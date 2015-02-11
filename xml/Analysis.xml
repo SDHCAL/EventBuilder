@@ -1,0 +1,23 @@
+<marlin>
+  <execute>
+    <processor name="MyAnalysisProcessor"/>
+  </execute>
+
+	<global>
+          <parameter name="LCIOInputFiles">
+
+          Salut
+ </parameter>
+             	<parameter name="MaxRecordNumber" value="0"/>
+                <parameter name="SkipNEvents" value="0"/>
+                <parameter name="SupressCheck" value="false"/>
+                 <parameter name="Verbosity" type="string">MESSAGE0 </parameter>
+
+  </global>
+
+  <processor name="MyAnalysisProcessor" type="AnalysisProcessorType">
+    <parameter name="FileNameGeometry" value="./DetectorGeometry/Aout.xml"/>
+    <parameter name="ReaderType" value="XMLReader"/>
+  </processor>
+</marlin>
+

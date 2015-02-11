@@ -1,0 +1,35 @@
+<marlin>
+  <execute>
+    <processor name="MyTriventProcessor"/>
+  </execute>
+
+	<global>
+          <parameter name="LCIOInputFiles">
+
+        
+        
+Salut
+      
+        
+        
+        
+  
+ </parameter>
+             	<parameter name="MaxRecordNumber" value="0"/>
+                <parameter name="SkipNEvents" value="0"/>
+                <parameter name="SupressCheck" value="false"/>
+                 <parameter name="Verbosity" type="string">SILENT </parameter>
+
+  </global>
+
+  <processor name="MyTriventProcessor" type="TriventProcessorType">
+    <parameter name="FileNameGeometry" value="./DetectorGeometry/Aout2.xml"/>
+    <parameter name="ReaderType" value="XMLReader"/>
+    <parameter name="LayerCut" value="3" />
+    <parameter name="noiseCut" value="3" />
+    <parameter name="timeWin" value="2" />
+    <parameter name="LCIOOutputFile" value="ModifieMoi" />
+    <parameter name="NOISEOutputFile" value="Test" />
+  </processor>
+</marlin>
+

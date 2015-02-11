@@ -1,0 +1,39 @@
+<Detector>
+
+
+  <Plate x="0" y="0" z="0" alpha="0" beta="0" gamma="0">
+    <Dif DifId="28" x="0" y="0"/>
+  </Plate>
+  
+  <Plate x="0" y="0" z="90" alpha="0" beta="0" gamma="0">
+    <Dif DifId="16" x="0" y="0" />  
+  </Plate>
+  
+  
+  <Plate x="0" y="0" z="180" alpha="0" beta="0" gamma="0">
+    <Dif DifId="23" x="0" y="0" /> 
+  </Plate>
+  
+ 
+   <Plate x="0" y="0" z="270" alpha="0" beta="0" gamma="0">
+    <Dif DifId="30" x="0" y="0" DifType="temporal" up_down="up"/>
+    <Dif DifId="94" x="0" y="0" DifType="positional" up_down="down"/>  
+    <Dif DifId="125" x="0" y="0" DifType="positional" up_down="up"/>
+    <Dif DifId="6" x="0" y="0" DifType="temporal" up_down="down"/>
+  </Plate>
+  
+   <Plate x="0" y="0" z="540" alpha="0" beta="0" gamma="0">
+    <Dif DifId="32" x="0" y="0"/>
+  </Plate>
+ 
+ 
+  
+  <Plate x="0" y="0" z="630" alpha="0" beta="0" gamma="0">
+    <Dif DifId="198" x="0" y="0"/>
+  </Plate>
+  <Plate x="0" y="0" z="700" alpha="0" beta="0" gamma="0">
+    <Dif DifId="142" x="0" y="0"/>
+  </Plate> 
+  
+  
+</Detector>

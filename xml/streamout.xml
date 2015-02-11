@@ -1,0 +1,37 @@
+<marlin>
+	<execute>
+  	<processor name="MySDHCAL_RawData_Processor"/>
+    <processor name="MyLCIOOutputProcessor"/>
+  </execute>
+  
+	<global>
+  	<parameter name="LCIOInputFiles">
+
+
+		
+		
+		
+
+		</parameter>
+    <parameter name="MaxRecordNumber" value="0"/>
+    <parameter name="SkipNEvents" value="0"/>
+    <parameter name="SupressCheck" value="false"/>
+    <parameter name="Verbosity" type="string">SILENT</parameter>
+  </global>
+  
+ 	<processor name="MySDHCAL_RawData_Processor" type="SDHCAL_RawData_Processor">
+ 		<!--SDHCAL_RawData_Processor prints info on the Raw data-->
+  	<!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
+  	
+  	<!--XDAQ produced collection name-->
+  	<parameter name="XDAQCollectionName" type="string" lcioInType="LCGenericObject">RU_XDAQ </parameter>
+  	<parameter name="DebugMode" type="bool"> true </parameter>
+	</processor>
+
+ 	<processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
+		<!--write mode for output file:  WRITE_APPEND or WRITE_NEW-->
+    <parameter name="LCIOWriteMode" type="string">WRITE_NEW </parameter>
+    <!-- name of output file -->
+    <parameter name="LCIOOutputFile" type="string"> ModifieMoi </parameter>
+	</processor>
+</marlin>
