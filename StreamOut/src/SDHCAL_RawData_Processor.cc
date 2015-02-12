@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <assert.h>
 #include <string>
+#include <stdlib.h>
 #include "../../Common/Colors.h"
 #include <EVENT/LCCollection.h>
 #include <EVENT/LCGenericObject.h>
@@ -139,7 +140,7 @@ void SDHCAL_RawData_Processor::init()
   else
   {
     std::cout << "Reader type n'existe pas !!" << std::endl;
-    std::exit(1);
+    exit(1);
   }
   delete myReader;
 }
@@ -172,7 +173,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
     {
     	LCGenericObject* obj=dynamic_cast<LCGenericObject*>(col->getElementAt(iel));
         LMGeneric* lmobj=(LMGeneric *) obj;
-	if (obj==nullptr)
+	if (obj==NULL)
 	{
 	_nWrongObj++;
 	continue;
@@ -190,8 +191,8 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 	_DIFStarter[idstart]++;	
 	if (!  bufferNavigator.validBuffer() ) continue;
         DIFPtr *d=bufferNavigator.getDIFPtr();
-	if (_debugMode) assert(d!=nullptr);
-	if (d!=nullptr)
+	if (_debugMode) assert(d!=NULL);
+	if (d!=NULL)
 	{
 		_DIFPtrValueAtReturnedPos[bufferNavigator.getDIFBufferStart()[d->getGetFramePtrReturn()] ]++;
 	      	if (_debugMode) assert( bufferNavigator.getDIFBufferStart()[d->getGetFramePtrReturn()]==0xa0 );

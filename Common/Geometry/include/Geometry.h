@@ -21,8 +21,8 @@ inline double GetDifPositionY( int& i){ return ((Difs.find(i))->second).GetPosit
 inline double GetDifAlpha( const int& i){ return ((Difs.find(i))->second).GetAngleXY();};
 inline double GetDifBeta( const int& i){ return ((Difs.find(i))->second).GetAngleXZ();};
 inline double GetDifGamma( const int& i){ return ((Difs.find(i))->second).GetAngleYZ();};
-inline double GetDifPositionXMax(const int& i ){unsigned currentMax = 0;for(auto it = Difs.begin(); it != Difs.end(); ++it ) {if ((it->second).GetNbrPlate()==i && (it ->second).GetPositionX() > currentMax) {currentMax = (it ->second).GetPositionX();}} return currentMax;};
-inline double GetDifPositionYMax(const int& i ){unsigned currentMax = 0;for(auto it = Difs.begin(); it != Difs.end(); ++it ) {if ((it->second).GetNbrPlate()==i && (it ->second).GetPositionY() > currentMax) {currentMax = (it ->second).GetPositionY();}} return currentMax;};
+ inline double GetDifPositionXMax(const int& i ){unsigned currentMax = 0;for(std::map<int, Dif >::iterator it = Difs.begin(); it != Difs.end(); ++it ) {if ((it->second).GetNbrPlate()==i && (it ->second).GetPositionX() > currentMax) {currentMax = (it ->second).GetPositionX();}} return currentMax;};
+inline double GetDifPositionYMax(const int& i ){unsigned currentMax = 0;for(std::map<int, Dif >::iterator it = Difs.begin(); it != Difs.end(); ++it ) {if ((it->second).GetNbrPlate()==i && (it ->second).GetPositionY() > currentMax) {currentMax = (it ->second).GetPositionY();}} return currentMax;};
 inline double GetDifPlateAlpha( const int& i){ return Plates[i].GetAngleXY();};
 inline double GetDifPlateBeta( const int& i){ return Plates[i].GetAngleXZ();};
 inline double GetDifPlateGamma( const int& i){ return Plates[i].GetAngleYZ();};

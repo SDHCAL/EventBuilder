@@ -45,7 +45,7 @@ class SDHCAL_RawBuffer_Navigator
 {
  public:
   SDHCAL_RawBuffer_Navigator(SDHCAL_buffer b);
-  ~SDHCAL_RawBuffer_Navigator() {if (_theDIFPtr!=nullptr) delete _theDIFPtr;}
+  ~SDHCAL_RawBuffer_Navigator() {if (_theDIFPtr!=NULL) delete _theDIFPtr;}
   bool validBuffer() {return _DIFstartIndex != 0;}
   uint32_t getStartOfDIF() {return _DIFstartIndex;}
   unsigned char* getDIFBufferStart() {return &(_buffer.buffer()[_DIFstartIndex]);}
