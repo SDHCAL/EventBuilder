@@ -1,5 +1,5 @@
-#ifndef BIBOU
-#define BIBOU
+#ifndef TRIVENT_PROCESSOR
+#define TRIVENT_PROCESSOR
 
 #include "marlin/Processor.h"
 #include "EVENT/RawCalorimeterHit.h"

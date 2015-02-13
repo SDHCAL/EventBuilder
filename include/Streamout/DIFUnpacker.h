@@ -1,5 +1,5 @@
-#ifndef _DIFUnpacker_h
-#define _DIFUnpacker_h
+#ifndef DIFUnpacker_h
+#define DIFUnpacker_h
 #include <string>
 #include <vector>
 #include <stdint.h>

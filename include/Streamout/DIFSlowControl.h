@@ -1,5 +1,5 @@
-#ifndef _DIFSlowControl_H
-#define _DIFSlowControl_H
+#ifndef DIFSlowControl_H
+#define DIFSlowControl_H
 #include <map>
 #include <string>
 #include <bitset>
