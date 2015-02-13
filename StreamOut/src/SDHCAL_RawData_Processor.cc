@@ -1,9 +1,10 @@
 #include "SDHCAL_RawData_Processor.h"
 #include <iostream>
+#include <string>
+#include <cstdlib>
+#include <cmath>
 #include <iomanip>
 #include <assert.h>
-#include <string>
-#include <stdlib.h>
 #include "../../Common/Colors.h"
 #include <EVENT/LCCollection.h>
 #include <EVENT/LCGenericObject.h>
@@ -21,10 +22,21 @@
 #include "../../Common/Reader/include/ReaderFactory.h"
 #include "../../Common/Reader/include/Reader.h"
 #include "DIFUnpacker.h"
-std::string b="Results_Time.root";
-TFile *hfile = new TFile(b.c_str(),"RECREATE","Results");
-TH1F* HistoTimeAsic1 = new TH1F("Test","Test",501,-250,250);
-TH1F* HistoTimeAsic2 = new TH1F("Test","Test",501,-250,250);
+#include <sstream>
+namespace patch
+{
+    template < typename T > std::string to_string( const T& n )
+    {
+        std::ostringstream stm ;
+        stm << n ;
+        return stm.str() ;
+    }
+}
+int _NbrRun=0;
+std::map<int,TH1F*>HistoTimeAsic1;
+std::map<int,TH1F*>HistoTimeAsic2;
+//TH1F* HistoTimeAsic1 = new TH1F("Test","Test",501,-250,250);
+//TH1F* HistoTimeAsic2 = new TH1F("Test","Test",501,-250,250);
 using namespace lcio ;
 using namespace marlin ;
 float CalibT0_0 = 7.14;
@@ -135,6 +147,17 @@ void SDHCAL_RawData_Processor::init()
   {
     myReader->Read(_FileNameGeometry,geom);
     geom.PrintGeom();
+    std::map<int, Dif > Difs=geom.GetDifs();
+    for(std::map<int, Dif >::iterator it=Difs.begin();it!=Difs.end();++it)
+    {
+      if(geom.GetDifType(it->first)==temporal)
+      {
+       std::string name1="Times_given_by_TDC_Asics_1"+patch::to_string(it->first);
+       std::string name2="Times_given_by_TDC_Asics_2"+patch::to_string(it->first);
+       HistoTimeAsic1.insert ( std::pair<int,TH1F*>(it->first,new TH1F(name1.c_str(),name1.c_str(),501,-250,250)) );
+       HistoTimeAsic2.insert ( std::pair<int,TH1F*>(it->first,new TH1F(name2.c_str(),name2.c_str(),501,-250,250)) );
+      }
+    }
   }
   else
   {
@@ -151,6 +174,7 @@ void SDHCAL_RawData_Processor::processRunHeader( LCRunHeader* run)
 
 void SDHCAL_RawData_Processor::processEvent( LCEvent * evt ) 
 { 
+  _NbrRun=evt->getRunNumber();
   _nevt++;
   IMPL::LCCollectionVec *RawVec=new IMPL::LCCollectionVec(LCIO::RAWCALORIMETERHIT) ;
   IMPL::LCCollectionVec *RawVec2=new IMPL::LCCollectionVec(LCIO::CALORIMETERHIT) ;
@@ -220,7 +244,8 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 			}
    		    	int32_t i1=(d->getFrameData(i,uint32_t(18))) |(d->getFrameData(i,uint32_t(17))<<8) ;
 		      	int32_t i0=(d->getFrameData(i,uint32_t(16))) |(d->getFrameData(i,uint32_t(15))<<8) ;
-		      	int32_t c0=(d->getFrameData(i,uint32_t(19))) &0x7;
+		      	//int32_t c0=(d->getFrameData(i,uint32_t(19))) &0x7;
+			
 		      	float Time0_6=0;
 		      	//for (int iw=0;iw<50;iw++) printf("%.2x ",d->getFrameData(i,iw));
           		if (iasic==1)
@@ -228,15 +253,16 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 				Time0_6 =(i0 -i1)*CalibT0_0+i1*CalibDeltaT_0;
 			  	//printf("=> %d %d %d-> %f %f ns\n",c0,i0,i1,Time0_6,c0*25+Time0_6);
 			  	//std::cout<<"iasic : "<<iasic<<"Time :"<<Time0_6<<std::endl;
-			  	HistoTimeAsic1->Fill(Time0_6);			  
+			  	HistoTimeAsic1[d->getID()]->Fill(Time0_6);			  
 			}
 		      	else
 			{
 				Time0_6=(i0 -i1)*CalibT0_1+i1*CalibDeltaT_1;
 				//printf("=> %d %d %d-> %f %f ns\n",c0,i0,i1,Time0_6,c0*25+Time0_6);	
 				//std::cout<<"iasic : "<<iasic<<"Time :"<<Time0_6<<std::endl;	
-				HistoTimeAsic2->Fill(Time0_6);	  
+				HistoTimeAsic2[d->getID()]->Fill(Time0_6);	  
 			}
+			
 			unsigned long int ID0;
 		      	ID0=(unsigned long int)(((unsigned short)d->getID())&0xFF);			//8 firsts bits: DIF Id
 		      	ID0+=(unsigned long int)(((unsigned short)d->getFrameAsicHeader(i)<<8)&0xFF00);	//8 next bits:   Asic Id
@@ -345,9 +371,19 @@ void SDHCAL_RawData_Processor::printCounter(std::string description, std::map<in
 
 void SDHCAL_RawData_Processor::end()
 { 
-  HistoTimeAsic1->Write();
-  HistoTimeAsic2->Write();
+  if(HistoTimeAsic1.size()!=0)
+  {
+  
+
+  std::string name="TimeGivenByTDC_"+ patch::to_string(_NbrRun)+".root";
+  TFile *hfile = new TFile(name.c_str(),"RECREATE","Results");	
+  //std::string add = std::to_string((long long int)_NbrRun);
+  //std::string name="ResultsTimeFromTDC"+add+".root";
+  //TFile *hfile = new TFile(name.c_str(),"RECREATE","Results");
+  for(std::map<int, TH1F* >::iterator it=HistoTimeAsic1.begin();it!=HistoTimeAsic1.end();++it) it->second->Write();
+  for(std::map<int, TH1F* >::iterator it=HistoTimeAsic2.begin();it!=HistoTimeAsic2.end();++it) it->second->Write();
   delete hfile;
+  }
   streamlog_out(MESSAGE) << "FINAL STATISTICS : " << std::endl;
   streamlog_out(MESSAGE) << " runs for " << _nevt << " events." << std::endl;
   printCounter("Size of GenericObject collections",_CollectionSizeCounter);

@@ -141,7 +141,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
 	  float sg=sin(geom.GetDifGamma(dif_id)*degtorad);
 	  
 	  unsigned int NbrPlate =geom.GetDifNbrPlate(dif_id)-1;
-          if(geom.GetDifNbrPlate(dif_id)>=300) {/*std::cout<<"Please add DIF "<<dif_id<<" to your geometry file; I'm Skipping their data."<<std::endl;*/continue;}
+          if(geom.GetDifNbrPlate(dif_id)>=300) {std::cout<<"Please add DIF "<<dif_id<<" to your geometry file; I'm Skipping their data."<<std::endl;continue;}
 	  float Z= geom.GetPlatePositionZ(NbrPlate);
 	  
 	  cd["Dif_id"]=dif_id;
@@ -462,8 +462,8 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 void TriventProcessor::end()
 {
 //total_time=timemax-timemin;
-  std::string b="Results_Trivent_"+ std::to_string( (long long int) _NbrRun)+".root";
-  TFile *hfile = new TFile(b.c_str(),"RECREATE","Results");
+  std::string name="Results_Trivent_"+ std::to_string( (long long int) _NbrRun)+".root";
+  TFile *hfile = new TFile(name.c_str(),"RECREATE","Results");
   for(unsigned int i=0; i<Flux_Noise.size();++i)
     {
       //Flux_Hits[i]->Scale(total_time*200e-9);
