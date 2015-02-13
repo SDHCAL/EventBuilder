@@ -6,13 +6,13 @@
 
 
 
-
-
 ### LIBRARY #################################################################
 
 # definitions to pass to the compiler
-ADD_DEFINITIONS( "-Wall -ansi -pedantic -std=c++11" )
+ADD_DEFINITIONS( "-Wall -ansi -pedantic -std=c++0x" )
 ADD_DEFINITIONS( "-Wno-long-long" )
+
+
 
 # include directories
 INCLUDE_DIRECTORIES( ./include )
