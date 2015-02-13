@@ -6,7 +6,7 @@
 	<global>
           <parameter name="LCIOInputFiles">
 
-          Salut
+          FILE
  </parameter>
              	<parameter name="MaxRecordNumber" value="0"/>
                 <parameter name="SkipNEvents" value="0"/>
