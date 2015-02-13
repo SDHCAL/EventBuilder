@@ -14,7 +14,6 @@
 #include "TH3F.h"
 #include "TFile.h"
 #include "IMPL/CalorimeterHitImpl.h"
-#include "../../Common/TimeHit/include/RawCalorimeterTimeImpl.h"
 #include <IMPL/LCRunHeaderImpl.h>
 #include "../../Common/Colors.h"
 #ifndef COLORS_H
@@ -332,7 +331,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	  
       for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) 
       {
-               EVENT::RawCalorimeterTime* raw_hit = dynamic_cast<EVENT::RawCalorimeterTime* >( col2->getElementAt(ihit)) ;
+               EVENT::CalorimeterHit* raw_hit = dynamic_cast<EVENT::CalorimeterHit* >( col2->getElementAt(ihit)) ;
                //int dif_id=((raw_hit)->getCellID0() & 0xFF);
 	        /*if(geom.GetDifType(dif_id)==temporal)
 	        {

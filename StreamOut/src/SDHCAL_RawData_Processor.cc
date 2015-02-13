@@ -12,7 +12,7 @@
 #include "IMPL/LCCollectionVec.h"
 #include "IMPL/LCFlagImpl.h"
 #include "IMPL/RawCalorimeterHitImpl.h"
-#include "../../Common/TimeHit/include/RawCalorimeterTimeImpl.h"
+#include "IMPL/CalorimeterHitImpl.h"
 #include "TH1F.h"
 #include "TFile.h"
 #include <bitset>
@@ -116,7 +116,7 @@ SDHCAL_RawData_Processor::SDHCAL_RawData_Processor() : Processor("SDHCAL_RawData
 
   registerInputCollection( LCIO::LCGENERICOBJECT,"XDAQCollectionName","XDAQ produced collection name",_XDAQCollectionNames,std::string("RU_XDAQ"));
   registerOutputCollection( LCIO::RAWCALORIMETERHIT,"OutputRawCaloHitCollectionName","Name of output collection containing raw calorimeter hits",_RawHitCollectionName,std::string("DHCALRawHits"));
-  registerOutputCollection( /*LCIO::LCGENERICOBJECT*/"RAWCALORIMETERTIME","OutputRawCaloHitTimeCollectionName","Name of output collection containing Times",_RawHitCollectionNameTime,std::string("DHCALRawTimes"));
+  registerOutputCollection( LCIO::RAWCALORIMETERHIT,"OutputCaloHitTimeCollectionName","Name of output collection containing Times",_RawHitCollectionNameTime,std::string("DHCALRawTimes"));
   _TcherenkovSignal="";
   registerOutputCollection( LCIO::LCGENERICOBJECT,"OutputTcherenkovCollectionName","Name of output collection containing Tcherenkov signal",_TcherenkovSignal,std::string("Tcherenkov")); 
   _nevt=_nWrongObj=_nProcessedObject=_hasSlowControl=_hasBadSlowControl=0;
@@ -128,7 +128,6 @@ SDHCAL_RawData_Processor::SDHCAL_RawData_Processor() : Processor("SDHCAL_RawData
 
 void SDHCAL_RawData_Processor::init() 
 { 
-  // usually a good idea to
   printParameters() ;
   ReaderFactory readerFactory;
   Reader* myReader = readerFactory.CreateReader(_ReaderType);
@@ -154,7 +153,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 { 
   _nevt++;
   IMPL::LCCollectionVec *RawVec=new IMPL::LCCollectionVec(LCIO::RAWCALORIMETERHIT) ;
-  IMPL::LCCollectionVec *RawVec2=new IMPL::LCCollectionVec(/*LCIO::LCGENERICOBJECT*/"RAWCALORIMETERTIME") ;
+  IMPL::LCCollectionVec *RawVec2=new IMPL::LCCollectionVec(LCIO::CALORIMETERHIT) ;
   //Prepare a flag to tag data type in RawVec (dit les types de data qu'on va enregistrer?)
   IMPL::LCFlagImpl chFlag(0) ;
   EVENT::LCIO bitinfo;
@@ -256,12 +255,14 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 			//j
 			,1);
 		      	//ThStatus[2]=isSynchronised; //I'm not computing the synchronisation here.
-	        	IMPL::RawCalorimeterTimeImpl *hit=new IMPL::RawCalorimeterTimeImpl() ;
+	        	IMPL::CalorimeterHitImpl *hit=new IMPL::CalorimeterHitImpl() ;
 		      	hit->setCellID0((unsigned long int)ID0);               
 		      	hit->setCellID1(ID1);
-		      	hit->setTime(Time0_6);
+		      	//Use setEnergyError to stock Time from the TDC !!!!!!!
+                        hit->setEnergyError(Time0_6);
 		      	unsigned long int TTT = (unsigned long int)(d->getFrameTimeToTrigger(i));
-		      	hit->setTimeStamp(TTT);			      		//Time stamp of this event from Run Begining
+			//Use setTime to stock TimeStamp !!!!!!!	      	
+			hit->setTime(TTT);//Time stamp of this event from Run Begining
 		      	RawVec2->addElement(hit);
         	}
       }
