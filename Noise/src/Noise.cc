@@ -70,17 +70,17 @@ void NoiseProcessor::init()
     for(std::map<int, int >::iterator it=PlansType.begin();it!=PlansType.end();++it)
     {
       testedPlanList.push_back(testedPlan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second));
-			std::string a="Time_Distribution"+ std::to_string( it->first +1 );
-			std::string b="number_of_hits_distribution"+std::to_string( it->first +1 );
-			std::string c="number_of_hits_distribution2"+std::to_string( it->first +1 );
-			Histos.push_back(new TH1F(a.c_str(),a.c_str(),50,0,50));
-			Histos3.push_back(new TH1F(c.c_str(),c.c_str(),50,0,50));
-			if(it->second==positional) {std::cout<<"Creation positional"<<std::endl;Noise_Histos.push_back(new TH2F(b.c_str(),b.c_str(),128,0,128,1,0,50));}
-			else {std::cout<<"Creation one"<<std::endl;Noise_Histos.push_back(new TH2F(b.c_str(),b.c_str(),100,0,100,100,0,100));}
-			Noise.push_back(std::map<int ,int>());
-			NumberOfHitsTotal.push_back(0);
-			Noise_vector.push_back(std::map<int ,std::vector<CalorimeterHit*>>());
-			NumberOfHits.push_back(std::map<int ,int>());
+      std::string a="Time_Distribution"+ std::to_string( (long long int) it->first +1 );
+      std::string b="number_of_hits_distribution"+std::to_string( (long long int)it->first +1 );
+      std::string c="number_of_hits_distribution2"+std::to_string( (long long int)it->first +1 );
+      Histos.push_back(new TH1F(a.c_str(),a.c_str(),50,0,50));
+      Histos3.push_back(new TH1F(c.c_str(),c.c_str(),50,0,50));
+      if(it->second==positional) {std::cout<<"Creation positional"<<std::endl;Noise_Histos.push_back(new TH2F(b.c_str(),b.c_str(),128,0,128,1,0,50));}
+      else {std::cout<<"Creation one"<<std::endl;Noise_Histos.push_back(new TH2F(b.c_str(),b.c_str(),100,0,100,100,0,100));}
+      Noise.push_back(std::map<int ,int>());
+      NumberOfHitsTotal.push_back(0);
+      Noise_vector.push_back(std::map<int ,std::vector<CalorimeterHit*>>());
+      NumberOfHits.push_back(std::map<int ,int>());
     }
   }
   else
@@ -175,49 +175,49 @@ void NoiseProcessor::processEvent( LCEvent* evtP )
 void NoiseProcessor::end()
 {
 //delete h;
-std::string b="Results_Noise"+ std::to_string(_NbrRun)+".root";
-TFile *hfile = new TFile(b.c_str(),"RECREATE","Results");
+  std::string b="Results_Noise"+ std::to_string( (long long int) _NbrRun)+".root";
+  TFile *hfile = new TFile(b.c_str(),"RECREATE","Results");
 
-for(unsigned int i=0; i<Noise_vector.size();++i)
-{
-		std::cout<<"Plane : "<<i<<std::endl;
- 		for(std::map<int,int>::iterator it=NumberOfHits[i].begin(); it!=NumberOfHits[i].end();++it)
- 			{
+  for(unsigned int i=0; i<Noise_vector.size();++i)
+    {
+      std::cout<<"Plane : "<<i<<std::endl;
+      for(std::map<int,int>::iterator it=NumberOfHits[i].begin(); it!=NumberOfHits[i].end();++it)
+	{
 				std::cout<<"*"<<blue<<it->first<<"  "<<it->second<<normal<<"*";
 				Histos3[i]->Fill(it->first,it->second);
- 			}
-Histos3[i]->Write();
-Noise_Histos[i]->Scale(TotalTime*200e-9);
-Noise_Histos[i]->Write();
-}
+	}
+      Histos3[i]->Write();
+      Noise_Histos[i]->Scale(TotalTime*200e-9);
+      Noise_Histos[i]->Write();
+    }
 
-All->Write();
-
-
-for(unsigned int i=0; i<Noise_vector.size();++i)
-{
-std::cout<<green<<NumberOfHitsTotal[i]/(TotalTime*200e-9*33*30)<<" "<<normal;
-}
+  All->Write();
 
 
-std::vector<int> number;
-for(unsigned int i=0;i!= Noise.size();++i)
-{
+  for(unsigned int i=0; i<Noise_vector.size();++i)
+    {
+      std::cout<<green<<NumberOfHitsTotal[i]/(TotalTime*200e-9*33*30)<<" "<<normal;
+    }
+
+
+  std::vector<int> number;
+  for(unsigned int i=0;i!= Noise.size();++i)
+    {
 	Histos[i]->SetBit(TH1::kCanRebin);
 	number.push_back(0);
 	for(std::map<int,int>::iterator it = Noise[i].begin();it!=Noise[i].end();++it)
-	{
- 	Histos[i]->Fill(it->first,it->second*1.0/_EVENT);
-	}
+	  {
+	    Histos[i]->Fill(it->first,it->second*1.0/_EVENT);
+	  }
 	
 	Histos[i]->Write();
-}
-for(unsigned int i=0;i!= Histos.size();++i)
-{
-delete Histos[i];
-delete Histos3[i];
-}
-Histos.clear();
-Histos3.clear();
-delete hfile;
+    }
+  for(unsigned int i=0;i!= Histos.size();++i)
+    {
+      delete Histos[i];
+      delete Histos3[i];
+    }
+  Histos.clear();
+  Histos3.clear();
+  delete hfile;
 }

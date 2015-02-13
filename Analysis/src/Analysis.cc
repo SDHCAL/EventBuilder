@@ -236,8 +236,8 @@ void AnalysisProcessor::init()
     for(std::map<int, int >::iterator it=PlansType.begin();it!=PlansType.end();++it)
     {
       testedPlanList.push_back(testedPlan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second));
-      std::string b="Correlations"+ std::to_string( it->first +1 );
-      std::string a="Distribution hit selectionner par analysis"+ std::to_string( it->first +1 );
+      std::string b="Correlations"+ std::to_string( (long long int) it->first +1 );
+      std::string a="Distribution hit selectionner par analysis"+ std::to_string( (long long int) it->first +1 );
       if(it->second==positional) {Distribution_hits.push_back(new TH2F(a.c_str(),a.c_str(),128,0,128,1,0,50));}
       else {Distribution_hits.push_back(new TH2F(a.c_str(),a.c_str(),100,0,100,100,0,100));}
      Correlations.push_back(new TH2F(b.c_str(),b.c_str(),200,0,200,200,0,200));
@@ -299,7 +299,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 
 void AnalysisProcessor::end()
 {
-	std::string b="Results_Analysis_"+std::to_string(_NbrRun)+".root";
+  std::string b="Results_Analysis_"+std::to_string( (long long int) _NbrRun)+".root";
 	TFile *hfile = new TFile(b.c_str(),"RECREATE");
   for(unsigned int i=0; i<Distribution_hits.size();++i)
 	{
