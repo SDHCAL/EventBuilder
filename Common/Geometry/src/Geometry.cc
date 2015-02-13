@@ -7,11 +7,11 @@ void Geometry::PrintGeom()
     for(unsigned int i=0;i<GetNumberPlates();++i)
     {
    
-    std::cout<<red<<GetPlatePositionX(i)<<"  "<<GetPlatePositionY(i)<<"  "<<GetPlatePositionZ(i)<<normal<<std::endl;
+   std::cout<<red<<"X:"<<GetPlatePositionX(i)<<"  Y:"<<GetPlatePositionY(i)<<"  Z:"<<GetPlatePositionZ(i)<<normal<<std::endl;
     }
     std::cout<<"Difs : "<<std::endl;
     for(std::map<int,Dif>::iterator it=Difs.begin();it!=Difs.end();++it)
     {
-    std::cout<<red<<(it->second).GetPositionX()<<"  "<<(it->second).GetPositionY()<<"  "<<(it->second).GetDifId()<<normal<<std::endl;
+    std::cout<<red<<"X:"<<(it->second).GetPositionX()<<"  Y:"<<(it->second).GetPositionY()<<"  DifId:"<<(it->second).GetDifId()<<normal<<std::endl;
     }
 }
