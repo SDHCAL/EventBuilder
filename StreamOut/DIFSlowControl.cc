@@ -1,4 +1,4 @@
-#include "DIFSlowControl.h"
+#include "Streamout/DIFSlowControl.h"
 #include <iostream>
 #include <stdio.h>
 void DIFSlowControl::FillHR1(int header_shift,unsigned char *cbuf)

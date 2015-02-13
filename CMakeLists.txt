@@ -17,7 +17,7 @@ elseif(COMPILER_SUPPORTS_CXX0X)
 else()
         message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
-
+include_directories(include)
 
 # project version
 SET( ${PROJECT_NAME}_VERSION_MAJOR 0 )
@@ -68,7 +68,7 @@ ENDIF()
 
 
 ADD_SUBDIRECTORY( ./Common)
-ADD_SUBDIRECTORY( ./StreamOut )
+ADD_SUBDIRECTORY( ./StreamOut)
 ADD_SUBDIRECTORY( ./Trivent )
 ADD_SUBDIRECTORY(./Analysis)
 ADD_SUBDIRECTORY(./Noise)

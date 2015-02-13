@@ -1,7 +1,7 @@
 #ifndef READER_H
 #define READER_H
 #include<string>
-#include"../../Geometry/include/Geometry.h"
+#include"Geometry/Geometry.h"
 class Reader
 {
   public:

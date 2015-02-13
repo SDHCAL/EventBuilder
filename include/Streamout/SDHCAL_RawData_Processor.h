@@ -10,7 +10,7 @@
 #include <map>
 #include <set>
 #include <exception>
-#include "../../Common/Geometry/include/Geometry.h"
+#include "Geometry/Geometry.h"
 #include "DIFSlowControl.h"
 
 using namespace lcio ;

@@ -14,12 +14,9 @@
 ADD_DEFINITIONS( "-Wall -ansi -pedantic" )
 ADD_DEFINITIONS( "-Wno-long-long -std=c++0x" )
 
-# include directories
-INCLUDE_DIRECTORIES( ./include )
-INSTALL_DIRECTORY( ./include DESTINATION . FILES_MATCHING PATTERN "*.h" )
 
 # add library
-AUX_SOURCE_DIRECTORY( ./src library_sources )
+AUX_SOURCE_DIRECTORY( . library_sources )
 ADD_SHARED_LIBRARY( Noise ${library_sources} )
 INSTALL_SHARED_LIBRARY( Noise DESTINATION lib )
 

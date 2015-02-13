@@ -1,4 +1,4 @@
-#include "TriventProcessor.h"
+#include "Trivent/TriventProcessor.h"
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -15,16 +15,16 @@
 #include "TFile.h"
 #include "IMPL/CalorimeterHitImpl.h"
 #include <IMPL/LCRunHeaderImpl.h>
-#include "../../Common/Colors.h"
+#include "Colors.h"
 #ifndef COLORS_H
 #define normal " "
 #define red "  "
 #define vert " "
 #define blanc " "
 #endif
-#include "../../Common/Reader/include/ReaderFactory.h"
-#include "../../Common/Reader/include/Reader.h"
-#include "Mapping.h"
+#include "Reader/ReaderFactory.h"
+#include "Reader/Reader.h"
+#include "Trivent/Mapping.h"
 #include "TGraph.h"
 using namespace marlin;
 #define degtorad 0.0174532925

@@ -1,10 +1,10 @@
-#ifndef ANALYSIS_H
-#define ANALYSIS_H
+#ifndef NOISE_H
+#define NOISE_H
 // marlin
 #include "marlin/Processor.h"
 #include "EVENT/RawCalorimeterHit.h"
 #include "EVENT/CalorimeterHit.h"
-#include "../../Common/Geometry/include/Geometry.h"
+#include "Geometry/Geometry.h"
 #include <cmath>
 #include "UTIL/CellIDDecoder.h"
 #define degtorad 0.0174532925
@@ -21,12 +21,12 @@ class testedPlan
   sb=sin(xz*degtorad);
 	cg=cos(yz*degtorad);
 	sg=sin(yz*degtorad);
-	/*****************************/
-	/* Xexp=pxz0+pxz1*Zexp
-	   Yexp = pyz0+pyz1*Zexp
-	   Zexp=Zexp
-	   (xnorm,ynorm,znorm).(Xexp-X0,Yexp-Y0,Zexp-z0)=0
-	*/   
+	// ***************************
+	// Xexp=pxz0+pxz1*Zexp
+	//   Yexp = pyz0+pyz1*Zexp
+	//   Zexp=Zexp
+	//   (xnorm,ynorm,znorm).(Xexp-X0,Yexp-Y0,Zexp-z0)=0
+	//   
 	xnorm=sg*sa+cg*sb*ca;
 	ynorm=-cg*sa+sg*sb*ca;
 	znorm=cb*ca;
@@ -75,7 +75,7 @@ private:
 class plan
 {
  public:
-  plan(){;}
+  plan(){hits.reserve(25);}
   inline void addHit(CalorimeterHit* a) {hits.push_back(a);}
   inline int nHits() {return hits.size();}
   inline void computeBarycentre();
@@ -109,31 +109,28 @@ class plan
   double max[3];
 };
 
-
-
-
-
-
-class AnalysisProcessor : public marlin::Processor
+class NoiseProcessor : public marlin::Processor
 {
 public:
- AnalysisProcessor();
- ~AnalysisProcessor();
- void PrintStat();
- marlin::Processor *newProcessor() { return new AnalysisProcessor(); }
+ NoiseProcessor();
+ ~NoiseProcessor();
+ marlin::Processor *newProcessor() { return new NoiseProcessor(); }
  void init();
  void processEvent(EVENT::LCEvent *evtP);
- void processRunHeader( LCRunHeader* run);
  void end();
+ int GetNbrRun() { return _NbrRun;}
 protected:
 std::vector<std::string> _hcalCollections;
 LCWriter* _EventWriter;
 std::string _FileNameGeometry;
 int _eventNr;
-int _NbrRun;
+int _EVENT;
+ int _NbrRun;
 Geometry geom;
 std::string _ReaderType;
-std::map<int,plan>Plans;
 std::vector<testedPlan> testedPlanList;
+std::vector<std::map<int,int> >Noise;
+std::vector<std::map<int,std::vector<CalorimeterHit*>>> Noise_vector;
+std::vector<std::map<float,int> >Distr;
 };
 #endif

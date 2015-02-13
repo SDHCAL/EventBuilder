@@ -15,11 +15,10 @@ ADD_DEFINITIONS( "-Wall -ansi -pedantic -std=c++0x" )
 ADD_DEFINITIONS( "-Wno-long-long" )
 
 # include directories
-INCLUDE_DIRECTORIES( ./include )
-INSTALL_DIRECTORY( ./include DESTINATION . FILES_MATCHING PATTERN "*.h" )
+INCLUDE_DIRECTORIES( ../include )
 
 # add library
-AUX_SOURCE_DIRECTORY( ./src library_sources )
+AUX_SOURCE_DIRECTORY( . library_sources )
 ADD_SHARED_LIBRARY( Analysis ${library_sources} )
 INSTALL_SHARED_LIBRARY( Analysis DESTINATION lib )
 

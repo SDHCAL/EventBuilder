@@ -1,12 +1,12 @@
-#include "Noise.h"
+#include "Noise/Noise.h"
 #include <iostream>
 #include <string> 
 #include "marlin/Processor.h"
 #include "UTIL/LCTOOLS.h"
 #include "UTIL/CellIDDecoder.h"
 #include "IMPL/CalorimeterHitImpl.h"
-#include "../../Common/Reader/include/ReaderFactory.h"
-#include "../../Common/Reader/include/Reader.h"
+#include "Reader/ReaderFactory.h"
+#include "Reader/Reader.h"
 #include "TROOT.h"
 #include "TH3F.h"
 #include "TH2F.h"
@@ -14,7 +14,7 @@
 #include "TCanvas.h"
 #include <TApplication.h>
 #include "TObject.h"
-#include "../../Common/Colors.h"
+#include "Colors.h"
 #define degtorad 0.0174532925
 #include <cstdlib>
 #include <cmath>

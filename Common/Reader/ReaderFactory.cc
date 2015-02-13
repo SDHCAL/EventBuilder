@@ -1,6 +1,6 @@
-#include "../include/ReaderFactory.h"
-#include"../include/XMLReader.h"
-#include"../include/TXTReader.h"
+#include "Reader/ReaderFactory.h"
+#include"Reader/XMLReader.h"
+#include"Reader/TXTReader.h"
 
 ReaderFactory::ReaderFactory()
 {

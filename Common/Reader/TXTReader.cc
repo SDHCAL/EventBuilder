@@ -1,4 +1,4 @@
-#include"TXTReader.h"
+#include"Reader/TXTReader.h"
 
 void TXTReader::Read(std::string FileName,Geometry& geom)
 {

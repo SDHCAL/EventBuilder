@@ -1,17 +1,17 @@
-#include "Analysis.h"
+#include "Analysis/Analysis.h"
 #include <iostream>
 #include <string>
 #include "marlin/Processor.h"
 #include "UTIL/LCTOOLS.h"
 #include "UTIL/CellIDDecoder.h"
 #include "IMPL/CalorimeterHitImpl.h"
-#include "../../Common/Reader/include/ReaderFactory.h"
-#include "../../Common/Reader/include/Reader.h"
+#include "Reader/ReaderFactory.h"
+#include "Reader/Reader.h"
 #include "TFile.h"
 #include "TGraphErrors.h"
 #include "TF1.h"
 #include "UTIL/CellIDDecoder.h"
-#include "../../Common/Colors.h"
+#include "Colors.h"
 #define degtorad 0.0174532925
 #include <cstdlib>
 #include <cmath>

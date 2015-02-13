@@ -1,5 +1,5 @@
-#include"../include/Geometry.h"
-#include"../../Colors.h"
+#include"Geometry/Geometry.h"
+#include"Colors.h"
 #include<iostream>
 void Geometry::PrintGeom()
 { 

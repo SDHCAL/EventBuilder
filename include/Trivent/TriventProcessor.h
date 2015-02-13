@@ -3,7 +3,7 @@
 
 #include "marlin/Processor.h"
 #include "EVENT/RawCalorimeterHit.h"
-#include "../../Common/Geometry/include/Geometry.h"
+#include "Geometry/Geometry.h"
 #include "IMPL/LCCollectionVec.h"
 #include "UTIL/CellIDEncoder.h"
 #include "IMPL/CalorimeterHitImpl.h"

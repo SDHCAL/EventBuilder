@@ -1,11 +1,11 @@
-#include "SDHCAL_RawData_Processor.h"
+#include "Streamout/SDHCAL_RawData_Processor.h"
 #include <iostream>
 #include <string>
 #include <cstdlib>
 #include <cmath>
 #include <iomanip>
 #include <assert.h>
-#include "../../Common/Colors.h"
+#include "Colors.h"
 #include <EVENT/LCCollection.h>
 #include <EVENT/LCGenericObject.h>
 #include <IMPL/LCGenericObjectImpl.h>
@@ -19,9 +19,9 @@
 #include <bitset>
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
-#include "../../Common/Reader/include/ReaderFactory.h"
-#include "../../Common/Reader/include/Reader.h"
-#include "DIFUnpacker.h"
+#include "Reader/ReaderFactory.h"
+#include "Reader/Reader.h"
+#include "Streamout/DIFUnpacker.h"
 #include <sstream>
 namespace patch
 {
