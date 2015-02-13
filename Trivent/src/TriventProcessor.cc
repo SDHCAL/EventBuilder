@@ -274,34 +274,34 @@ void TriventProcessor::init()
     }
     for(std::map<int, int >::iterator it=PlansType.begin();it!=PlansType.end();++it)
     {
-                        std::string b="Number_hits_Events"+ std::to_string( it->first +1 );
-                        Times_Plates.emplace_back(std::map<int ,int>());
-                        Times_Plates_perRun.emplace_back(std::map<int ,int>());
-			if(it->second==positional) {Flux_Events.emplace_back(new TH2F(b.c_str(),b.c_str(),128,0,128,1,0,50));}
-			else {Flux_Events.emplace_back(new TH2F(b.c_str(),b.c_str(),100,0,100,100,0,100));}
-                        std::string c="Number_hits_Noise"+ std::to_string( it->first +1 );
-			if(it->second==positional) {Flux_Noise.emplace_back(new TH2F(c.c_str(),c.c_str(),128,0,128,1,0,50));}
-			else {Flux_Noise.emplace_back(new TH2F(c.c_str(),c.c_str(),100,0,100,100,0,100));}
-			std::string d="Number_hits_Events_Asic"+ std::to_string( it->first +1 );
-			if(it->second==positional) {Flux_Events_Asic.emplace_back(new TH2F(d.c_str(),d.c_str(),2,0,3,1,0,50));}
-			else {Flux_Events_Asic.emplace_back(new TH2F(d.c_str(),d.c_str(),100,0,100,100,0,100));}
-                        std::string e="Number_hits_Noise_Asic"+ std::to_string( it->first +1 );
-			if(it->second==positional) {Flux_Noise_Asic.emplace_back(new TH2F(e.c_str(),e.c_str(),2,1,3,1,0,50));}
-			else {Flux_Noise_Asic.emplace_back(new TH2F(e.c_str(),e.c_str(),100,0,100,100,0,100));}
-			std::string h="Time_Distribution"+ std::to_string( it->first +1 );
-			Time_Distr.emplace_back(new TH1F(h.c_str(),h.c_str(),25000,0,25000));
-                        std::string i="Number_hit_per_clock"+ std::to_string( it->first +1 );
-                        Hits_Distr.emplace_back(new TH1F(i.c_str(),i.c_str(),25000,0,25000));
-                        std::string j="Time_Distribution_Events"+ std::to_string( it->first +1 );
-			Time_Distr_Events.emplace_back(new TH1F(j.c_str(),j.c_str(),25000,0,25000));
-                        std::string k="Number_hit_per_clock_Events"+ std::to_string( it->first +1 );
-                        Hits_Distr_Events.emplace_back(new TH1F(k.c_str(),k.c_str(),25000,0,25000));
-			std::string l="Time_Distribution_Noise"+ std::to_string( it->first +1 );
-			Time_Distr_Noise.emplace_back(new TH1F(l.c_str(),l.c_str(),25000,0,25000));
-                        std::string m="Number_hit_per_clock_Noise"+ std::to_string( it->first +1 );
-                        Hits_Distr_Noise.emplace_back(new TH1F(m.c_str(),m.c_str(),25000,0,25000));
-   		        //NumberOfHits.push_back(std::map<int ,int>());
-                        Nbrof0Hits.push_back(0);
+      std::string b="Number_hits_Events"+ std::to_string( (long long int) it->first +1 );
+      Times_Plates.emplace_back(std::map<int ,int>());
+      Times_Plates_perRun.emplace_back(std::map<int ,int>());
+      if(it->second==positional) {Flux_Events.emplace_back(new TH2F(b.c_str(),b.c_str(),128,0,128,1,0,50));}
+      else {Flux_Events.emplace_back(new TH2F(b.c_str(),b.c_str(),100,0,100,100,0,100));}
+      std::string c="Number_hits_Noise"+ std::to_string( (long long int) it->first +1 );
+      if(it->second==positional) {Flux_Noise.emplace_back(new TH2F(c.c_str(),c.c_str(),128,0,128,1,0,50));}
+      else {Flux_Noise.emplace_back(new TH2F(c.c_str(),c.c_str(),100,0,100,100,0,100));}
+      std::string d="Number_hits_Events_Asic"+ std::to_string( (long long int) it->first +1 );
+      if(it->second==positional) {Flux_Events_Asic.emplace_back(new TH2F(d.c_str(),d.c_str(),2,0,3,1,0,50));}
+      else {Flux_Events_Asic.emplace_back(new TH2F(d.c_str(),d.c_str(),100,0,100,100,0,100));}
+      std::string e="Number_hits_Noise_Asic"+ std::to_string( (long long int) it->first +1 );
+      if(it->second==positional) {Flux_Noise_Asic.emplace_back(new TH2F(e.c_str(),e.c_str(),2,1,3,1,0,50));}
+      else {Flux_Noise_Asic.emplace_back(new TH2F(e.c_str(),e.c_str(),100,0,100,100,0,100));}
+      std::string h="Time_Distribution"+ std::to_string( (long long int) it->first +1 );
+      Time_Distr.emplace_back(new TH1F(h.c_str(),h.c_str(),25000,0,25000));
+      std::string i="Number_hit_per_clock"+ std::to_string( (long long int) it->first +1 );
+      Hits_Distr.emplace_back(new TH1F(i.c_str(),i.c_str(),25000,0,25000));
+      std::string j="Time_Distribution_Events"+ std::to_string( (long long int) it->first +1 );
+      Time_Distr_Events.emplace_back(new TH1F(j.c_str(),j.c_str(),25000,0,25000));
+      std::string k="Number_hit_per_clock_Events"+ std::to_string( (long long int) it->first +1 );
+      Hits_Distr_Events.emplace_back(new TH1F(k.c_str(),k.c_str(),25000,0,25000));
+      std::string l="Time_Distribution_Noise"+ std::to_string( (long long int) it->first +1 );
+      Time_Distr_Noise.emplace_back(new TH1F(l.c_str(),l.c_str(),25000,0,25000));
+      std::string m="Number_hit_per_clock_Noise"+ std::to_string( (long long int) it->first +1 );
+      Hits_Distr_Noise.emplace_back(new TH1F(m.c_str(),m.c_str(),25000,0,25000));
+      //NumberOfHits.push_back(std::map<int ,int>());
+      Nbrof0Hits.push_back(0);
     }
   }
   else
@@ -462,22 +462,22 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 void TriventProcessor::end()
 {
 //total_time=timemax-timemin;
-std::string b="Results_Trivent_"+ std::to_string(_NbrRun)+".root";
-TFile *hfile = new TFile(b.c_str(),"RECREATE","Results");
-   for(unsigned int i=0; i<Flux_Noise.size();++i)
-{
-//Flux_Hits[i]->Scale(total_time*200e-9);
-//Flux_Hits[i]->Write();
-//Flux_Noise[i]->Scale(total_time*200e-9);
-Flux_Noise[i]->Write();
-Flux_Noise_Asic[i]->Write();
-//Flux_Events[i]->Scale(total_time*200e-9);
-Flux_Events[i]->Write();
-Flux_Events_Asic[i]->Write();
-//Noise3D->Scale(total_time*200e-9);
-//Events3D->Scale(total_time*200e-9);
-//Noise3D->Write();
-//Events3D->Write();
+  std::string b="Results_Trivent_"+ std::to_string( (long long int) _NbrRun)+".root";
+  TFile *hfile = new TFile(b.c_str(),"RECREATE","Results");
+  for(unsigned int i=0; i<Flux_Noise.size();++i)
+    {
+      //Flux_Hits[i]->Scale(total_time*200e-9);
+      //Flux_Hits[i]->Write();
+      //Flux_Noise[i]->Scale(total_time*200e-9);
+      Flux_Noise[i]->Write();
+      Flux_Noise_Asic[i]->Write();
+      //Flux_Events[i]->Scale(total_time*200e-9);
+      Flux_Events[i]->Write();
+      Flux_Events_Asic[i]->Write();
+      //Noise3D->Scale(total_time*200e-9);
+      //Events3D->Scale(total_time*200e-9);
+      //Noise3D->Write();
+      //Events3D->Write();
 	for(std::map<int,int>::iterator it = Times_Plates[i].begin();it!=Times_Plates[i].end();++it)
 	{
  		Time_Distr[i]->Fill(it->first,it->second);
