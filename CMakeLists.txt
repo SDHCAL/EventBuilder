@@ -44,19 +44,6 @@ LINK_LIBRARIES( ${ROOT_LIBRARIES} )
 ADD_DEFINITIONS( ${ROOT_DEFINITIONS} )
 
 
-# optional package
-#FIND_PACKAGE( AIDA )
-#IF( AIDA_FOUND )
-#    INCLUDE_DIRECTORIES( ${AIDA_INCLUDE_DIRS} )
-#    LINK_LIBRARIES( ${AIDA_LIBRARIES} )
-#    ADD_DEFINITIONS( "-DMARLIN_USE_AIDA" )
-#    MESSAGE( STATUS "AIDA -- found" )
-#ELSE()
-#    MESSAGE( STATUS "AIDA -- not found" )
-#ENDIF()
-
-
-
 ### DOCUMENTATION ###########################################################
 
 OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" ON )
@@ -65,13 +52,8 @@ IF( INSTALL_DOC AND EXISTS "${PROJECT_SOURCE_DIR}/doc/CMakeLists.txt" )
     ADD_SUBDIRECTORY( ./doc )
 ENDIF()
 
-
-
-ADD_SUBDIRECTORY( ./Common)
-ADD_SUBDIRECTORY( ./StreamOut)
-ADD_SUBDIRECTORY( ./Trivent )
-ADD_SUBDIRECTORY(./Analysis)
-ADD_SUBDIRECTORY(./Noise)
+### SUB DIRECTORIES #########################################################
+ADD_SUBDIRECTORY( source )
 
 
 # display some variables and write them to cache
