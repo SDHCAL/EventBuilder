@@ -35,8 +35,6 @@ namespace patch
 int _NbrRun=0;
 std::map<int,TH1F*>HistoTimeAsic1;
 std::map<int,TH1F*>HistoTimeAsic2;
-//TH1F* HistoTimeAsic1 = new TH1F("Test","Test",501,-250,250);
-//TH1F* HistoTimeAsic2 = new TH1F("Test","Test",501,-250,250);
 using namespace lcio ;
 using namespace marlin ;
 float CalibT0_0 = 7.14;
@@ -89,7 +87,7 @@ void SDHCAL_RawBuffer_Navigator::setSCBuffer()
     uint32_t scsize=_SCbuffer.first[k];
     if (scsize != 74 && scsize != 109) 
 	  {
-	    std::cout << "PROBLEM WITH SC SIZE " << scsize << std::endl;
+	    //std::cout << "PROBLEM WITH SC SIZE " << scsize << std::endl;
 	    k=0;
 	    _badSCdata=true;
 	    break;
@@ -101,7 +99,7 @@ void SDHCAL_RawBuffer_Navigator::setSCBuffer()
   else 
   {
     _badSCdata=true;
-    std::cout << "PROBLEM SC TRAILER NOT FOUND " << std::endl;
+    //std::cout << "PROBLEM SC TRAILER NOT FOUND " << std::endl;
   }
 }
 
@@ -174,6 +172,8 @@ void SDHCAL_RawData_Processor::processRunHeader( LCRunHeader* run)
 
 void SDHCAL_RawData_Processor::processEvent( LCEvent * evt ) 
 { 
+  _eventNr=evt->getEventNumber();
+    if(_eventNr %1000 ==0)std::cout<<"Event Number : "<<_eventNr<<std::endl;
   _NbrRun=evt->getRunNumber();
   _nevt++;
   IMPL::LCCollectionVec *RawVec=new IMPL::LCCollectionVec(LCIO::RAWCALORIMETERHIT) ;
@@ -190,6 +190,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
   try
   {
     LCCollection* col = evt->getCollection(_XDAQCollectionNames);
+    
     int nElement=col->getNumberOfElements();
     _CollectionSizeCounter[nElement]++;
     for (int iel=0; iel<nElement; iel++)

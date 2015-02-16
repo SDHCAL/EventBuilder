@@ -104,7 +104,7 @@ class SDHCAL_RawData_Processor : public Processor {
   /** Flags to DEBUG : use it with care : this is plan to crash may crash the application (use of assert)
   */
   bool _debugMode;
-
+  unsigned int _eventNr;
   /** Input collection name.
    */
   std::string  _XDAQCollectionNames ;
