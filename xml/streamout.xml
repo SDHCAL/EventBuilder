@@ -38,6 +38,6 @@
 		<!--write mode for output file:  WRITE_APPEND or WRITE_NEW-->
     <parameter name="LCIOWriteMode" type="string">WRITE_NEW </parameter>
     <!-- name of output file -->
-    <parameter name="LCIOOutputFile" type="string"> OUTPUTFILE </parameter>
+    <parameter name="LCIOOutputFile" type="string"> OUTPUT </parameter>
 	</processor>
 </marlin>

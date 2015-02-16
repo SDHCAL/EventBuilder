@@ -124,7 +124,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
   grxz.Fit("myfit","Q");	
   TF1 *myfitxz = (TF1*) grxz.GetFunction("myfit");
   double  kxz = myfitxz->GetChisquare();
-  if (kxz>=2.0) return;
+  if (kxz>= _Chi2) return;
   double pxz0 = myfitxz->GetParameter(0);           
   double  pxz1 = myfitxz->GetParameter(1);
   counts[XZTRACKFITPASSED]++;
@@ -133,7 +133,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
   gryz.Fit("myfit2","Q");	
   TF1 *myfityz = (TF1*) gryz.GetFunction("myfit2");
   double  kyz = myfityz->GetChisquare();
-  if (kyz>=2.0) return;
+  if (kyz>= _Chi2) return;
   double pyz0 = myfityz->GetParameter(0);           
   double  pyz1 = myfityz->GetParameter(1);
   counts[YZTRACKFITPASSED]++;
@@ -206,6 +206,8 @@ AnalysisProcessor::AnalysisProcessor() : Processor("AnalysisProcessorType")
   registerProcessorParameter("FileNameGeometry","Name of the Geometry File",_FileNameGeometry,_FileNameGeometry);
   _ReaderType="";
   registerProcessorParameter("ReaderType","Type of the Reader needed to read InFileName",_ReaderType ,_ReaderType);
+  _Chi2 = 1.0;
+  registerProcessorParameter("Chi2" ,"Value of the Chi2  ",_Chi2 ,_Chi2);
 }
 
 AnalysisProcessor::~AnalysisProcessor() {}
@@ -227,7 +229,7 @@ void AnalysisProcessor::init()
       if(geom.GetDifType(it->first)!=temporal)
       {
         PlansType.insert(std::pair<int,int>(geom.GetDifNbrPlate(it->first)-1,geom.GetDifType(it->first)));
-        std::cout<<"Salut!"<<std::endl;//PlansType[geom.GetDifNbrPlate(it->first)-1]=geom.GetDifType(it->first);
+        //PlansType[geom.GetDifNbrPlate(it->first)-1]=geom.GetDifType(it->first);
       }
     }
     for(std::map<int, int >::iterator it=PlansType.begin();it!=PlansType.end();++it)

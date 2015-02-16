@@ -29,8 +29,8 @@ FILE
     <parameter name="LayerCut" value="3" />
     <parameter name="noiseCut" value="3" />
     <parameter name="timeWin" value="2" />
-    <parameter name="LCIOOutputFile" value="OUTPUTFILE" />
-    <parameter name="NOISEOutputFile" value="OUTPUTNOISE" />
+    <parameter name="LCIOOutputFile" value=" OUTPUT " />
+    <parameter name="NOISEOutputFile" value=" OUTPUTNOISE " />
   </processor>
 </marlin>
 

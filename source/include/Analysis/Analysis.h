@@ -111,7 +111,7 @@ class plan
 
 
 
-
+int _Chi2;
 
 
 class AnalysisProcessor : public marlin::Processor
@@ -131,6 +131,7 @@ LCWriter* _EventWriter;
 std::string _FileNameGeometry;
 int _eventNr;
 int _NbrRun;
+
 Geometry geom;
 std::string _ReaderType;
 std::map<int,plan>Plans;

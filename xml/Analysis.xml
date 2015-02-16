@@ -18,6 +18,7 @@
   <processor name="MyAnalysisProcessor" type="AnalysisProcessorType">
     <parameter name="FileNameGeometry" value="./DetectorGeometry/Aout.xml"/>
     <parameter name="ReaderType" value="XMLReader"/>
+    <parameter name="Chi2" value="1.0"/>
   </processor>
 </marlin>
 
