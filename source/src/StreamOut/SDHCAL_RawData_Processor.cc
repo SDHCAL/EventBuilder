@@ -373,15 +373,11 @@ void SDHCAL_RawData_Processor::end()
 { 
   if(HistoTimeAsic1.size()!=0)
   {
-  
-
   std::string name="TimeGivenByTDC_"+ patch::to_string(_NbrRun)+".root";
   TFile *hfile = new TFile(name.c_str(),"RECREATE","Results");	
-  //std::string add = std::to_string((long long int)_NbrRun);
-  //std::string name="ResultsTimeFromTDC"+add+".root";
-  //TFile *hfile = new TFile(name.c_str(),"RECREATE","Results");
   for(std::map<int, TH1F* >::iterator it=HistoTimeAsic1.begin();it!=HistoTimeAsic1.end();++it) it->second->Write();
   for(std::map<int, TH1F* >::iterator it=HistoTimeAsic2.begin();it!=HistoTimeAsic2.end();++it) it->second->Write();
+  hfile->Close();
   delete hfile;
   }
   streamlog_out(MESSAGE) << "FINAL STATISTICS : " << std::endl;

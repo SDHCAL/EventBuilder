@@ -328,19 +328,8 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	  
       for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) 
       {
-               EVENT::CalorimeterHit* raw_hit = dynamic_cast<EVENT::CalorimeterHit* >( col2->getElementAt(ihit)) ;
-               //int dif_id=((raw_hit)->getCellID0() & 0xFF);
-	        /*if(geom.GetDifType(dif_id)==temporal)
-	        {
-	          RawTimeDifs[raw_hit->getTimeStamp()].push_back(raw_hit);
-		  for(int i=0;i<64;++i)
-		  {
-		    //std::cout<<raw_hit->getAmplitude()<<std::end; 
-		  }
-	          continue;
-	        }*/
-                //int dif_id  = (raw_hit)->getCellID0() & 0xFF ;
-	       //std::cout<<raw_hit->getTime()<<"  ";
+        EVENT::CalorimeterHit* raw_time = dynamic_cast<EVENT::CalorimeterHit* >( col2->getElementAt(ihit)) ;
+	       RawTimeDifs[raw_time->getTimeStamp()].push_back(raw_time);
       }
 	    
 	    if(col == NULL)
