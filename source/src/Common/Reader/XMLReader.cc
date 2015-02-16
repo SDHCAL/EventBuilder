@@ -30,7 +30,6 @@ void XMLReader::Read(std::string FileName, Geometry& geom)
       double xz=atof(Platee->Attribute("beta"));
       double yz=atof(Platee->Attribute("gamma"));
       
-	    //std::cout<<x<<y<<z<<xy<<xz<<yz<<std::endl;
       Diff=Platee->FirstChildElement();
       while (Diff)
       {
@@ -58,7 +57,6 @@ void XMLReader::Read(std::string FileName, Geometry& geom)
         }
         
               streamlog_out( MESSAGE ) << Diff->Value() << std::endl;
-	      std::cout<<Diff->Attribute("DifId")<<Diff->Attribute("x")<<"DifType :  "<<DifType<<" Position :  "<<up_down<<std::endl;
 	      DifM.push_back(atof(Diff->Attribute("DifId")));
 	      geom.AddDif(atof(Diff->Attribute("x")),atof(Diff->Attribute("y")),atof(Diff->Attribute("DifId")),xy,xz,yz,PlateNumber,up_down,DifType);
 	      Diff= Diff->NextSiblingElement();
@@ -67,6 +65,5 @@ void XMLReader::Read(std::string FileName, Geometry& geom)
 	    DifM.clear();
 	    Platee=Platee->NextSiblingElement(); 
     }
-	  //std::cout<<"Fini"<<std::endl;
 	}
 }

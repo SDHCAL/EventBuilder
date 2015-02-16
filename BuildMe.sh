@@ -1,6 +1,3 @@
-
-
-
 CreateBuildDir()
 {
     if [ -d build ]; then
@@ -29,11 +26,8 @@ Compile()
 }
 
 #The script
-
-
 CreateBuildDir
 cd build
 CreateMakefile
 Compile
 echo " Compilation done"
-

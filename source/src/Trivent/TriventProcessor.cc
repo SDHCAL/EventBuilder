@@ -45,9 +45,10 @@ std::vector<TH2F*>Flux_Noise_Asic;
 std::vector<TH2F*>Flux_Events_Asic;
 std::vector<long>Nbrof0Hits;
 int _NbrRun=0;
-double total_time=0;
+long long int total_time=0;
 double timemax=0;
 double timemin=2147483647;
+
 
 void TriventProcessor::FillTimes()
 {
@@ -300,7 +301,6 @@ void TriventProcessor::init()
       Time_Distr_Noise.emplace_back(new TH1F(l.c_str(),l.c_str(),25000,0,25000));
       std::string m="Number_hit_per_clock_Noise"+ std::to_string( (long long int) it->first +1 );
       Hits_Distr_Noise.emplace_back(new TH1F(m.c_str(),m.c_str(),25000,0,25000));
-      //NumberOfHits.push_back(std::map<int ,int>());
       Nbrof0Hits.push_back(0);
     }
   }
@@ -361,18 +361,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
               
 	      RawCalorimeterHit *raw_hit = dynamic_cast<RawCalorimeterHit*>( col->getElementAt(ihit)) ;
 	      if (raw_hit != NULL)
-	      {
-	        //int dif_id=((raw_hit)->getCellID0() & 0xFF);
-	        /*if(geom.GetDifType(dif_id)==temporal)
-	        {
-	          RawTimeDifs[raw_hit->getTimeStamp()].push_back(raw_hit);
-		  for(int i=0;i<64;++i)
-		  {
-		    //std::cout<<raw_hit->getAmplitude()<<std::end; 
-		  }
-	          continue;
-	        }*/
-                
+	      { 
                 int dif_id  = (raw_hit)->getCellID0() & 0xFF ;
                 //std::cout<<red<<dif_id<<blue<<geom.GetDifNbrPlate(dif_id)-1<<normal<<std::endl;
 	        Times[raw_hit->getTimeStamp()]++;
@@ -386,6 +375,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	    }
                
             double delta=timemax_local-timemin_local;
+            total_time+=delta;
             for(unsigned int j =0; j<Nbrof0Hits.size();++j) {Nbrof0Hits[j]+=(delta-Times_Plates_perRun[j].size());}
             //std::cout<<red<<timemax_local<<"  "<<timemin_local<<"  "<<delta<<"  "<<green<<Times_Plates_perRun[0].size()<<yellow<<"  "<<delta-Times_Plates_perRun[0].size()<<red<<"  "<<Nbrof0Hits[0]<<normal<<std::endl;
                 
@@ -496,29 +486,26 @@ void TriventProcessor::end()
 }
 for(unsigned int i=0; i<Flux_Noise.size();++i)
 {
-
-
-
-//delete Flux_Hits[i];
-delete Flux_Noise[i];
-delete Flux_Events[i];
-delete Flux_Noise_Asic[i];
-delete Flux_Events_Asic[i];
-delete Time_Distr[i];
-delete Hits_Distr[i];
-delete Time_Distr_Events[i];
-delete Time_Distr_Noise[i];
-delete Hits_Distr_Events[i];
-delete Hits_Distr_Noise[i];
+	delete Flux_Noise[i];
+	delete Flux_Events[i];
+	delete Flux_Noise_Asic[i];
+	delete Flux_Events_Asic[i];
+	delete Time_Distr[i];
+	delete Hits_Distr[i];
+	delete Time_Distr_Events[i];
+	delete Time_Distr_Noise[i];
+	delete Hits_Distr_Events[i];
+	delete Hits_Distr_Noise[i];
 }
 hfile->Close();
 delete hfile;
-   _EventWriter->close();
-   if(_noiseFileName!="")
+_EventWriter->close();
+if(_noiseFileName!="")
    {
     _NoiseWriter->close();
    }
-   std::cout << "TestProcess::end() !! "<<_trig_count<<" Events Trigged"<< std::endl;
+   std::cout << "TriventProcess::end() !! "<<_trig_count<<" Events Trigged"<< std::endl;
    std::cout <<TouchedEvents<<" Events were overlaping "<<"("<<(TouchedEvents*1.0/(TouchedEvents+eventtotal))*100<<"%)"<<std::endl;
    std::cout <<"Total nbr Events : "<<eventtotal<<" Events with nbr of plates >="<<_LayerCut<<" : "<<EventsSelected<<" ("<<EventsSelected*1.0/eventtotal*100<<"%)"<< std::endl;
+   std::cout <<"Total Time : "<<total_time;
 }
