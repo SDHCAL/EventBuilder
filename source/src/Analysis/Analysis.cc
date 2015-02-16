@@ -67,9 +67,7 @@ void plan::computeBarycentre( )
   for (int i=0; i<3; i++) barycentre[i]=0;
   for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!=hits.end(); ++it)
   {
-    barycentre[0]+=(*it)->getPosition()[0];
-    barycentre[1]+=(*it)->getPosition()[1];
-    barycentre[2]+=(*it)->getPosition()[2];
+	for (int i=0; i<3; i++)barycentre[i]+=(*it)->getPosition()[i];
   }
   if (nHits() != 0)
   for (int i=0; i<3; i++) barycentre[i]/=nHits();      
@@ -84,12 +82,11 @@ void plan::computeMaxima()
   }
   for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!=hits.end(); ++it)
   {
-    if((*it)->getPosition()[0]<min[0])min[0]=(*it)->getPosition()[0];
-    if((*it)->getPosition()[1]<min[1])min[1]=(*it)->getPosition()[1];
-    if((*it)->getPosition()[2]<min[2])min[2]=(*it)->getPosition()[2];
-    if((*it)->getPosition()[0]>max[0])max[0]=(*it)->getPosition()[0];
-    if((*it)->getPosition()[1]>max[1])max[1]=(*it)->getPosition()[1];
-    if((*it)->getPosition()[2]>max[2])max[2]=(*it)->getPosition()[2];
+    for (int i=0; i<3; i++)
+    {
+	if((*it)->getPosition()[i]<min[i])min[i]=(*it)->getPosition()[i];
+	if((*it)->getPosition()[i]>max[i])max[i]=(*it)->getPosition()[i];
+    }
   }     
 }
 
