@@ -328,8 +328,9 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	  
       for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) 
       {
-        EVENT::RawCalorimeterHit* raw_time = dynamic_cast<EVENT::RawCalorimeterHit* >( col2->getElementAt(ihit)) ;
-	       RawTimeDifs[raw_time->getTimeStamp()].push_back(raw_time);
+        EVENT::CalorimeterHit* raw_time = dynamic_cast<EVENT::CalorimeterHit* >( col2->getElementAt(ihit)) ;
+				std::cout<<raw_time->getTime()<<"  "<<raw_time->getEnergyError()<<std::endl;
+	      //RawTimeDifs[raw_time->getTimeStamp()].push_back(raw_time);
       }
 	    
 	    if(col == NULL)

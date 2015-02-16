@@ -231,32 +231,35 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 
 	//if Difs are temporal ones -> createRawCalorimeterHit
 	
-        else if(geom.GetDifType(d->getID())==temporal)
+  else if(geom.GetDifType(d->getID())==temporal)
 	{
-      		for (uint32_t i=0;i<d->getNumberOfFrames();i++)
-	    	{
-        		double t=d->getFrameTimeToTrigger(i)*2E-7;
-		      	int32_t iasic=(d->getFrameData(i,uint32_t(0)));
-		      	//std::cout<<red<<iasic<<normal<<std::endl;
-		      	if (t>3.8) 
+	  unsigned long int ID0;
+	  unsigned long int ID1;
+	  unsigned long int TTT;
+	  float Time0_6=0;
+  	for (uint32_t i=0;i<d->getNumberOfFrames();i++)
+	  {
+    	double t=d->getFrameTimeToTrigger(i)*2E-7;
+		  int32_t iasic=(d->getFrameData(i,uint32_t(0)));
+		  //std::cout<<red<<iasic<<normal<<std::endl;
+		  if (t>3.8) 
 			{
-	  			printf("Wrong Time %f %x \n",t,d->getFrameTimeToTrigger(i));
+	  		printf("Wrong Time %f %x \n",t,d->getFrameTimeToTrigger(i));
 	 		 	continue;
 			}
-   		    	int32_t i1=(d->getFrameData(i,uint32_t(18))) |(d->getFrameData(i,uint32_t(17))<<8) ;
-		      	int32_t i0=(d->getFrameData(i,uint32_t(16))) |(d->getFrameData(i,uint32_t(15))<<8) ;
-		      	//int32_t c0=(d->getFrameData(i,uint32_t(19))) &0x7;
-			
-		      	float Time0_6=0;
-		      	//for (int iw=0;iw<50;iw++) printf("%.2x ",d->getFrameData(i,iw));
-          		if (iasic==1)
+   		int32_t i1=(d->getFrameData(i,uint32_t(18))) |(d->getFrameData(i,uint32_t(17))<<8) ;
+		  int32_t i0=(d->getFrameData(i,uint32_t(16))) |(d->getFrameData(i,uint32_t(15))<<8) ;
+		  //int32_t c0=(d->getFrameData(i,uint32_t(19))) &0x7;
+			//float Time0_6=0;
+		  //for (int iw=0;iw<50;iw++) printf("%.2x ",d->getFrameData(i,iw));
+      if (iasic==1)
 			{
 				Time0_6 =(i0 -i1)*CalibT0_0+i1*CalibDeltaT_0;
-			  	//printf("=> %d %d %d-> %f %f ns\n",c0,i0,i1,Time0_6,c0*25+Time0_6);
-			  	//std::cout<<"iasic : "<<iasic<<"Time :"<<Time0_6<<std::endl;
-			  	HistoTimeAsic1[d->getID()]->Fill(Time0_6);			  
+			  //printf("=> %d %d %d-> %f %f ns\n",c0,i0,i1,Time0_6,c0*25+Time0_6);
+			 	//std::cout<<"iasic : "<<iasic<<"Time :"<<Time0_6<<std::endl;
+			  HistoTimeAsic1[d->getID()]->Fill(Time0_6);			  
 			}
-		      	else
+		  else
 			{
 				Time0_6=(i0 -i1)*CalibT0_1+i1*CalibDeltaT_1;
 				//printf("=> %d %d %d-> %f %f ns\n",c0,i0,i1,Time0_6,c0*25+Time0_6);	
@@ -264,34 +267,38 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 				HistoTimeAsic2[d->getID()]->Fill(Time0_6);	  
 			}
 			
-			unsigned long int ID0;
-		      	ID0=(unsigned long int)(((unsigned short)d->getID())&0xFF);			//8 firsts bits: DIF Id
-		      	ID0+=(unsigned long int)(((unsigned short)d->getFrameAsicHeader(i)<<8)&0xFF00);	//8 next bits:   Asic Id
-		      	bitset<6> Channel(0
+			
+		  ID0=(unsigned long int)(((unsigned short)d->getID())&0xFF);			//8 firsts bits: DIF Id
+		  ID0+=(unsigned long int)(((unsigned short)d->getFrameAsicHeader(i)<<8)&0xFF00);	//8 next bits:   Asic Id
+		  bitset<6> Channel(0
 			//j
 			);														
-		      	ID0+=(unsigned long int)((Channel.to_ulong()<<16)&0x3F0000);			//6 next bits:   Asic's Channel
-		      	unsigned long BarrelEndcapModule=0;  //(40 barrel + 24 endcap) modules to be coded here  0 for testbeam (over 6 bits)
-		      	ID0+=(unsigned long int)((BarrelEndcapModule<<22)&0xFC00000);	
-		      	unsigned long int ID1 = (unsigned long int)(d->getFrameBCID(i));
-		      	bitset<2> ThStatus;
-		      	ThStatus[0]=d->getFrameLevel(i,0
+		  ID0+=(unsigned long int)((Channel.to_ulong()<<16)&0x3F0000);			//6 next bits:   Asic's Channel
+		  unsigned long BarrelEndcapModule=0;  //(40 barrel + 24 endcap) modules to be coded here  0 for testbeam (over 6 bits)
+		  ID0+=(unsigned long int)((BarrelEndcapModule<<22)&0xFC00000);	
+		  ID1 = (unsigned long int)(d->getFrameBCID(i));
+		  bitset<2> ThStatus;
+		  ThStatus[0]=d->getFrameLevel(i,0
 			//j
 			,0);
-		      	ThStatus[1]=d->getFrameLevel(i,0
+		  ThStatus[1]=d->getFrameLevel(i,0
 			//j
 			,1);
-		      	//ThStatus[2]=isSynchronised; //I'm not computing the synchronisation here.
-	        	IMPL::CalorimeterHitImpl *hit=new IMPL::CalorimeterHitImpl() ;
-		      	hit->setCellID0((unsigned long int)ID0);               
-		      	hit->setCellID1(ID1);
-		      	//Use setEnergyError to stock Time from the TDC !!!!!!!
-                        hit->setEnergyError(Time0_6);
-		      	unsigned long int TTT = (unsigned long int)(d->getFrameTimeToTrigger(i));
-			//Use setTime to stock TimeStamp !!!!!!!	      	
-			hit->setTime(TTT);//Time stamp of this event from Run Begining
-		      	RawVec2->addElement(hit);
+		  //ThStatus[2]=isSynchronised; //I'm not computing the synchronisation here.
+	    
+		      	TTT = (unsigned long int)(d->getFrameTimeToTrigger(i));
+		      	
+			      //Use setTime to stock TimeStamp !!!!!!!	      	
+			     
         	}
+        	  IMPL::CalorimeterHitImpl *hit2=new IMPL::CalorimeterHitImpl() ;
+		      	hit2->setCellID0((unsigned long int)ID0);               
+		      	hit2->setCellID1(ID1);
+		      	//Use setEnergyError to stock Time from the TDC !!!!!!!
+            hit2->setEnergyError(Time0_6);
+            hit2->setTime((float)TTT);//Time stamp of this event from Run Begining
+			      std::cout<<TTT<<std::endl;
+		      	RawVec2->addElement(hit2);
       }
       	else
 	{
@@ -314,7 +321,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 		      		ThStatus[0]=d->getFrameLevel(i,j,0);
 		      		ThStatus[1]=d->getFrameLevel(i,j,1);
 		      		//ThStatus[2]=isSynchronised; //I'm not computing the synchronisation here.
-	        		IMPL::RawCalorimeterHitImpl *hit=new IMPL::RawCalorimeterHitImpl() ;
+	        		IMPL::RawCalorimeterHitImpl *hit = new IMPL::RawCalorimeterHitImpl() ;
 		      		hit->setCellID0((unsigned long int)ID0);               
 		      		hit->setCellID1(ID1);
 		      		hit->setAmplitude(ThStatus.to_ulong());
@@ -337,6 +344,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 	std::stringstream ss("");
 	ss<<"DIF"<<d->getID()<<"_Triggers";
 	RawVec->parameters().setValues(ss.str(),trig);
+	RawVec2->parameters().setValues(ss.str(),trig);
 	if (bufferNavigator.hasSlowControlData()) _hasSlowControl++;
 	if (bufferNavigator.badSCData())  _hasBadSlowControl++;
 	SDHCAL_buffer eod=bufferNavigator.getEndOfAllData();
