@@ -19,14 +19,14 @@ else
 	cp $(pwd)/xml/Trivent.xml $(pwd)
 	sed -i "s|FILE|$(pwd)/DHCAL_Streamout_"$m"_I0.slcio|" Trivent.xml
 	sed -i "s|OUTPUT|$(pwd)/DHCAL_Trivent_"$m"_I0.slcio|" Trivent.xml
-	sed -i "s|NOISE|$(pwd)/DHCAL_Noise_"$m"_I0.slcio|" Trivent.xml
+	sed -i "s|NOISES|$(pwd)/DHCAL_Noise_"$m"_I0.slcio|" Trivent.xml
 	cp $(pwd)/xml/Analysis.xml $(pwd)/Analysis_"$m".xml
 	sed -i "s|FILE|$(pwd)/DHCAL_Trivent_"$m"_I0.slcio|" Analysis_"$m".xml
 	Marlin DHCAL_"$m".xml
 	rm DHCAL_"$m".xml
 	Marlin Trivent.xml
 	rm Trivent.xml
-	Marlin Analysis_"$m".xml >>Result_"$m".txt
+	Marlin Analysis_"$m".xml
 	rm Analysis_"$m".xml
 	done
 	elif [[ $1 == streamout ]]
@@ -91,9 +91,9 @@ else
 	m=$( echo "$n" | cut -c 17-22 ) 
 	sed -i "s|FILE|$(pwd)/DHCAL_Streamout_"$m"_I0.slcio|" Trivent.xml
 	sed -i "s|OUTPUT|$(pwd)/DHCAL_Trivent_"$m"_I0.slcio|" Trivent.xml
-	sed -i "s|NOISE|$(pwd)/DHCAL_Noise_"$m"_I0.slcio|" Trivent.xml
+	sed -i "s|NOISES|$(pwd)/DHCAL_Noise_"$m"_I0.slcio|" Trivent.xml
 	Marlin Trivent.xml
-	rm Trivent.xml
+	#rm Trivent.xml
         mv Results_Trivent_*.root $(pwd)/NoSplit
 	done
         elif [[ $1 == triventSplit ]]
@@ -104,7 +104,7 @@ else
 	m=$( echo "$n" | cut -c 17-22 ) 
 	sed -i "s|FILE|$(pwd)/DHCAL_Streamout_"$m"_I0.slcio|" TriventSplit.xml
 	sed -i "s|OUTPUT|$(pwd)/DHCAL_Trivent_"$m"_I0_Split.slcio|" TriventSplit.xml
-	sed -i "s|NOISE|$(pwd)/DHCAL_Noise_"$m"_I0_Split.slcio|" TriventSplit.xml
+	sed -i "s|NOISES|$(pwd)/DHCAL_Noise_"$m"_I0_Split.slcio|" TriventSplit.xml
 	Marlin TriventSplit.xml
         mv Results_Trivent_*.root $(pwd)/Split
 	rm TriventSplit.xml

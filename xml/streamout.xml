@@ -15,7 +15,7 @@
 		
 
 		</parameter>
-    <parameter name="MaxRecordNumber" value="10000"/>
+    <parameter name="MaxRecordNumber" value="0"/>
     <parameter name="SkipNEvents" value="0"/>
     <parameter name="SupressCheck" value="false"/>
     <parameter name="Verbosity" type="string">SILENT</parameter>
@@ -35,9 +35,7 @@
 	</processor>
 
  	<processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
-		<!--write mode for output file:  WRITE_APPEND or WRITE_NEW-->
     <parameter name="LCIOWriteMode" type="string">WRITE_NEW </parameter>
-    <!-- name of output file -->
     <parameter name="LCIOOutputFile" type="string"> OUTPUT </parameter>
 	</processor>
 </marlin>

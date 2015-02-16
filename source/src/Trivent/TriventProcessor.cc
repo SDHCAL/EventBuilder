@@ -130,8 +130,6 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
           {     
                 Time_Distr_Events[geom.GetDifNbrPlate(dif_id)-1]->Fill((*it)->getTimeStamp(),1);
           }
-          //if(IsNoise==1)Time_Distr_Noise[geom.GetDifNbrPlate(dif_id)-1]->Fill((*it)->getTimeStamp(),1);
-          //else Time_Distr_Events[geom.GetDifNbrPlate(dif_id)-1]->Fill((*it)->getTimeStamp(),1);
 	  int asic_id = ((*it)->getCellID0() & 0xFF00)>>8;
 	  int chan_id = ((*it)->getCellID0() & 0x3F0000)>>16;
 	  float ca=cos(geom.GetDifAlpha(dif_id)*degtorad);
@@ -165,7 +163,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
 	    pos[1] = sg*cb*I*10.4125+(cg*ca+sg*sb*sa)*J*10.4125+(-cg*sa+sg*sb*ca)*Z+geom.GetPlatePositionY(NbrPlate);
 	    pos[2] = -sb*I*10.4125+cb*sa*J*10.4125+cb*ca*Z;
 	     
-    }
+          }
     
        if(geom.GetDifType(dif_id)==positional)
 	  {
@@ -183,7 +181,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
 	    }
 	    pos[1] = sg*cb*I*2.5+(cg*ca+sg*sb*sa)*J*2.5+(-cg*sa+sg*sb*ca)*Z+geom.GetPlatePositionY(NbrPlate);
 	    pos[2] = -sb*I*2.5+cb*sa*J*2.5+cb*ca*Z;
-    }
+           }
     if(IsNoise==1) 
     {
 	Flux_Noise[geom.GetDifNbrPlate(dif_id)-1]->Fill(I,J);
@@ -327,7 +325,6 @@ void TriventProcessor::processEvent( LCEvent * evtP )
       RawTimeDifs.clear();
       LCCollection* col = evtP ->getCollection(_hcalCollections[i].c_str());
       LCCollection* col2 = evtP ->getCollection("DHCALRawTimes");
-            //std::cout<<blue<<col2->getNumberOfElements()<<normal<<std::endl;
 	  
       for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) 
       {
@@ -357,7 +354,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
             long timemin_local=17976931348620; 
             for(unsigned int i=0;i<Times_Plates_perRun.size();++i)Times_Plates_perRun[i].clear();
 	    for (int ihit=0; ihit < numElements; ++ihit) 
-	    {// loop over the hits
+	    {
               
 	      RawCalorimeterHit *raw_hit = dynamic_cast<RawCalorimeterHit*>( col->getElementAt(ihit)) ;
 	      if (raw_hit != NULL)
@@ -451,7 +448,6 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 
 void TriventProcessor::end()
 {
-//total_time=timemax-timemin;
   std::string name="Results_Trivent_"+ std::to_string( (long long int) _NbrRun)+".root";
   TFile *hfile = new TFile(name.c_str(),"RECREATE","Results");
   for(unsigned int i=0; i<Flux_Noise.size();++i)
@@ -500,12 +496,9 @@ for(unsigned int i=0; i<Flux_Noise.size();++i)
 hfile->Close();
 delete hfile;
 _EventWriter->close();
-if(_noiseFileName!="")
-   {
-    _NoiseWriter->close();
-   }
+if(_noiseFileName!="") _NoiseWriter->close();
    std::cout << "TriventProcess::end() !! "<<_trig_count<<" Events Trigged"<< std::endl;
    std::cout <<TouchedEvents<<" Events were overlaping "<<"("<<(TouchedEvents*1.0/(TouchedEvents+eventtotal))*100<<"%)"<<std::endl;
    std::cout <<"Total nbr Events : "<<eventtotal<<" Events with nbr of plates >="<<_LayerCut<<" : "<<EventsSelected<<" ("<<EventsSelected*1.0/eventtotal*100<<"%)"<< std::endl;
-   std::cout <<"Total Time : "<<total_time;
+   std::cout <<"Total Time : "<<total_time <<std::endl;
 }
