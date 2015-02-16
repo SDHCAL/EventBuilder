@@ -184,7 +184,8 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
   chFlag.setBit(bitinfo.RCHBIT_LONG ) ;                    // raw calorimeter data -> format long //(sert a qq chose?)
   chFlag.setBit(bitinfo.RCHBIT_BARREL ) ;                  // barrel
   chFlag.setBit(bitinfo.RCHBIT_ID1 ) ;                     // cell ID 
-  chFlag.setBit(bitinfo.RCHBIT_TIME ) ;                    // timestamp
+  chFlag.setBit(bitinfo.RCHBIT_TIME ) ;
+  chFlag.setBit(bitinfo.RCHBIT_ENERGY_ERROR);                    // timestamp
   RawVec->setFlag(chFlag.getFlag()  ) ;   
   RawVec2->setFlag(chFlag.getFlag()  ) ;
   try
