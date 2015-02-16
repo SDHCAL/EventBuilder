@@ -3,15 +3,17 @@
 
 #include "marlin/Processor.h"
 #include "lcio.h"
-#include <EVENT/LCGenericObject.h>
 #include <IMPL/LCGenericObjectImpl.h>
 #include <string>
-#include <vector>
 #include <map>
-#include <set>
-#include <exception>
 #include "Geometry/Geometry.h"
 #include "DIFSlowControl.h"
+#include "IMPL/LCFlagImpl.h"
+#include <UTIL/LCTOOLS.h>
+
+
+
+
 
 using namespace lcio ;
 using namespace marlin ;
@@ -99,6 +101,7 @@ class SDHCAL_RawData_Processor : public Processor {
   
  private:
   Geometry geom;
+  IMPL::LCFlagImpl chFlag;
   std::string _FileNameGeometry;
   std::string _ReaderType;
   /** Flags to DEBUG : use it with care : this is plan to crash may crash the application (use of assert)
@@ -114,7 +117,7 @@ class SDHCAL_RawData_Processor : public Processor {
   std::string _RawHitCollectionName;
   std::string _RawHitCollectionNameTime;
   std::string _TcherenkovSignal;
-
+ 
   //statistical counters
   unsigned int _nevt;
   std::map<int,int> _CollectionSizeCounter;
@@ -124,7 +127,7 @@ class SDHCAL_RawData_Processor : public Processor {
   std::map<int,int> _SizeAfterDIFPtr;
   std::map<int,int> _SizeAfterAllData;
   std::map<int,int> _NonZeroValusAtEndOfData;
-
+  
   void printCounter(std::string description, std::map<int,int> &);
 } ;
 #endif

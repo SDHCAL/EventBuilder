@@ -163,31 +163,37 @@ void SDHCAL_RawData_Processor::init()
     exit(1);
   }
   delete myReader;
+  IMPL::LCFlagImpl chFlag(0) ;
+  EVENT::LCIO bitinfo;
+  chFlag.setBit(bitinfo.RCHBIT_LONG ) ;                    // raw calorimeter data -> format long //(sert a qq chose?)
+  chFlag.setBit(bitinfo.RCHBIT_BARREL ) ;                 // barrel
+  chFlag.setBit(bitinfo.RCHBIT_ID1 ) ;                     // cell ID 
+  chFlag.setBit(bitinfo.RCHBIT_TIME ) ;
+  chFlag.setBit(bitinfo.RCHBIT_ENERGY_ERROR);  
+                    // timestamp
 }
 
 void SDHCAL_RawData_Processor::processRunHeader( LCRunHeader* run) 
 { 
   LCTOOLS::dumpRunHeader(run);
+  
 } 
 
 void SDHCAL_RawData_Processor::processEvent( LCEvent * evt ) 
 { 
+  lcio::IntVec trig(8);
+  IMPL::LCCollectionVec *RawVec=new IMPL::LCCollectionVec(LCIO::RAWCALORIMETERHIT) ;
+  IMPL::LCCollectionVec *RawVecTime=new IMPL::LCCollectionVec(LCIO::CALORIMETERHIT) ;
+  IMPL::LCCollectionVec *RawVecTcherenkov=new IMPL::LCCollectionVec(LCIO::LCGENERICOBJECT) ;
   _eventNr=evt->getEventNumber();
     if(_eventNr %1000 ==0)std::cout<<"Event Number : "<<_eventNr<<std::endl;
   _NbrRun=evt->getRunNumber();
   _nevt++;
-  IMPL::LCCollectionVec *RawVec=new IMPL::LCCollectionVec(LCIO::RAWCALORIMETERHIT) ;
-  IMPL::LCCollectionVec *RawVec2=new IMPL::LCCollectionVec(LCIO::CALORIMETERHIT) ;
+  
   //Prepare a flag to tag data type in RawVec (dit les types de data qu'on va enregistrer?)
-  IMPL::LCFlagImpl chFlag(0) ;
-  EVENT::LCIO bitinfo;
-  chFlag.setBit(bitinfo.RCHBIT_LONG ) ;                    // raw calorimeter data -> format long //(sert a qq chose?)
-  chFlag.setBit(bitinfo.RCHBIT_BARREL ) ;                  // barrel
-  chFlag.setBit(bitinfo.RCHBIT_ID1 ) ;                     // cell ID 
-  chFlag.setBit(bitinfo.RCHBIT_TIME ) ;
-  chFlag.setBit(bitinfo.RCHBIT_ENERGY_ERROR);                    // timestamp
+  
   RawVec->setFlag(chFlag.getFlag()  ) ;   
-  RawVec2->setFlag(chFlag.getFlag()  ) ;
+  RawVecTime->setFlag(chFlag.getFlag()  ) ;
   try
   {
     LCCollection* col = evt->getCollection(_XDAQCollectionNames);
@@ -198,6 +204,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
     {
     	LCGenericObject* obj=dynamic_cast<LCGenericObject*>(col->getElementAt(iel));
         LMGeneric* lmobj=(LMGeneric *) obj;
+        
 	if (obj==NULL)
 	{
 	_nWrongObj++;
@@ -228,18 +235,24 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 	if(geom.GetDifType(d->getID())==tcherenkov)
 	{
 		std::cout<<"I'm tchrenkov's Signal !!!!! Dif : "<<d->getID()<<std::endl;
+		IMPL::LCGenericObjectImpl* Tcherenkov= new IMPL::LCGenericObjectImpl(0,0,1) ;
+		Tcherenkov->setDoubleVal(1,(unsigned long int)(d->getFrameTimeToTrigger(0)));
+		std::cout<<(unsigned long int)(d->getFrameTimeToTrigger(0))<<"  "<<(unsigned long int)(d->getFrameTimeToTrigger(1))<<std::endl;
+		RawVecTcherenkov->addElement(Tcherenkov);
+		
 	}
 
 	//if Difs are temporal ones -> createRawCalorimeterHit
 	
   else if(geom.GetDifType(d->getID())==temporal)
 	{
-	  unsigned long int ID0;
+	  
+  	for (uint32_t i=0;i<d->getNumberOfFrames();i++)
+	  {
+	    unsigned long int ID0;
 	  unsigned long int ID1;
 	  unsigned long int TTT;
 	  float Time0_6=0;
-  	for (uint32_t i=0;i<d->getNumberOfFrames();i++)
-	  {
     	double t=d->getFrameTimeToTrigger(i)*2E-7;
 		  int32_t iasic=(d->getFrameData(i,uint32_t(0)));
 		  //std::cout<<red<<iasic<<normal<<std::endl;
@@ -290,17 +303,15 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 		      	TTT = (unsigned long int)(d->getFrameTimeToTrigger(i));
 		      	
 			      //Use setTime to stock TimeStamp !!!!!!!	      	
-			     
-        	}
-        	  IMPL::CalorimeterHitImpl *hit2=new IMPL::CalorimeterHitImpl() ;
+			     IMPL::CalorimeterHitImpl *hit2=new IMPL::CalorimeterHitImpl() ;
 		      	hit2->setCellID0((unsigned long int)ID0);               
 		      	hit2->setCellID1(ID1);
 		      	//Use setEnergyError to stock Time from the TDC !!!!!!!
             hit2->setEnergyError((float)Time0_6);
-            std::cout<<Time0_6<<std::endl;
             hit2->setTime((float)TTT);//Time stamp of this event from Run Begining
-			      std::cout<<TTT<<std::endl;
-		      	RawVec2->addElement(hit2);
+		      	RawVecTime->addElement(hit2);
+        	}
+        	  
       }
       	else
 	{
@@ -334,7 +345,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
       		}//for (uint32_t i=0;i<d->getNumberOfFrames();i++)
       		//register Triggers'time : lots of values here ?
 	}
-	lcio::IntVec trig(8);
+	
 	trig[0] = d->getDTC();
 	trig[1] = d->getGTC();
 	trig[2] = d->getBCID();
@@ -346,7 +357,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 	std::stringstream ss("");
 	ss<<"DIF"<<d->getID()<<"_Triggers";
 	RawVec->parameters().setValues(ss.str(),trig);
-	RawVec2->parameters().setValues(ss.str(),trig);
+	RawVecTime->parameters().setValues(ss.str(),trig);
 	if (bufferNavigator.hasSlowControlData()) _hasSlowControl++;
 	if (bufferNavigator.badSCData())  _hasBadSlowControl++;
 	SDHCAL_buffer eod=bufferNavigator.getEndOfAllData();
@@ -366,7 +377,8 @@ catch(DataNotAvailableException &e)
 	streamlog_out(WARNING) << _XDAQCollectionNames << " collection not available" << std::endl;
 }
   	evt->addCollection(RawVec,_RawHitCollectionName);
-  	evt->addCollection(RawVec2,_RawHitCollectionNameTime);
+  	evt->addCollection(RawVecTime,_RawHitCollectionNameTime);
+  	evt->addCollection(RawVecTcherenkov,_TcherenkovSignal);
 }
 
 void SDHCAL_RawData_Processor::printCounter(std::string description, std::map<int,int> &m)

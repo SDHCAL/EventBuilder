@@ -8,6 +8,7 @@
 #include "UTIL/CellIDEncoder.h"
 #include "IMPL/CalorimeterHitImpl.h"
 #include <EVENT/LCRunHeader.h>
+
 class TriventProcessor : public marlin::Processor
 {
 public:
