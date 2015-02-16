@@ -103,8 +103,8 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
     else thisPlan=&(it->second);
   }
   
-  for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin();it != plansUsedForTrackMaking.end(); ++it) if ((*it)->nHits()>=6) return;
-  if(plansUsedForTrackMaking.size()<3) return;
+  for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin();it != plansUsedForTrackMaking.end(); ++it) if ((*it)->nHits()>=_NbrHitPerPlaneMax ) return;
+  if(plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
   counts[NOTOOMUCHHITSINPLAN]++;
   ////////////////////////////////////////////////////////////////////////////////////
   TGraphErrors grxz(plansUsedForTrackMaking.size());
@@ -208,6 +208,10 @@ AnalysisProcessor::AnalysisProcessor() : Processor("AnalysisProcessorType")
   registerProcessorParameter("ReaderType","Type of the Reader needed to read InFileName",_ReaderType ,_ReaderType);
   _Chi2 = 1.0;
   registerProcessorParameter("Chi2" ,"Value of the Chi2  ",_Chi2 ,_Chi2);
+	_NbrHitPerPlaneMax = 6;
+  registerProcessorParameter("NbrHitPerPlaneMax" ,"Maximal number of Hit in each Plane (<=6 by default)  ",_NbrHitPerPlaneMax ,_NbrHitPerPlaneMax);
+  _NbrPlaneUseForTracking = 3;
+  registerProcessorParameter("NbrPlaneUseForTracking" ,"Number minimal of PLanes used for tracking (>=3 by default)",_NbrPlaneUseForTracking,_NbrPlaneUseForTracking);
 }
 
 AnalysisProcessor::~AnalysisProcessor() {}
@@ -266,7 +270,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 	      break;
 	    } 
 	    CellIDDecoder<CalorimeterHit> cd(col);
-	    int numElements = col->getNumberOfElements();// hit number
+	    int numElements = col->getNumberOfElements();
 	    for (int ihit=0; ihit < numElements; ++ihit) 
 	    {
 	      CalorimeterHit *raw_hit = dynamic_cast<CalorimeterHit*>( col->getElementAt(ihit)) ;
@@ -283,9 +287,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 			int dif_id2=cd(raw_hit2)["Dif_id"];
 			int I2=cd(raw_hit2)["I"];
 			int J2=cd(raw_hit2)["J"];
-			//for(int k=1;k<Correlations.size()+1;++k){
 			if((geom.GetDifNbrPlate(dif_id)==1 && geom.GetDifNbrPlate(dif_id2)==4)&&(raw_hit->getTime()==raw_hit2->getTime())) Correlations[4]->Fill((I-1),I2);}
-		//}
 	      }
 	    }
     }

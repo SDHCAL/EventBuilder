@@ -19,6 +19,8 @@
     <parameter name="FileNameGeometry" value="./DetectorGeometry/Aout.xml"/>
     <parameter name="ReaderType" value="XMLReader"/>
     <parameter name="Chi2" value="1.0"/>
+    <parameter name="NbrHitPerPlaneMax" value="6"/>
+    <parameter name="NbrPlaneUseForTracking" value="3"/>
   </processor>
 </marlin>
 

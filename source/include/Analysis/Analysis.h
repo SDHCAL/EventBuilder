@@ -111,8 +111,9 @@ class plan
 
 
 
-int _Chi2;
-
+double _Chi2;
+int _NbrHitPerPlaneMax ;
+int _NbrPlaneUseForTracking ;
 
 class AnalysisProcessor : public marlin::Processor
 {
