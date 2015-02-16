@@ -185,8 +185,8 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
   chFlag.setBit(bitinfo.RCHBIT_BARREL ) ;                  // barrel
   chFlag.setBit(bitinfo.RCHBIT_ID1 ) ;                     // cell ID 
   chFlag.setBit(bitinfo.RCHBIT_TIME ) ;                    // timestamp
-  RawVec->setFlag( chFlag.getFlag()  ) ;   
-
+  RawVec->setFlag(chFlag.getFlag()  ) ;   
+  RawVec2->setFlag(chFlag.getFlag()  ) ;
   try
   {
     LCCollection* col = evt->getCollection(_XDAQCollectionNames);
@@ -295,7 +295,8 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 		      	hit2->setCellID0((unsigned long int)ID0);               
 		      	hit2->setCellID1(ID1);
 		      	//Use setEnergyError to stock Time from the TDC !!!!!!!
-            hit2->setEnergyError(Time0_6);
+            hit2->setEnergyError((float)Time0_6);
+            std::cout<<Time0_6<<std::endl;
             hit2->setTime((float)TTT);//Time stamp of this event from Run Begining
 			      std::cout<<TTT<<std::endl;
 		      	RawVec2->addElement(hit2);
