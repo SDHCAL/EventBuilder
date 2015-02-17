@@ -140,7 +140,6 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
 	  float sg=sin(geom.GetDifGamma(dif_id)*degtorad);
 	  
 	  unsigned int NbrPlate =geom.GetDifNbrPlate(dif_id)-1;
-          if(geom.GetDifNbrPlate(dif_id)>=300) {std::cout<<"Please add DIF "<<dif_id<<" to your geometry file; I'm Skipping their data."<<std::endl;continue;}
 	  float Z= geom.GetPlatePositionZ(NbrPlate);
 	  
 	  cd["Dif_id"]=dif_id;
@@ -325,12 +324,14 @@ void TriventProcessor::processEvent( LCEvent * evtP )
       RawTimeDifs.clear();
       LCCollection* col = evtP ->getCollection(_hcalCollections[i].c_str());
       LCCollection* col2 = evtP ->getCollection("DHCALRawTimes");
-	  
-      for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) 
+      if(col2!=NULL)
       {
-        EVENT::CalorimeterHit* raw_time = dynamic_cast<EVENT::CalorimeterHit* >( col2->getElementAt(ihit)) ;
-				std::cout<<raw_time->getTime()<<"  "<<raw_time->getEnergyError()<<std::endl;
-	      //RawTimeDifs[raw_time->getTimeStamp()].push_back(raw_time);
+      	for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) 
+      	{
+        	EVENT::CalorimeterHit* raw_time = dynamic_cast<EVENT::CalorimeterHit* >( col2->getElementAt(ihit)) ;
+		std::cout<<raw_time->getTime()<<"  "<<raw_time->getEnergyError()<<std::endl;
+	      	//RawTimeDifs[raw_time->getTimeStamp()].push_back(raw_time);
+      	}
       }
 	    
 	    if(col == NULL)
@@ -350,7 +351,8 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	      if (raw_hit != NULL)
 	      { 
                 int dif_id  = (raw_hit)->getCellID0() & 0xFF ;
-                //std::cout<<red<<dif_id<<blue<<geom.GetDifNbrPlate(dif_id)-1<<normal<<std::endl;
+                if(geom.GetDifNbrPlate(dif_id)==-1) {std::cout<<"Please add DIF "<<dif_id<<" to your geometry file; I'm Skipping its data."<<std::endl;continue;}
+                //std::cout<<red<<dif_id<<blue<<geom.GetDifNbrPlate(dif_id)-1<<"  "<<dif_id<<normal<<std::endl;
 	        Times[raw_hit->getTimeStamp()]++;
                 Times_Plates[geom.GetDifNbrPlate(dif_id)-1][raw_hit->getTimeStamp()]++;
                 Times_Plates_perRun[geom.GetDifNbrPlate(dif_id)-1][raw_hit->getTimeStamp()]++;

@@ -31,7 +31,7 @@ inline int GetNbrDifInPlate(int& i){return  Plates[i].GetNbrDifInPlate();};
 inline double GetPlatePositionX(const unsigned int& i){ return Plates[i].GetPositionX();};
 inline double GetPlatePositionY(const unsigned int& i){ return Plates[i].GetPositionY();};
 inline double GetPlatePositionZ(const unsigned int& i){ return Plates[i].GetPositionZ();};
-inline int GetDifNbrPlate( const int& i){ return ((Difs.find(i))->second).GetNbrPlate();};
+inline int GetDifNbrPlate( const int& i){ if(Difs.find(i)==Difs.end())return -1; else return ((Difs.find(i))->second).GetNbrPlate();};
 inline int GetDifType( const int& i){ return ((Difs.find(i))->second).GetDifType();};
 inline int GetDifUpDown( int& i){ return ((Difs.find(i))->second).GetDifUpDown();};
 inline unsigned int GetNumberDifs(){return Difs.size();};
