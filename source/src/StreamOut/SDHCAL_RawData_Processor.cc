@@ -164,13 +164,7 @@ void SDHCAL_RawData_Processor::init()
   }
   delete myReader;
   //Prepare a flag to tag data type in RawVec (dit les types de data qu'on va enregistrer?)
-  IMPL::LCFlagImpl chFlag(0) ;
-  EVENT::LCIO bitinfo;
-  chFlag.setBit(bitinfo.RCHBIT_LONG );// raw calorimeter data -> format long //(sert a qq chose?)
-  chFlag.setBit(bitinfo.RCHBIT_BARREL );// barrel
-  chFlag.setBit(bitinfo.RCHBIT_ID1 );// cell ID 
-  chFlag.setBit(bitinfo.RCHBIT_TIME );//timestamp
-  chFlag.setBit(bitinfo.RCHBIT_ENERGY_ERROR);  
+  
 }
 
 void SDHCAL_RawData_Processor::processRunHeader( LCRunHeader* run) 
@@ -181,6 +175,14 @@ void SDHCAL_RawData_Processor::processRunHeader( LCRunHeader* run)
 
 void SDHCAL_RawData_Processor::processEvent( LCEvent * evt ) 
 { 
+
+  IMPL::LCFlagImpl chFlag(0) ;
+  EVENT::LCIO bitinfo;
+  chFlag.setBit(bitinfo.RCHBIT_LONG );// raw calorimeter data -> format long //(sert a qq chose?)
+  chFlag.setBit(bitinfo.RCHBIT_BARREL );// barrel
+  chFlag.setBit(bitinfo.RCHBIT_ID1 );// cell ID 
+  chFlag.setBit(bitinfo.RCHBIT_TIME );//timestamp
+  chFlag.setBit(bitinfo.RCHBIT_ENERGY_ERROR);  
   lcio::IntVec trig(8);
   IMPL::LCCollectionVec *RawVec=new IMPL::LCCollectionVec(LCIO::RAWCALORIMETERHIT) ;
   IMPL::LCCollectionVec *RawVecTime=new IMPL::LCCollectionVec(LCIO::CALORIMETERHIT) ;
@@ -204,14 +206,14 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
     for (int iel=0; iel<nElement; iel++)
     {
     	LCGenericObject* obj=dynamic_cast<LCGenericObject*>(col->getElementAt(iel));
-        
+        LMGeneric *lmobj=(LMGeneric *) obj;
 	if (obj==NULL)
 	{
 	_nWrongObj++;
 	continue;
 	}
 	_nProcessedObject++;
-	LMGeneric *lmobj=(LMGeneric *) obj;
+	//LMGeneric *lmobj=(LMGeneric *) obj;
 	unsigned char* debug_variable_1=lmobj->getSDHCALBuffer().endOfBuffer();
 	SDHCAL_RawBuffer_Navigator bufferNavigator(lmobj->getSDHCALBuffer());
 	unsigned char* debug_variable_2=bufferNavigator.getDIFBuffer().endOfBuffer();
@@ -238,12 +240,11 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 		IMPL::LCGenericObjectImpl* Tcherenkov= new IMPL::LCGenericObjectImpl(1,0,0) ;
 		Tcherenkov->setIntVal(0,(unsigned long int)(d->getFrameTimeToTrigger(0)));
 		RawVecTcherenkov->addElement(Tcherenkov);
-		
 	}
 
 	//if Difs are temporal ones -> createCalorimeterHit
 	
-  else if(geom.GetDifType(d->getID())==temporal)
+        else if(geom.GetDifType(d->getID())==temporal)
 	{
 	  
   	for (uint32_t i=0;i<d->getNumberOfFrames();i++)
