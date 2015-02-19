@@ -7,12 +7,13 @@
 #include "Geometry/Geometry.h"
 #include <cmath>
 #include "UTIL/CellIDDecoder.h"
+#include <map>
 #define degtorad 0.0174532925
 class plan;
 class testedPlan
 {
  public:
- testedPlan(int numeroPlan,float x ,float y,float z,float xy, float xz, float yz, int type) : Nbr(numeroPlan),X0(x),Y0(y),Z0(z),XY(xy),XZ(xz),YZ(yz),Type(type), nombreTests(0), nombreTestsOK(0), sommeNombreHits(0) 
+ testedPlan(int numeroPlan,float x ,float y,float z,float xy, float xz, float yz, int type,double _Ip,double _Im, double _Jp, double _Jm) : Nbr(numeroPlan),X0(x),Y0(y),Z0(z),XY(xy),XZ(xz),YZ(yz),Type(type),Ip(_Ip),Im(_Im),Jp(_Jp),Jm(_Jm), nombreTests(0), nombreTestsOK(0), sommeNombreHits(0)
  {
  for (int i=0; i<NCOUNTERS; i++) counts[i]=0;
   ca=cos(xy*degtorad);
@@ -46,6 +47,10 @@ class testedPlan
   inline float GetY0(){return Y0;}
   inline float GetZ0(){return Z0;}
   inline int GetType(){return Type;}
+  inline double GetIp(){return Ip;}
+  inline double GetIm(){return Im;}
+  inline double GetJp(){return Jp;}
+  inline double GetJm(){return Jm;}
   inline double GetNumberOK(){return nombreTestsOK;}
   inline float GetZexp(const double & pxz0,const double & pyz0,const double & pxz1,const double& pyz1)
   {
@@ -61,6 +66,10 @@ private:
   int Nbr;
   float X0,Y0,Z0,XY,XZ,YZ,xnorm,ynorm,znorm,xi,yi,zi,xj,yj,zj,ca,sa,cb,sb,cg,sg;
   int Type;
+  double Ip;
+  double Im;
+  double Jp;
+  double Jm;
   double nombreTests;
   double nombreTestsOK;
   double sommeNombreHits;
@@ -114,6 +123,10 @@ class plan
 double _Chi2;
 int _NbrHitPerPlaneMax ;
 int _NbrPlaneUseForTracking ;
+double _dlimforPad;
+double _dlimforStrip;
+std::map<int ,std::vector<double> >Delimiter;
+std::string _Delimiters;
 
 class AnalysisProcessor : public marlin::Processor
 {

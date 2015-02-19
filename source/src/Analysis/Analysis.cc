@@ -36,6 +36,52 @@ void AnalysisProcessor::processRunHeader( LCRunHeader* run)
 
 } 
 
+void FillDelimiter(std::string ToParse)
+{
+	std::string delimiter_Dif = "|";
+	std::string delimiter_others=":";
+	size_t pos = 0;
+	std::string token;
+	std::vector<std::string>a;
+	while ((pos = ToParse.find(delimiter_Dif)) != std::string::npos) 
+	{
+    		token = ToParse.substr(0, pos);
+    		//std::cout << token << std::endl;
+    		a.push_back(token);
+    		ToParse.erase(0, pos + delimiter_Dif.length());
+	}
+    	//std::cout<<red<<a.size()<<normal<<std::endl;
+    	for(unsigned int i=0;i<a.size();++i)
+   	{
+        	std::vector<double> tab(4);
+                int Dif=0;
+        	int j =0;
+        	size_t posi =0;
+		while ((posi = a[i].find(delimiter_others)) != std::string::npos) 
+        	{
+           		token = a[i].substr(0, posi);
+	   		
+           		if (j==0) {Dif=atof(token.c_str());/*std::cout <<blue<< token <<normal<< std::endl;*/}
+			else {tab[j-1]=atof(token.c_str());/*std::cout <<green<< token <<normal<< std::endl;*/}
+           		a[i].erase(0, posi + delimiter_others.length());
+           		++j;
+           	}
+        	tab[3]=atof(a[i].c_str());
+        	//std::cout<<green<<tab[3]<<normal<<std::endl;
+       		Delimiter[Dif]=tab;
+    	}
+        for(std::map<int,std::vector<double>>::iterator it=Delimiter.begin();it!=Delimiter.end();++it)
+	{ 
+                std::cout<<green<<it->first<<"  ";
+		for(int i=0; i<it->second.size();++i)
+		{
+                  std::cout<<(it->second)[i]<<"  ";
+		}
+		std::cout<<normal<<std::endl;
+	}
+
+}
+
 int plan::countHitAt(double& x, double& y, double dlim)
 {
 	CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
@@ -71,12 +117,13 @@ void plan::computeBarycentre( )
   {
 	for (int i=0; i<3; i++)   
         {barycentre[i]+=(*it)->getPosition()[i];
-        std::cout<<green<<(*it)->getPosition()[i]<<normal;}
+       // std::cout<<green<<(*it)->getPosition()[i]<<normal<<"  ";
+	}
   }
-  std::cout<<std::endl;
+  //std::cout<<std::endl;
   if (nHits() != 0)
   for (int i=0; i<3; i++) barycentre[i]/=nHits();  
-  std::cout<<red<<"Barycentre:"<<    barycentre[0]<<"  "<<barycentre[1]<<"  "<<barycentre[2]<<normal<<std::endl;
+  //std::cout<<red<<"Barycentre:"<<    barycentre[0]<<"  "<<barycentre[1]<<"  "<<barycentre[2]<<normal<<std::endl;
 }
 
 void plan::computeMaxima()
@@ -109,7 +156,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
   }
   
   for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin();it != plansUsedForTrackMaking.end(); ++it) if ((*it)->nHits()>=_NbrHitPerPlaneMax ) return;
-  std::cout<<yellow<<plansUsedForTrackMaking.size()<<std::endl;
+  //std::cout<<yellow<<plansUsedForTrackMaking.size()<<std::endl;
   if(plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
   counts[NOTOOMUCHHITSINPLAN]++;
   ////////////////////////////////////////////////////////////////////////////////////
@@ -125,7 +172,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
     grxz.SetPointError(i,p.ErrorZ(),p.ErrorX());
   }
   TF1 myfit = TF1("myfit","[1]*x + [0]", 0, 50);
-TF1 myfit2 = TF1("myfit2","[1]*x + [0]", 0, 50);
+  TF1 myfit2 = TF1("myfit2","[1]*x + [0]", 0, 50);
   myfit.SetParameter(1, 0.1);
   myfit.SetParameter(0, 0.1);
   grxz.Fit("myfit","Q");	
@@ -152,7 +199,8 @@ TF1 myfit2 = TF1("myfit2","[1]*x + [0]", 0, 50);
   ///////////////////////////////
   double Projectioni=GetProjectioni(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
   double Projectionj=GetProjectionj(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
-  if(Projectioni<=300&&Projectioni>=0&&Projectionj<=300&&Projectionj>=0)
+  std::cout<<red<<this->GetIp()<<"  "<<this->GetIm()<<"  "<<this->GetJp()<<"  "<<this->GetJm()<<normal<<std::endl;
+  if(Projectioni<=this->GetIp()&&Projectioni>=this->GetIm()&&Projectionj<=this->GetJp()&&Projectionj>=this->GetJm())
   {
     nombreTests++;
     if (nullptr==thisPlan) return;
@@ -160,11 +208,11 @@ TF1 myfit2 = TF1("myfit2","[1]*x + [0]", 0, 50);
     int nhit;
     if(this->GetType()==pad)
     {
-      nhit=thisPlan->countHitAt(Projectioni,Projectionj,/*6*10.4125*/40);
+      nhit=thisPlan->countHitAt(Projectioni,Projectionj,/*6*10.4125*/_dlimforPad);
     }
     else
     {
-      nhit=thisPlan->countHitAtStrip(Projectioni,40);
+      nhit=thisPlan->countHitAtStrip(Projectioni,_dlimforStrip);
     }
     if (nhit>0) nombreTestsOK++;
     sommeNombreHits+=nhit;
@@ -216,10 +264,16 @@ AnalysisProcessor::AnalysisProcessor() : Processor("AnalysisProcessorType")
   registerProcessorParameter("ReaderType","Type of the Reader needed to read InFileName",_ReaderType ,_ReaderType);
   _Chi2 = 1.0;
   registerProcessorParameter("Chi2" ,"Value of the Chi2  ",_Chi2 ,_Chi2);
-	_NbrHitPerPlaneMax = 6;
+  _NbrHitPerPlaneMax = 6;
   registerProcessorParameter("NbrHitPerPlaneMax" ,"Maximal number of Hit in each Plane (<=6 by default)  ",_NbrHitPerPlaneMax ,_NbrHitPerPlaneMax);
   _NbrPlaneUseForTracking = 3;
   registerProcessorParameter("NbrPlaneUseForTracking" ,"Number minimal of PLanes used for tracking (>=3 by default)",_NbrPlaneUseForTracking,_NbrPlaneUseForTracking);
+  _dlimforPad=40;
+  registerProcessorParameter("dlimforPad" ,"dlim for Pad ",_dlimforPad,_dlimforPad);
+  _dlimforStrip=40;
+  registerProcessorParameter("dlimforStrip" ,"dlim for Strip ",_dlimforStrip,_dlimforStrip);
+  _Delimiters="";
+  registerProcessorParameter("Delimiters" ,"Delimiters",_Delimiters,_Delimiters);
 }
 
 AnalysisProcessor::~AnalysisProcessor() {}
@@ -227,6 +281,7 @@ AnalysisProcessor::~AnalysisProcessor() {}
 void AnalysisProcessor::init()
 {
   printParameters();
+  FillDelimiter(_Delimiters);
   ReaderFactory readerFactory;
   Reader* myReader = readerFactory.CreateReader(_ReaderType);
   
@@ -246,7 +301,7 @@ void AnalysisProcessor::init()
     }
     for(std::map<int, int >::iterator it=PlansType.begin();it!=PlansType.end();++it)
     {
-      testedPlanList.push_back(testedPlan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second));
+      testedPlanList.push_back(testedPlan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second,Delimiter[it->first+1][1],Delimiter[it->first+1][0],Delimiter[it->first+1][3],Delimiter[it->first+1][2]));
       std::string b="Correlations"+ std::to_string( (long long int) it->first +1 );
       std::string a="Distribution hit selectionner par analysis"+ std::to_string( (long long int) it->first +1 );
       if(it->second==positional) {Distribution_hits.push_back(new TH2F(a.c_str(),a.c_str(),128,0,128,1,0,50));}
@@ -254,6 +309,9 @@ void AnalysisProcessor::init()
      Correlations.push_back(new TH2F(b.c_str(),b.c_str(),200,0,200,200,0,200));
 			
     }
+    
+    
+    
   }
   else
   {
