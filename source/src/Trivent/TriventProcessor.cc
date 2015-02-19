@@ -40,7 +40,7 @@ unsigned int _eventNr=0;
 #define size_pad 10.4125
 #define size_strip 2.5
 std::map<int,bool>Warning;
-class ToTree
+/*class ToTree
 {
 public:
 int pI,pJ,pK,pAsic,pDifId,pAsicChannel;
@@ -60,7 +60,7 @@ TBranch* Branch6 =  t->Branch("K",&(totree.pK));
 TBranch* Branch7 =  t->Branch("Time",&(totree.pTime));
 TBranch* Branch8 =  t->Branch("Asic",&(totree.pAsic));
 TBranch* Branch9 =  t->Branch("DifId",&(totree.pDifId));   
-TBranch* Branch10 =  t->Branch("AsicChannel",&(totree.pAsicChannel));
+TBranch* Branch10 =  t->Branch("AsicChannel",&(totree.pAsicChannel));*/
 std::vector<TH1F*>Time_Distr;
 std::vector<TH1F*>Hits_Distr;
 std::vector<TH1F*>Time_Distr_Events;
@@ -195,7 +195,8 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
        if(geom.GetDifType(dif_id)==positional)
 	  {
 	    if(asic_id%2==0) Z= geom.GetPlatePositionZ(NbrPlate)+2;
-	    if((asic_id%2==0&&geom.GetDifUpDown(dif_id)==1)||(asic_id%2==1&&geom.GetDifUpDown(dif_id)==0))
+	    //if((asic_id%2==0&&geom.GetDifUpDown(dif_id)==1)||(asic_id%2==1&&geom.GetDifUpDown(dif_id)==0))
+	    if(geom.GetDifUpDown(dif_id)==1)
 	    {
 	      I =(2*chan_id)+geom.GetDifPositionX(dif_id);
 	    }
@@ -227,7 +228,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
     caloHit->setPosition(pos);
     cd.setCellID( caloHit ) ;
     col->addElement(caloHit);
-   totree.pI=I;
+   /*totree.pI=I;
    totree.pJ=J;
    totree.pK=K;
    totree.pX=pos[0];
@@ -239,7 +240,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
    totree.pTime=(*it)->getTimeStamp();
    
    //std::cout<<magenta<<totree.pI<<"  "<<totree.pJ<<"  "<<red<<(*it)->getTimeStamp()<<"  "<<totree.pTime<<normal<<std::endl;
-   t->Fill();
+   t->Fill();*/
    
   }
   if(IsNoise==1)
@@ -396,7 +397,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	      if (raw_hit != NULL)
 	      { 
                 int dif_id  = (raw_hit)->getCellID0() & 0xFF ;
-                if(geom.GetDifNbrPlate(dif_id)==-1) {if(Warning[dif_id]!=true) {Warning[dif_id]=true;  std::cout<<"Please add DIF "<<dif_id<<"  "<<Warning[dif_id]<<" to your geometry file; I'm Skipping its data."<<std::endl;}continue;}
+                if(geom.GetDifNbrPlate(dif_id)==-1) {if(Warning[dif_id]!=true) {Warning[dif_id]=true;  std::cout<<"Please add DIF "<<dif_id<<" to your geometry file; I'm Skipping its data."<<std::endl;}continue;}
                 //std::cout<<red<<dif_id<<blue<<geom.GetDifNbrPlate(dif_id)-1<<"  "<<dif_id<<normal<<std::endl;
 	        Times[raw_hit->getTimeStamp()]++;
                 Times_Plates[geom.GetDifNbrPlate(dif_id)-1][raw_hit->getTimeStamp()]++;
@@ -530,7 +531,7 @@ for(unsigned int i=0; i<Flux_Noise.size();++i)
 	delete Hits_Distr_Events[i];
 	delete Hits_Distr_Noise[i];
 }
-t->Write();
+/*t->Write();
 delete Branch1;
 delete Branch2;
 delete Branch3;
@@ -541,7 +542,7 @@ delete Branch7;
 delete Branch8;
 delete Branch9;
 delete Branch10;
-delete t;
+delete t;*/
 hfile->Close();
 delete hfile;
 _EventWriter->close();
