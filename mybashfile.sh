@@ -52,13 +52,12 @@ else
 	m=$( echo "$n" | cut -c 15-20 ) 
 	cp $(pwd)/xml/Analysis.xml $(pwd)/Analysis_"$m".xml
 	sed -i "s|FILE|$(pwd)/DHCAL_Trivent_"$m"_I0.slcio|" Analysis_"$m".xml
-	Marlin Analysis_"$m".xml >>Result_"$m".txt
+	Marlin Analysis_"$m".xml
 	rm Analysis_"$m".xml
         now=$(date +"%m_%d_%Y")
-        mv Results_"$m".txt $(pwd)/NoSplit/Results_"$m"_"$now".txt
-        mv Results_Analysis_"$m".root $(pwd)/NoSplit/Results_Analysis_"$m"_"$now".root
+        #mv Results_"$m".txt $(pwd)/Results_"$m"_"$now".txt
+        #mv Results_Analysis_"$m".root $(pwd)/Results_Analysis_"$m"_"$now".root
 	done
-        mv Results.txt $(pwd)/NoSplit/Results_No_Split_"$now".txt
         elif [[ $1 == analysisSplit ]]
 	then
 	for n in DHCAL_Trivent_*_I0_Split.slcio
@@ -69,8 +68,8 @@ else
 	Marlin Analysis_"$m".xml >>Result_"$m"_Split.txt
 	rm Analysis_"$m".xml
         now=$(date +"%m_%d_%Y")
-        mv Results_"$m".txt $(pwd)/Split/Results_"$m"_"$now".txt
-        mv Results_Analysis_"$m".root $(pwd)/Split/Results_Analysis_"$m"_"$now".root
+        #mv Results_"$m".txt $(pwd)/Split/Results_"$m"_"$now".txt
+        #mv Results_Analysis_"$m".root $(pwd)/Split/Results_Analysis_"$m"_"$now".root
 	done
         mv Results.txt $(pwd)/Split/Results_Split_"$now".txt
         elif [[ $1 == noise ]]
@@ -92,9 +91,10 @@ else
 	sed -i "s|FILE|$(pwd)/DHCAL_Streamout_"$m"_I0.slcio|" Trivent.xml
 	sed -i "s|OUTPUT|$(pwd)/DHCAL_Trivent_"$m"_I0.slcio|" Trivent.xml
 	sed -i "s|NOISES|$(pwd)/DHCAL_Noise_"$m"_I0.slcio|" Trivent.xml
+        now=$(date +"%m_%d_%Y")
+        #mv Results_"m".root $(pwd)/Results_Trivent_"m"_"$now".root
 	Marlin Trivent.xml
-	#rm Trivent.xml
-        mv Results_Trivent_*.root $(pwd)/NoSplit
+	rm Trivent.xml
 	done
         elif [[ $1 == triventSplit ]]
 	then
@@ -106,7 +106,7 @@ else
 	sed -i "s|OUTPUT|$(pwd)/DHCAL_Trivent_"$m"_I0_Split.slcio|" TriventSplit.xml
 	sed -i "s|NOISES|$(pwd)/DHCAL_Noise_"$m"_I0_Split.slcio|" TriventSplit.xml
 	Marlin TriventSplit.xml
-        mv Results_Trivent_*.root $(pwd)/Split
+        #mv Results_Trivent_*.root $(pwd)/Split
 	rm TriventSplit.xml
 	done
 	fi
