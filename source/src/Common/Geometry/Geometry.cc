@@ -12,6 +12,6 @@ void Geometry::PrintGeom()
     std::cout<<"Difs : "<<std::endl;
     for(std::map<int,Dif>::iterator it=Difs.begin();it!=Difs.end();++it)
     {
-    std::cout<<red<<"X:"<<(it->second).GetPositionX()<<"  Y:"<<(it->second).GetPositionY()<<"  DifId:"<<(it->second).GetDifId()<<normal<<std::endl;
+    std::cout<<red<<"I:"<<(it->second).GetPositionX()<<"  J:"<<(it->second).GetPositionY()<<"  DifId:"<<(it->second).GetDifId()<<normal<<std::endl;
     }
 }
