@@ -36,13 +36,36 @@ void AnalysisProcessor::processRunHeader( LCRunHeader* run)
 
 } 
 
-void FillDelimiter(std::string ToParse)
+void FillDelimiter(std::string ToParse,int size)
 {
 	std::string delimiter_Dif = "|";
+        std::string delimiter_Difs = "*";
 	std::string delimiter_others=":";
 	size_t pos = 0;
 	std::string token;
 	std::vector<std::string>a;
+        if(ToParse.find(delimiter_Difs))
+        {
+		pos=ToParse.find(delimiter_Dif);
+		token = ToParse.substr(0, pos);
+		std::vector<double> tab(4);
+                int Dif=0;
+        	int j =0;
+        	size_t posi =0;
+		while ((posi = token.find(delimiter_others)) != std::string::npos) 
+        	{
+                        std::string token2;
+           		token2 = token.substr(0, posi);
+	   		
+			tab[j]=atof(token2.c_str());/*std::cout <<green<< token <<normal<< std::endl;*/
+           		token.erase(0, posi + delimiter_others.length());
+           		++j;
+           	}
+        	tab[3]=atof(token.c_str());
+        	//std::cout<<green<<tab[3]<<normal<<std::endl;
+                for(unsigned int i=1;i<size+1;++i) Delimiter[i]=tab;
+	}
+        
 	while ((pos = ToParse.find(delimiter_Dif)) != std::string::npos) 
 	{
     		token = ToParse.substr(0, pos);
@@ -50,6 +73,15 @@ void FillDelimiter(std::string ToParse)
     		a.push_back(token);
     		ToParse.erase(0, pos + delimiter_Dif.length());
 	}
+        if(a.size()==0)std::cout<<red<<"Warning:No Delimiters given "<<normal<<std::endl;
+        if(a.size()!=size&&a.size()!=0)
+	{
+		std::cout<<red<<"Error:Delimiters no well set ! "<<normal<<std::endl;
+                std::exit(2);
+
+		
+	}
+        
     	//std::cout<<red<<a.size()<<normal<<std::endl;
     	for(unsigned int i=0;i<a.size();++i)
    	{
@@ -70,6 +102,7 @@ void FillDelimiter(std::string ToParse)
         	//std::cout<<green<<tab[3]<<normal<<std::endl;
        		Delimiter[Dif]=tab;
     	}
+        
         for(std::map<int,std::vector<double>>::iterator it=Delimiter.begin();it!=Delimiter.end();++it)
 	{ 
                 std::cout<<green<<it->first<<"  ";
@@ -200,7 +233,10 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
   double Projectioni=GetProjectioni(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
   double Projectionj=GetProjectionj(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
   std::cout<<red<<this->GetIp()<<"  "<<this->GetIm()<<"  "<<this->GetJp()<<"  "<<this->GetJm()<<normal<<std::endl;
-  if(Projectioni<=this->GetIp()&&Projectioni>=this->GetIm()&&Projectionj<=this->GetJp()&&Projectionj>=this->GetJm())
+  bool Pass;
+  if(Delimiter.size()==0)Pass=1;
+  else Pass=Projectioni<=this->GetIp()&&Projectioni>=this->GetIm()&&Projectionj<=this->GetJp()&&Projectionj>=this->GetJm();
+  if(Pass)
   {
     nombreTests++;
     if (nullptr==thisPlan) return;
@@ -281,7 +317,7 @@ AnalysisProcessor::~AnalysisProcessor() {}
 void AnalysisProcessor::init()
 {
   printParameters();
-  FillDelimiter(_Delimiters);
+  
   ReaderFactory readerFactory;
   Reader* myReader = readerFactory.CreateReader(_ReaderType);
   
@@ -299,9 +335,12 @@ void AnalysisProcessor::init()
         //PlansType[geom.GetDifNbrPlate(it->first)-1]=geom.GetDifType(it->first);
       }
     }
+    FillDelimiter(_Delimiters,PlansType.size());
     for(std::map<int, int >::iterator it=PlansType.begin();it!=PlansType.end();++it)
     {
+      if(Delimiter.size()!=0)
       testedPlanList.push_back(testedPlan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second,Delimiter[it->first+1][1],Delimiter[it->first+1][0],Delimiter[it->first+1][3],Delimiter[it->first+1][2]));
+      else testedPlanList.push_back(testedPlan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second,0,0,0,0));
       std::string b="Correlations"+ std::to_string( (long long int) it->first +1 );
       std::string a="Distribution hit selectionner par analysis"+ std::to_string( (long long int) it->first +1 );
       if(it->second==positional) {Distribution_hits.push_back(new TH2F(a.c_str(),a.c_str(),128,0,128,1,0,50));}
