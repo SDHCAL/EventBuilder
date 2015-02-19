@@ -22,7 +22,7 @@ void XMLReader::Read(std::string FileName, Geometry& geom)
     while (Platee)
     {
       PlateNumber++;
-      streamlog_out( MESSAGE ) << Platee->Value() << std::endl;
+      //streamlog_out( MESSAGE ) << Platee->Value() << std::endl;
       double x= atof(Platee->Attribute("x"));
       double y=atof(Platee->Attribute("y"));
       double z=atof(Platee->Attribute("z"));
@@ -56,7 +56,7 @@ void XMLReader::Read(std::string FileName, Geometry& geom)
          }
         }
         
-              streamlog_out( MESSAGE ) << Diff->Value() << std::endl;
+              //streamlog_out( MESSAGE ) << Diff->Value() << std::endl;
 	      DifM.push_back(atof(Diff->Attribute("DifId")));
 	      geom.AddDif(atof(Diff->Attribute("x")),atof(Diff->Attribute("y")),atof(Diff->Attribute("DifId")),xy,xz,yz,PlateNumber,up_down,DifType);
 	      Diff= Diff->NextSiblingElement();
