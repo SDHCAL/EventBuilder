@@ -25,6 +25,8 @@
 #define blue " "
 #endif
 #include <fstream>
+#define size_pad 10.4125
+#define size_strip 2.5
 
 using namespace std;
 std::vector<TH2F*>Distribution_hits;
@@ -67,10 +69,14 @@ void plan::computeBarycentre( )
   for (int i=0; i<3; i++) barycentre[i]=0;
   for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!=hits.end(); ++it)
   {
-	for (int i=0; i<3; i++)barycentre[i]+=(*it)->getPosition()[i];
+	for (int i=0; i<3; i++)   
+        {barycentre[i]+=(*it)->getPosition()[i];
+        std::cout<<green<<(*it)->getPosition()[i]<<normal;}
   }
+  std::cout<<std::endl;
   if (nHits() != 0)
-  for (int i=0; i<3; i++) barycentre[i]/=nHits();      
+  for (int i=0; i<3; i++) barycentre[i]/=nHits();  
+  std::cout<<red<<"Barycentre:"<<    barycentre[0]<<"  "<<barycentre[1]<<"  "<<barycentre[2]<<normal<<std::endl;
 }
 
 void plan::computeMaxima()
@@ -90,8 +96,7 @@ void plan::computeMaxima()
   }     
 }
 
-TF1 myfit = TF1("myfit","[1]*x + [0]", 0, 50);
-TF1 myfit2 = TF1("myfit2","[1]*x + [0]", 0, 50);
+
 void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
 {
   counts[TESTYOUCALLED]++;
@@ -104,6 +109,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
   }
   
   for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin();it != plansUsedForTrackMaking.end(); ++it) if ((*it)->nHits()>=_NbrHitPerPlaneMax ) return;
+  std::cout<<yellow<<plansUsedForTrackMaking.size()<<std::endl;
   if(plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
   counts[NOTOOMUCHHITSINPLAN]++;
   ////////////////////////////////////////////////////////////////////////////////////
@@ -118,13 +124,15 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
     if(p.GetType()==pad){gryz.SetPoint(i,p.barycentreZ(),p.barycentreY());gryz.SetPointError(i,p.ErrorZ(),p.ErrorY());}
     grxz.SetPointError(i,p.ErrorZ(),p.ErrorX());
   }
- 
+  TF1 myfit = TF1("myfit","[1]*x + [0]", 0, 50);
+TF1 myfit2 = TF1("myfit2","[1]*x + [0]", 0, 50);
   myfit.SetParameter(1, 0.1);
   myfit.SetParameter(0, 0.1);
   grxz.Fit("myfit","Q");	
   TF1 *myfitxz = (TF1*) grxz.GetFunction("myfit");
   double  kxz = myfitxz->GetChisquare();
   if (kxz>= _Chi2) return;
+  
   double pxz0 = myfitxz->GetParameter(0);           
   double  pxz1 = myfitxz->GetParameter(1);
   counts[XZTRACKFITPASSED]++;
@@ -144,7 +152,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
   ///////////////////////////////
   double Projectioni=GetProjectioni(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
   double Projectionj=GetProjectionj(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
-  if(Projectioni<=187.425&&Projectioni>=135.3625&&Projectionj<=218.6625&&Projectionj>=166.6)
+  if(Projectioni<=300&&Projectioni>=0&&Projectionj<=300&&Projectionj>=0)
   {
     nombreTests++;
     if (nullptr==thisPlan) return;
@@ -152,7 +160,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
     int nhit;
     if(this->GetType()==pad)
     {
-      nhit=thisPlan->countHitAt(Projectioni,Projectionj,6*10.4125);
+      nhit=thisPlan->countHitAt(Projectioni,Projectionj,/*6*10.4125*/40);
     }
     else
     {
@@ -287,7 +295,8 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 			int dif_id2=cd(raw_hit2)["Dif_id"];
 			int I2=cd(raw_hit2)["I"];
 			int J2=cd(raw_hit2)["J"];
-			if((geom.GetDifNbrPlate(dif_id)==1 && geom.GetDifNbrPlate(dif_id2)==4)&&(raw_hit->getTime()==raw_hit2->getTime())) Correlations[4]->Fill((I-1),I2);}
+			//if((geom.GetDifNbrPlate(dif_id)==1 && geom.GetDifNbrPlate(dif_id2)==4)&&(raw_hit->getTime()==raw_hit2->getTime())) Correlations[4]->Fill((I-1),I2);
+}
 	      }
 	    }
     }

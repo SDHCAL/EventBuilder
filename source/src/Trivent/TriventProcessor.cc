@@ -13,9 +13,13 @@
 #include "TH2F.h"
 #include "TH3F.h"
 #include "TFile.h"
+#include "TTree.h"
 #include "IMPL/CalorimeterHitImpl.h"
 #include <IMPL/LCRunHeaderImpl.h>
 #include "Colors.h"
+#include "TBranch.h"
+#include "TObject.h"
+
 #ifndef COLORS_H
 #define normal " "
 #define red "  "
@@ -33,6 +37,30 @@ unsigned int eventtotal=0;
 unsigned int EventsSelected=0; 
 unsigned int TouchedEvents=0;
 unsigned int _eventNr=0;
+#define size_pad 10.4125
+#define size_strip 2.5
+std::map<int,bool>Warning;
+class ToTree
+{
+public:
+int pI,pJ,pK,pAsic,pDifId,pAsicChannel;
+unsigned int pTime;
+double pX,pY,pZ;
+};
+
+ToTree totree;
+std::string name="Tree";
+TTree* t= new TTree(name.c_str(), name.c_str());
+TBranch* Branch1 =  t->Branch("X",&(totree.pX));
+TBranch* Branch2 =  t->Branch("Y",&(totree.pY));
+TBranch* Branch3 =  t->Branch("Z",&(totree.pZ));
+TBranch* Branch4 =  t->Branch("I",&(totree.pI));
+TBranch* Branch5 =  t->Branch("J",&(totree.pJ));
+TBranch* Branch6 =  t->Branch("K",&(totree.pK));
+TBranch* Branch7 =  t->Branch("Time",&(totree.pTime));
+TBranch* Branch8 =  t->Branch("Asic",&(totree.pAsic));
+TBranch* Branch9 =  t->Branch("DifId",&(totree.pDifId));   
+TBranch* Branch10 =  t->Branch("AsicChannel",&(totree.pAsicChannel));
 std::vector<TH1F*>Time_Distr;
 std::vector<TH1F*>Hits_Distr;
 std::vector<TH1F*>Time_Distr_Events;
@@ -158,9 +186,9 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
 	   I =(1+MapILargeHR2[chan_id]+AsicShiftI[asic_id])+geom.GetDifPositionX(dif_id);
 	    J =(32-(MapJLargeHR2[chan_id]+AsicShiftJ[asic_id]))+geom.GetDifPositionY(dif_id);
 	    
-	    pos[0] = cg*cb*I*10.4125+(-sg*ca+cg*sb*sa)*J*10.4125+(sg*sa+cg*sb*ca)*Z+geom.GetPlatePositionX(NbrPlate);
-	    pos[1] = sg*cb*I*10.4125+(cg*ca+sg*sb*sa)*J*10.4125+(-cg*sa+sg*sb*ca)*Z+geom.GetPlatePositionY(NbrPlate);
-	    pos[2] = -sb*I*10.4125+cb*sa*J*10.4125+cb*ca*Z;
+	    pos[0] = cg*cb*I*size_pad+(-sg*ca+cg*sb*sa)*J*size_pad+(sg*sa+cg*sb*ca)*Z+geom.GetPlatePositionX(NbrPlate);
+	    pos[1] = sg*cb*I*size_pad+(cg*ca+sg*sb*sa)*J*size_pad+(-cg*sa+sg*sb*ca)*Z+geom.GetPlatePositionY(NbrPlate);
+	    pos[2] = -sb*I*size_pad+cb*sa*J*size_pad+cb*ca*Z;
 	     
           }
     
@@ -173,13 +201,13 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
 	    }
 	    else I =2*(64-chan_id)-1+geom.GetDifPositionX(dif_id);
 	    J =0;
-	    pos[0] = cg*cb*I*2.5+(-sg*ca+cg*sb*sa)*J*2.5+(sg*sa+cg*sb*ca)*Z+geom.GetPlatePositionX(NbrPlate);
+	    pos[0] = cg*cb*I*size_strip+(-sg*ca+cg*sb*sa)*J*size_strip+(sg*sa+cg*sb*ca)*Z+geom.GetPlatePositionX(NbrPlate);
 	     if(asic_id%2==1)
 	    {
-	      pos[0]=cg*cb*I*2.5+(-sg*ca+cg*sb*sa)*J*2.5+(sg*sa+cg*sb*ca)*Z+geom.GetPlatePositionX(NbrPlate)+1;
+	      pos[0]=cg*cb*I*size_strip+(-sg*ca+cg*sb*sa)*J*size_strip+(sg*sa+cg*sb*ca)*Z+geom.GetPlatePositionX(NbrPlate)+1;
 	    }
-	    pos[1] = sg*cb*I*2.5+(cg*ca+sg*sb*sa)*J*2.5+(-cg*sa+sg*sb*ca)*Z+geom.GetPlatePositionY(NbrPlate);
-	    pos[2] = -sb*I*2.5+cb*sa*J*2.5+cb*ca*Z;
+	    pos[1] = sg*cb*I*size_strip+(cg*ca+sg*sb*sa)*J*size_strip+(-cg*sa+sg*sb*ca)*Z+geom.GetPlatePositionY(NbrPlate);
+	    pos[2] = -sb*I*size_strip+cb*sa*J*size_strip+cb*ca*Z;
            }
     if(IsNoise==1) 
     {
@@ -199,7 +227,20 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
     caloHit->setPosition(pos);
     cd.setCellID( caloHit ) ;
     col->addElement(caloHit);
-	
+   totree.pI=I;
+   totree.pJ=J;
+   totree.pK=K;
+   totree.pX=pos[0];
+   totree.pY=pos[1];
+   totree.pZ=pos[2];
+   totree.pAsic=asic_id;
+   totree.pDifId=dif_id;
+   totree.pAsicChannel=chan_id;
+   totree.pTime=(*it)->getTimeStamp();
+   
+   //std::cout<<magenta<<totree.pI<<"  "<<totree.pJ<<"  "<<red<<(*it)->getTimeStamp()<<"  "<<totree.pTime<<normal<<std::endl;
+   t->Fill();
+   
   }
   if(IsNoise==1)
   {
@@ -209,6 +250,8 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
   {
     for(unsigned int i=0;i<Times_Plates.size();++i)for(std::map<int,int>::iterator it = Times_Plates[i].begin();it!=Times_Plates[i].end();++it) Hits_Distr_Events[i]->Fill(it->second,1);
   }
+  
+  
 }
 
 TriventProcessor aTriventProcessor;
@@ -275,6 +318,7 @@ void TriventProcessor::init()
       std::string b="Number_hits_Events"+ std::to_string( (long long int) it->first +1 );
       Times_Plates.emplace_back(std::map<int ,int>());
       Times_Plates_perRun.emplace_back(std::map<int ,int>());
+      
       if(it->second==positional) {Flux_Events.emplace_back(new TH2F(b.c_str(),b.c_str(),128,0,128,1,0,50));}
       else {Flux_Events.emplace_back(new TH2F(b.c_str(),b.c_str(),100,0,100,100,0,100));}
       std::string c="Number_hits_Noise"+ std::to_string( (long long int) it->first +1 );
@@ -300,6 +344,7 @@ void TriventProcessor::init()
       Hits_Distr_Noise.emplace_back(new TH1F(m.c_str(),m.c_str(),25000,0,25000));
       Nbrof0Hits.push_back(0);
     }
+    
   }
   else
   {
@@ -351,7 +396,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	      if (raw_hit != NULL)
 	      { 
                 int dif_id  = (raw_hit)->getCellID0() & 0xFF ;
-                if(geom.GetDifNbrPlate(dif_id)==-1) {std::cout<<"Please add DIF "<<dif_id<<" to your geometry file; I'm Skipping its data."<<std::endl;continue;}
+                if(geom.GetDifNbrPlate(dif_id)==-1) {if(Warning[dif_id]!=true) {Warning[dif_id]=true;  std::cout<<"Please add DIF "<<dif_id<<"  "<<Warning[dif_id]<<" to your geometry file; I'm Skipping its data."<<std::endl;}continue;}
                 //std::cout<<red<<dif_id<<blue<<geom.GetDifNbrPlate(dif_id)-1<<"  "<<dif_id<<normal<<std::endl;
 	        Times[raw_hit->getTimeStamp()]++;
                 Times_Plates[geom.GetDifNbrPlate(dif_id)-1][raw_hit->getTimeStamp()]++;
@@ -485,6 +530,18 @@ for(unsigned int i=0; i<Flux_Noise.size();++i)
 	delete Hits_Distr_Events[i];
 	delete Hits_Distr_Noise[i];
 }
+t->Write();
+delete Branch1;
+delete Branch2;
+delete Branch3;
+delete Branch4;
+delete Branch5;
+delete Branch6;
+delete Branch7;
+delete Branch8;
+delete Branch9;
+delete Branch10;
+delete t;
 hfile->Close();
 delete hfile;
 _EventWriter->close();
@@ -493,4 +550,5 @@ if(_noiseFileName!="") _NoiseWriter->close();
    std::cout <<TouchedEvents<<" Events were overlaping "<<"("<<(TouchedEvents*1.0/(TouchedEvents+eventtotal))*100<<"%)"<<std::endl;
    std::cout <<"Total nbr Events : "<<eventtotal<<" Events with nbr of plates >="<<_LayerCut<<" : "<<EventsSelected<<" ("<<EventsSelected*1.0/eventtotal*100<<"%)"<< std::endl;
    std::cout <<"Total Time : "<<total_time <<std::endl;
+   for(std::map<int,bool>::iterator it=Warning.begin();it!=Warning.end();it++) std::cout<<red<<"REMINDER::Data from Dif "<<it->first<<" are skipped !"<<normal<<std::endl;
 }
