@@ -44,46 +44,40 @@ void FillDelimiter(std::string ToParse,int size)
 	size_t pos = 0;
 	std::string token;
 	std::vector<std::string>a;
-        if(ToParse.find(delimiter_Difs))
+        bool findstar =ToParse.find(delimiter_Difs);
+        if(findstar)
         {
 		pos=ToParse.find(delimiter_Dif);
-		token = ToParse.substr(0, pos);
+		a.push_back(ToParse.substr(0, pos));
 		std::vector<double> tab(4);
                 int Dif=0;
         	int j =0;
         	size_t posi =0;
-		while ((posi = token.find(delimiter_others)) != std::string::npos) 
+		while ((posi = a[0].find(delimiter_others)) != std::string::npos) 
         	{
-                        std::string token2;
-           		token2 = token.substr(0, posi);
+                        std::string token;
+                        token = a[0].substr(0, posi);
+                        tab[j]=atof(token.c_str());/*std::cout <<green<< token <<normal<< std::endl;*/
+           		
 	   		
-			tab[j]=atof(token2.c_str());/*std::cout <<green<< token <<normal<< std::endl;*/
-           		token.erase(0, posi + delimiter_others.length());
+			
+           		a[0].erase(0, posi + delimiter_others.length());
            		++j;
            	}
-        	tab[3]=atof(token.c_str());
+        	tab[3]=atof(a[0].c_str());
         	//std::cout<<green<<tab[3]<<normal<<std::endl;
-                for(unsigned int i=1;i<size+1;++i) Delimiter[i]=tab;
+                for(unsigned int i=0;i<size;++i) Delimiter[i+1]=tab;
 	}
-        
-	while ((pos = ToParse.find(delimiter_Dif)) != std::string::npos) 
+        else
 	{
-    		token = ToParse.substr(0, pos);
-    		//std::cout << token << std::endl;
-    		a.push_back(token);
-    		ToParse.erase(0, pos + delimiter_Dif.length());
-	}
-        if(a.size()==0)std::cout<<red<<"Warning:No Delimiters given "<<normal<<std::endl;
-        if(a.size()!=size&&a.size()!=0)
-	{
-		std::cout<<red<<"Error:Delimiters no well set ! "<<normal<<std::endl;
-                std::exit(2);
-
-		
-	}
-        
-    	//std::cout<<red<<a.size()<<normal<<std::endl;
-    	for(unsigned int i=0;i<a.size();++i)
+		while ((pos = ToParse.find(delimiter_Dif)) != std::string::npos) 
+		{
+    			token = ToParse.substr(0, pos);
+    			//std::cout << token << std::endl;
+    			a.push_back(token);
+    			ToParse.erase(0, pos + delimiter_Dif.length());
+		}
+		for(unsigned int i=0;i<a.size();++i)
    	{
         	std::vector<double> tab(4);
                 int Dif=0;
@@ -102,13 +96,25 @@ void FillDelimiter(std::string ToParse,int size)
         	//std::cout<<green<<tab[3]<<normal<<std::endl;
        		Delimiter[Dif]=tab;
     	}
+	}
+        if(a.size()==0)std::cout<<red<<"Warning:No Delimiters given "<<normal<<std::endl;
+        if(a.size()!=size&&a.size()!=0&&!findstar)
+	{
+		std::cout<<red<<"Error:Delimiters no well set ! "<<normal<<std::endl;
+                std::exit(2);	
+	}
         
+    	//std::cout<<red<<a.size()<<normal<<std::endl;
+    	
+        std::vector<string>word{"Imin : "," Imax : "," Jmin : "," Jmax : "};
+        std::cout<<green<<"Delimiters"<<normal<<std::endl ;
         for(std::map<int,std::vector<double>>::iterator it=Delimiter.begin();it!=Delimiter.end();++it)
 	{ 
-                std::cout<<green<<it->first<<"  ";
+		               
+		std::cout<<green<<"Plane "<<it->first<<" : "<<normal;
 		for(int i=0; i<it->second.size();++i)
 		{
-                  std::cout<<(it->second)[i]<<"  ";
+                  std::cout<<green<<word[i]<<(it->second)[i]<<normal;
 		}
 		std::cout<<normal<<std::endl;
 	}
@@ -232,7 +238,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
   ///////////////////////////////
   double Projectioni=GetProjectioni(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
   double Projectionj=GetProjectionj(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
-  std::cout<<red<<this->GetIp()<<"  "<<this->GetIm()<<"  "<<this->GetJp()<<"  "<<this->GetJm()<<normal<<std::endl;
+  //std::cout<<red<<this->GetIp()<<"  "<<this->GetIm()<<"  "<<this->GetJp()<<"  "<<this->GetJm()<<normal<<std::endl;
   bool Pass;
   if(Delimiter.size()==0)Pass=1;
   else Pass=Projectioni<=this->GetIp()&&Projectioni>=this->GetIm()&&Projectionj<=this->GetJp()&&Projectionj>=this->GetJm();
