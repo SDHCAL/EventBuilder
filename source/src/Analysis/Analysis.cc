@@ -417,12 +417,12 @@ void AnalysisProcessor::end()
   for(unsigned int i=0; i<Distribution_hits.size();++i)
 	{
 		Distribution_hits[i]->Write();
-		Correlations[i]->Write();
+		//Correlations[i]->Write();
 	}
 	for(unsigned int i=0; i<Distribution_hits.size();++i)
 	{
 		delete Distribution_hits[i];
-		delete Correlations[i];
+		//delete Correlations[i];
 	}
   hfile->Close();
 	delete hfile;

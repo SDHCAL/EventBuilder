@@ -214,22 +214,22 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 	}
 	_nProcessedObject++;
 	//LMGeneric *lmobj=(LMGeneric *) obj;
-	unsigned char* debug_variable_1=lmobj->getSDHCALBuffer().endOfBuffer();
+	//unsigned char* debug_variable_1=lmobj->getSDHCALBuffer().endOfBuffer();
 	SDHCAL_RawBuffer_Navigator bufferNavigator(lmobj->getSDHCALBuffer());
-	unsigned char* debug_variable_2=bufferNavigator.getDIFBuffer().endOfBuffer();
-	streamlog_out(DEBUG)<<"DIF BUFFER END "<<(unsigned int *) debug_variable_1<<" "<< (unsigned int *) debug_variable_2 << std::endl;
-	if (_debugMode) assert (debug_variable_1 == debug_variable_2);
+	//unsigned char* debug_variable_2=bufferNavigator.getDIFBuffer().endOfBuffer();
+	//streamlog_out(DEBUG)<<"DIF BUFFER END "<<(unsigned int *) debug_variable_1<<" "<< (unsigned int *) debug_variable_2 << std::endl;
+	//if (_debugMode) assert (debug_variable_1 == debug_variable_2);
 	uint32_t idstart=bufferNavigator.getStartOfDIF();
-	streamlog_out(DEBUG)<<"DIF header starts at "<<idstart<<" and is equal to "<<std::hex<<(unsigned int)lmobj->getCharBuffer()[idstart] << std::dec << std::endl;
+	//streamlog_out(DEBUG)<<"DIF header starts at "<<idstart<<" and is equal to "<<std::hex<<(unsigned int)lmobj->getCharBuffer()[idstart] << std::dec << std::endl;
 	if(idstart==0 && streamlog::out.write< streamlog::DEBUG >() ) lmobj->getSDHCALBuffer().printBuffer( 0 , streamlog::out() );
 	_DIFStarter[idstart]++;	
 	if (!  bufferNavigator.validBuffer() ) continue;
         DIFPtr *d=bufferNavigator.getDIFPtr();
-	if (_debugMode) assert(d!=NULL);
+	//if (_debugMode) assert(d!=NULL);
 	if (d!=NULL)
 	{
 		_DIFPtrValueAtReturnedPos[bufferNavigator.getDIFBufferStart()[d->getGetFramePtrReturn()] ]++;
-	      	if (_debugMode) assert( bufferNavigator.getDIFBufferStart()[d->getGetFramePtrReturn()]==0xa0 );
+	      	//if (_debugMode) assert( bufferNavigator.getDIFBufferStart()[d->getGetFramePtrReturn()]==0xa0 );
 	}
 	_SizeAfterDIFPtr[bufferNavigator.getSizeAfterDIFPtr()]++;
 
@@ -362,10 +362,10 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 	if (bufferNavigator.badSCData())  _hasBadSlowControl++;
 	SDHCAL_buffer eod=bufferNavigator.getEndOfAllData();
 	_SizeAfterAllData[eod.getsize()]++;
-	unsigned char* debug_variable_3=eod.endOfBuffer();
-	streamlog_out(DEBUG)<<"END DATA BUFFER END "<<(unsigned int *)debug_variable_1<<" "<<(unsigned int *)debug_variable_3<<std::endl;
-	if (_debugMode) assert (debug_variable_1 == debug_variable_3);
-	streamlog_out(DEBUG) << "End of Data remaining stuff : ";
+	//unsigned char* debug_variable_3=eod.endOfBuffer();
+	//streamlog_out(DEBUG)<<"END DATA BUFFER END "<<(unsigned int *)debug_variable_1<<" "<<(unsigned int *)debug_variable_3<<std::endl;
+	//if (_debugMode) assert (debug_variable_1 == debug_variable_3);
+	//streamlog_out(DEBUG) << "End of Data remaining stuff : ";
 	if(streamlog::out.write< streamlog::DEBUG >() ) eod.printBuffer( 0 , streamlog::out() );
 	int nonzeroCount=0;
 	for (unsigned char* it=eod.buffer(); it != eod.endOfBuffer(); it++) if (int(*it) !=0) nonzeroCount++;
@@ -374,7 +374,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 }
 catch(DataNotAvailableException &e)
 {
-	streamlog_out(WARNING) << _XDAQCollectionNames << " collection not available" << std::endl;
+	//streamlog_out(WARNING) << _XDAQCollectionNames << " collection not available" << std::endl;
 }
   	evt->addCollection(RawVec,_RawHitCollectionName);
   	evt->addCollection(RawVecTime,_RawHitCollectionNameTime);
