@@ -1,35 +1,46 @@
 <marlin>
-  <execute>
-    <processor name="MyAnalysisProcessor"/>
-  </execute>
+	<execute>
+	<processor name="MyAnalysisProcessor"/>
+        </execute>
+        <global>
+        	<parameter name="LCIOInputFiles">
 
-	<global>
-          <parameter name="LCIOInputFiles">
 
-          FILE
- </parameter>
-             	<parameter name="MaxRecordNumber" value="0"/>
+
+
+
+
+
+
+		FILE
+
+
+
+
+
+
+
+		</parameter>
+                <parameter name="MaxRecordNumber" value="0"/>
                 <parameter name="SkipNEvents" value="0"/>
                 <parameter name="SupressCheck" value="false"/>
-                 <parameter name="Verbosity" type="string">MESSAGE0 </parameter>
-
-  </global>
-
-  <processor name="MyAnalysisProcessor" type="AnalysisProcessorType">
-    <parameter name="FileNameGeometry" value="./DetectorGeometry/Dome.xml"/>
-    <parameter name="ReaderType" value="XMLReader"/>
-    <parameter name="Chi2" value="15"/>
-    <parameter name="NbrHitPerPlaneMax" value="50"/>
-    <parameter name="NbrPlaneUseForTracking" value="3"/>
-    <parameter name="dlimforPad" value="40"/>
-    <parameter name="dlimforstrip" value="40"/>
-    <!--
-    To Complete Delimiters option :
-    1) Keep blanck -> No Delimiters
-    2) Imin:Imax:Jmin:Jmax* -> Only tracks in Imin<=I<=Imax and Jmin<=J<=Jmax are considered
-    3) Plane_1:Imin_1:Imax_1:Jmin_1:Jmax_1|...|Plane_n:Plane_n:Imin_n:Imax_n:Jmin_n:Jmax_n/ -> Each Delimiters need to be provided 
-    -->
-   <parameter name="Delimiters" value="0:300:0:300*"/>
-  </processor>
+              	<parameter name="Verbosity" type="string">MESSAGE0 </parameter>
+	</global>
+	<processor name="MyAnalysisProcessor" type="AnalysisProcessorType">
+        	<parameter name="FileNameGeometry" value="./DetectorGeometry/Dome.xml"/>
+        	<parameter name="ReaderType" value="XMLReader"/>
+        	<parameter name="Chi2" value="10"/>
+        	<parameter name="NbrHitPerPlaneMax" value="10000"/>
+        	<parameter name="NbrPlaneUseForTracking" value="4"/>
+                <parameter name="dlimforPad" value="40"/>
+                <parameter name="dlimforstrip" value="40"/>
+                <parameter name="ShortEfficiency" value="0" />
+                <!--
+                To Complete Delimiters option :
+                1) Keep blanck -> No Delimiters
+                2) Imin:Imax:Jmin:Jmax* -> Only tracks in Imin<=I<=Imax and Jmin<=J<=Jmax are considered
+		3) Plane_1:Imin_1:Imax_1:Jmin_1:Jmax_1|...|Plane_n:Plane_n:Imin_n:Imax_n:Jmin_n:Jmax_n/ -> Each Delimiters need to be provided
+		-->
+		<parameter name="Delimiters" value="0:300:0:300*"/>
+	</processor>
 </marlin>
-
