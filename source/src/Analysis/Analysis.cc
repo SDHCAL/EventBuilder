@@ -1,6 +1,7 @@
 #include "Analysis/Analysis.h"
 #include <iostream>
 #include <string>
+#include <iomanip>
 #include "marlin/Processor.h"
 #include "UTIL/LCTOOLS.h"
 #include "UTIL/CellIDDecoder.h"
@@ -294,11 +295,11 @@ void AnalysisProcessor::PrintStat()
         fichier<<std::endl;
         fichier.close();  // on referme le fichier
     }
-
+    std::cout<<"Run Number : "<<_NbrRun<<std::endl;
     for(unsigned int i=0; i!=testedPlanList.size(); ++i) {
         // testedPlanList[i].print();
-        std::cout<<_NbrRun<<std::endl;
-        std::cout<<"Efficacite "<<testedPlanList[i].efficiency()<<" Multiplicite "<<testedPlanList[i].multiplicity()<<std::endl;
+        
+        std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanList[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanList[i].efficiency()<<" Error : "<<setw(6)<<sqrt(testedPlanList[i].GetNumberOK()*testedPlanList[i].efficiency()*(1-testedPlanList[i].efficiency()))*1.0/testedPlanList[i].GetNumberOK()<<" Multiplicity : "<<setw(6)<<testedPlanList[i].multiplicity()<<normal<<std::endl;
     }
 }
 
