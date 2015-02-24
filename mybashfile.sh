@@ -104,7 +104,7 @@ else
 	m=$( echo "$n" | cut -c 17-22 ) 
 	sed -i "s|FILE|$(pwd)/DHCAL_Streamout_"$m"_I0.slcio|" Trivent.xml
 	sed -i "s|OUTPUT|$(pwd)/DHCAL_Trivent_"$m"_I0.slcio|" Trivent.xml
-	sed -i "s|NOISES|0" Trivent.xml
+	sed -i "s|NOISES| |" Trivent.xml
         now=$(date +"%m_%d_%Y")
         #mv Results_"m".root $(pwd)/Results_Trivent_"m"_"$now".root
 	Marlin Trivent.xml

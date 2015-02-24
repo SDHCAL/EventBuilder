@@ -147,7 +147,7 @@ class plan
 public:
     plan()
     {
-        ;
+      ;
     }
     inline void addHit(CalorimeterHit* a)
     {

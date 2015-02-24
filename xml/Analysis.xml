@@ -27,13 +27,13 @@
               	<parameter name="Verbosity" type="string">MESSAGE0 </parameter>
 	</global>
 	<processor name="MyAnalysisProcessor" type="AnalysisProcessorType">
-        	<parameter name="FileNameGeometry" value="./DetectorGeometry/Dome.xml"/>
+        	<parameter name="FileNameGeometry" value="./DetectorGeometry/Dome2.xml"/>
         	<parameter name="ReaderType" value="XMLReader"/>
         	<parameter name="Chi2" value="10"/>
-        	<parameter name="NbrHitPerPlaneMax" value="10000"/>
+        	<parameter name="NbrHitPerPlaneMax" value="50000"/>
         	<parameter name="NbrPlaneUseForTracking" value="4"/>
                 <parameter name="dlimforPad" value="40"/>
-                <parameter name="dlimforstrip" value="40"/>
+                <parameter name="dlimforStrip" value="40"/>
                 <parameter name="ShortEfficiency" value="0" />
                 <!--
                 To Complete Delimiters option :

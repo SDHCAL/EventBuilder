@@ -159,6 +159,7 @@ int plan::countHitAtStrip(double& x, double dlim)
     for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!= hits.end(); ++it) {
         if(fabs(x-(*it)->getPosition()[0])<dlim) {
             n++;
+            std::cout<<fabs(x-(*it)->getPosition()[0])<<"  "<<dlim<<std::endl;
             Distribution_hits[cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
         }
     }
@@ -403,25 +404,27 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
                     int J=cd(raw_hit)["J"];
                     Plans[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
                     Plans[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
-                    for(int jhit=ihit+1; jhit<numElements; ++jhit) {
+                    /*for(int jhit=ihit+1; jhit<numElements; ++jhit) {
                         CalorimeterHit *raw_hit2 = dynamic_cast<CalorimeterHit*>( col->getElementAt(jhit)) ;
                         int dif_id2=cd(raw_hit2)["Dif_id"];
                         int I2=cd(raw_hit2)["I"];
                         int J2=cd(raw_hit2)["J"];
                         //if((geom.GetDifNbrPlate(dif_id)==1 && geom.GetDifNbrPlate(dif_id2)==4)&&(raw_hit->getTime()==raw_hit2->getTime())) Correlations[4]->Fill((I-1),I2);
-                    }
+                    }*/
                 }
+
+	     
             }
         }
-        for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) {
-            iter->testYou(Plans);
-        }
-        if(_ShortEfficiency!=0 && NbrReadOut%_ShortEfficiency==0) {
-            PrintStatShort();
-            for(unsigned int i=0; i!=testedPlanList.size(); ++i) {
-                testedPlanList[i].ClearShort();
-            };
-    }
+        for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans);
+        if(_ShortEfficiency!=0 && NbrReadOut%_ShortEfficiency==0) 
+        {
+        	PrintStatShort();
+            	for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
+		{
+                	testedPlanList[i].ClearShort();
+            	}
+    	}
 }
 }
 

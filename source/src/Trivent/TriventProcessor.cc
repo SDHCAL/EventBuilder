@@ -243,7 +243,7 @@ TriventProcessor::TriventProcessor() : Processor("TriventProcessorType")
     registerProcessorParameter("ReaderType","Type of the Reader needed to read InFileName",_ReaderType ,_ReaderType);
     _outFileName="LCIO_clean_run.slcio";
     registerProcessorParameter("LCIOOutputFile","LCIO file",_outFileName,_outFileName);
-    _noiseFileName="0";
+    _noiseFileName="";
     registerProcessorParameter("NOISEOutputFile" ,"NOISE file" ,_noiseFileName ,_noiseFileName);
     _timeWin = 2;
     registerProcessorParameter("timeWin" ,"time window = 2 in default",_timeWin ,_timeWin);
@@ -269,7 +269,7 @@ void TriventProcessor::init()
     _EventWriter = LCFactory::getInstance()->createLCWriter() ;
     _EventWriter->setCompressionLevel( 0 ) ;
     _EventWriter->open(_outFileName.c_str(),LCIO::WRITE_NEW) ;
-    if(_noiseFileName!="0") {
+    if(_noiseFileName!="") {
         _NoiseWriter = LCFactory::getInstance()->createLCWriter() ;
         _NoiseWriter->setCompressionLevel( 0 ) ;
         _NoiseWriter->open(_noiseFileName.c_str(),LCIO::WRITE_NEW) ;
@@ -437,7 +437,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
                 }
             }
 
-            if(_noiseFileName!="0") {
+            if(_noiseFileName!="") {
                 EventsNoise++;
                 LCEventImpl*  evt = new LCEventImpl() ;
                 LCCollectionVec* col_event = new LCCollectionVec(LCIO::CALORIMETERHIT);
@@ -519,7 +519,7 @@ void TriventProcessor::end()
     hfile->Close();
     delete hfile;
     _EventWriter->close();
-    if(_noiseFileName!="0") _NoiseWriter->close();
+    if(_noiseFileName!="") _NoiseWriter->close();
     std::cout << "TriventProcess::end() !! "<<_trig_count<<" Events Trigged"<< std::endl;
     std::cout <<TouchedEvents<<" Events were overlaping "<<"("<<(TouchedEvents*1.0/(TouchedEvents+eventtotal))*100<<"%)"<<std::endl;
     std::cout <<"Total nbr Events : "<<eventtotal<<" Events with nbr of plates >="<<_LayerCut<<" : "<<EventsSelected<<" ("<<EventsSelected*1.0/eventtotal*100<<"%)"<< std::endl;
