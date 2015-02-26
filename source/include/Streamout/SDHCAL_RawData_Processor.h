@@ -13,7 +13,7 @@
 
 
 
-
+int _BitsToSkip;
 
 using namespace lcio ;
 using namespace marlin ;
@@ -180,7 +180,7 @@ private:
     */
     bool _debugMode;
     unsigned int _eventNr;
-    int _BitsToSkip;
+    
     /** Input collection name.
      */
     std::string  _XDAQCollectionNames ;
