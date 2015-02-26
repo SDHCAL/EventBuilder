@@ -50,7 +50,7 @@ void SDHCAL_buffer::printBuffer(unsigned int start, unsigned int stop,std::ostre
 
 SDHCAL_RawBuffer_Navigator::SDHCAL_RawBuffer_Navigator(SDHCAL_buffer b) :_buffer(b),_SCbuffer(0,0)
 {
-    _DIFstartIndex=DIFUnpacker::getStartOfDIF(_buffer.buffer(),_buffer.getsize(),24); //92 was here
+    _DIFstartIndex=DIFUnpacker::getStartOfDIF(_buffer.buffer(),_buffer.getsize(),_BitsToSkip); //92 was here
     _theDIFPtr=NULL;
     _badSCdata=false;
 }
