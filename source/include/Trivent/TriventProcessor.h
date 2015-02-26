@@ -38,6 +38,7 @@ protected:
     int _trig_count;
     int _noiseCut;
     int _LayerCut;
+    int _TriggerTime;
     std::map<int,int>Times;
     std::vector<std::map<int,int> >Times_Plates;
     std::vector<std::map<int,int> >Times_Plates_perRun;

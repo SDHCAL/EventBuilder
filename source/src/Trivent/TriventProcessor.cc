@@ -251,6 +251,8 @@ TriventProcessor::TriventProcessor() : Processor("TriventProcessorType")
     registerProcessorParameter("noiseCut" ,"noise cut in time spectrum 7 in default",_noiseCut ,_noiseCut);
     _LayerCut = 3;
     registerProcessorParameter("LayerCut" ,"cut in number of layer 3 in default",_LayerCut ,_LayerCut);
+    _TriggerTime = 0;
+    registerProcessorParameter("TriggerTime" ,"All Events with Time greater than this number will be ignored (0) in case of Triggerless",_TriggerTime ,_TriggerTime);
 }
 
 TriventProcessor::~TriventProcessor() {}
@@ -379,7 +381,10 @@ void TriventProcessor::processEvent( LCEvent * evtP )
                         continue;
                     }
                     //std::cout<<red<<dif_id<<blue<<geom.GetDifNbrPlate(dif_id)-1<<"  "<<dif_id<<normal<<std::endl;
-                    Times[raw_hit->getTimeStamp()]++;
+                    if(_TriggerTime==0 || raw_hit->getTimeStamp()<=_TriggerTime)
+                    {
+		    Times[raw_hit->getTimeStamp()]++;
+                    }
                     Times_Plates[geom.GetDifNbrPlate(dif_id)-1][raw_hit->getTimeStamp()]++;
                     Times_Plates_perRun[geom.GetDifNbrPlate(dif_id)-1][raw_hit->getTimeStamp()]++;
                     if(raw_hit->getTimeStamp()>timemax)timemax=raw_hit->getTimeStamp();
@@ -388,7 +393,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
                     RawHits[raw_hit->getTimeStamp()].push_back(raw_hit);
                 }
             }
-
+            if(Times.size()==0) std::cout<<red<<" 0 hits within the the TriggerTime given... You should verify your TriggerTime or your run is triggerless "<<normal<<std::endl;
             double delta=timemax_local-timemin_local;
             total_time+=delta;
             for(unsigned int j =0; j<Nbrof0Hits.size(); ++j) {

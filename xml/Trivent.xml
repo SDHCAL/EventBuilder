@@ -24,11 +24,13 @@ FILE
   </global>
 
   <processor name="MyTriventProcessor" type="TriventProcessorType">
-    <parameter name="FileNameGeometry" value="./DetectorGeometry/Aout.xml"/>
+    <parameter name="FileNameGeometry" value="./DetectorGeometry/Dome2.xml"/>
     <parameter name="ReaderType" value="XMLReader"/>
     <parameter name="LayerCut" value="3" />
     <parameter name="noiseCut" value="3" />
     <parameter name="timeWin" value="2" />
+    <!-- All Events with TimeStamp greater than TriggerTime will be considered as noise -->
+    <parameter name="TriggerTime" value="0"/>
     <parameter name="LCIOOutputFile" value=" OUTPUT " />
     <parameter name="NOISEOutputFile" value=" NOISES " />
   </processor>
