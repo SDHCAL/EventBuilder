@@ -48,9 +48,9 @@ void SDHCAL_buffer::printBuffer(unsigned int start, unsigned int stop,std::ostre
     flux << std::dec <<  std::endl;
 }
 
-SDHCAL_RawBuffer_Navigator::SDHCAL_RawBuffer_Navigator(SDHCAL_buffer b) :_buffer(b),_SCbuffer(0,0)
+SDHCAL_RawBuffer_Navigator::SDHCAL_RawBuffer_Navigator(SDHCAL_buffer b, unsigned int BitsToSkip) :_buffer(b),_SCbuffer(0,0)
 {
-    _DIFstartIndex=DIFUnpacker::getStartOfDIF(_buffer.buffer(),_buffer.getsize(),_BitsToSkip); //92 was here
+    _DIFstartIndex=DIFUnpacker::getStartOfDIF(_buffer.buffer(),_buffer.getsize(),BitsToSkip); //92 was here
     _theDIFPtr=NULL;
     _badSCdata=false;
 }
@@ -204,7 +204,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
             _nProcessedObject++;
             //LMGeneric *lmobj=(LMGeneric *) obj;
             //unsigned char* debug_variable_1=lmobj->getSDHCALBuffer().endOfBuffer();
-            SDHCAL_RawBuffer_Navigator bufferNavigator(lmobj->getSDHCALBuffer());
+            SDHCAL_RawBuffer_Navigator bufferNavigator(lmobj->getSDHCALBuffer(), _BitsToSkip);
             //unsigned char* debug_variable_2=bufferNavigator.getDIFBuffer().endOfBuffer();
             //streamlog_out(DEBUG)<<"DIF BUFFER END "<<(unsigned int *) debug_variable_1<<" "<< (unsigned int *) debug_variable_2 << std::endl;
             //if (_debugMode) assert (debug_variable_1 == debug_variable_2);

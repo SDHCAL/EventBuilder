@@ -13,7 +13,6 @@
 
 
 
-int _BitsToSkip;
 
 using namespace lcio ;
 using namespace marlin ;
@@ -79,7 +78,7 @@ public:
 class SDHCAL_RawBuffer_Navigator
 {
 public:
-    SDHCAL_RawBuffer_Navigator(SDHCAL_buffer b);
+    SDHCAL_RawBuffer_Navigator(SDHCAL_buffer b,unsigned int BitsToSkip); //BitsToSkip=92 in 2012, 24 in 2014
     ~SDHCAL_RawBuffer_Navigator()
     {
         if (_theDIFPtr!=NULL) delete _theDIFPtr;
@@ -190,6 +189,10 @@ private:
     std::string _RawHitCollectionName;
     std::string _RawHitCollectionNameTime;
     std::string _TcherenkovSignal;
+
+    /** Parameters
+     */
+    int _BitsToSkip;
 
     //statistical counters
     unsigned int _nevt;
