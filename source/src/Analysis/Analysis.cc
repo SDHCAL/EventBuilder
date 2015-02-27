@@ -42,7 +42,7 @@ void AnalysisProcessor::processRunHeader( LCRunHeader* run)
 void AnalysisProcessor::PrintStatShort()
 {
     ofstream fichier;
-    fichier.open("ResultsShorts"+std::to_string(_NbrRun)+".txt", ios::out | ios::app);  //déclaration du flux et ouverture du fichier
+    fichier.open("ResultsShorts"+std::to_string((long long int)_NbrRun)+".txt", ios::out | ios::app);  //déclaration du flux et ouverture du fichier
     if(fichier) { // si l'ouverture a réussi
         fichier<<_NbrRun<<"   ";
         for(unsigned int i=0; i!=testedPlanList.size(); ++i) {
@@ -246,6 +246,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
     double  pyz1 = myfityz->GetParameter(1);
     counts[YZTRACKFITPASSED]++;
     double Zexp=this->GetZexp(pxz0,pyz0,pxz1,pyz1);
+    std::cout<<blue<<pxz0<<"  "<<myfit.GetParErrors()[0]<<"  "<<pxz1<<"  "<<myfit.GetParErrors()[1]<<"  "<<pyz0<<"  "<<myfit2.GetParErrors()[0]<<"  "<<pyz1<<"  "<<myfit2.GetParErrors()[1]<<normal<<std::endl;
     
     ///////////////////////////////
     //double Xexp = pxz0+pxz1*Zexp;
@@ -279,8 +280,10 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
 
 void testedPlan::print()
 {
-    std::cout<<"Plane Number (in geometry file): "<<Nbr<<" Z="<<Z0<<" NombreTests="<<nombreTests<<" pass="<<nombreTestsOK<<"  sommeNHits="<<sommeNombreHits<< "  (type=" <<GetType()<<" )"<<std::endl;
-    for (int i=0; i<NCOUNTERS; i++) std::cout << i<<":"<<counts[i]<<"  ";
+    std::cout<<yellow<<"Plane Number (in geometry file): "<<Nbr+1<<" Z = "<<Z0<<" NombreTests = "<<nombreTests<<" nombreTestsOk = "<<nombreTestsOK<<"  sommeNHits = "<<sommeNombreHits<< "  ( type = " <<GetType()<<" )"<<normal<<std::endl;
+    std::cout<<"List of counters"<<std::endl;
+    std::vector<std::string>Text{"TESTYOUCALLED","NOTOOMUCHHITSINPLAN","XZTRACKFITPASSED","YZTRACKFITPASSED","NOHITINPLAN"};
+    for (int i=0; i<NCOUNTERS; i++) std::cout <<yellow<< Text[i]<<" : "<<counts[i]<<"  "<<normal;
     std::cout<<std::endl;
 }
 
@@ -358,15 +361,15 @@ void AnalysisProcessor::init()
             //std::string b="Correlations"+ std::to_string( (long long int) it->first +1 );
             std::string a="Distribution hit selectionner par analysis"+ std::to_string( (long long int) it->first +1 );
             if(it->second==positional) {
-                Distribution_hits.push_back(new TH2F(a.c_str(),a.c_str(),128,0,128,1,0,50));
+                Distribution_hits.push_back(new TH2F(a.c_str(),a.c_str(),700,0,700,700,0,700));
             } else {
-                Distribution_hits.push_back(new TH2F(a.c_str(),a.c_str(),100,0,100,100,0,100));
+                Distribution_hits.push_back(new TH2F(a.c_str(),a.c_str(),700,0,700,700,0,700));
             }
              std::string b="Hit expected"+ std::to_string( (long long int) it->first +1 );
             if(it->second==positional) {
-                Distribution_exp.push_back(new TH2F(b.c_str(),b.c_str(),300,0,300,300,0,300));
+                Distribution_exp.push_back(new TH2F(b.c_str(),b.c_str(),700,0,700,700,0,700));
             } else {
-                Distribution_exp.push_back(new TH2F(b.c_str(),b.c_str(),300,0,300,300,0,300));
+                Distribution_exp.push_back(new TH2F(b.c_str(),b.c_str(),700,0,700,700,0,700));
             }
             //Correlations.push_back(new TH2F(b.c_str(),b.c_str(),200,0,200,200,0,200));
 
@@ -430,6 +433,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 
 void AnalysisProcessor::end()
 {
+    for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->print();
     std::string b="Results_Analysis_"+std::to_string( (long long int) _NbrRun)+".root";
     TFile *hfile = new TFile(b.c_str(),"RECREATE");
     for(unsigned int i=0; i<Distribution_hits.size(); ++i) {

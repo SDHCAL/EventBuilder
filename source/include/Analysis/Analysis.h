@@ -201,18 +201,20 @@ public:
     }
     inline double ErrorX()
     {
-        double e=fabs(maxX()-minX());
-        return (e<1 ? 1 : e);
+        //double e=fabs(maxX()-minX());
+        //return (e<1 ? 1 : e);
+        return 10;
     }
     inline double ErrorY()
     {
-        double e=fabs(maxY()-minY());
-        if(this->GetType()==pad)return (e<1 ? 1 : e);
-        else return 0;
+        //double e=fabs(maxY()-minY());
+        //if(this->GetType()==pad)return (e<1 ? 1 : e);
+        //else return 0;
+        return 10;
     }
     inline double ErrorZ()
     {
-        return 2;
+        return 10;
     }
     inline bool operator==(plan b);
     inline bool operator!=(plan b);

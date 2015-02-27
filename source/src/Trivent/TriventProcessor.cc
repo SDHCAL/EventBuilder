@@ -40,15 +40,16 @@ unsigned int _eventNr=0;
 #define size_pad 10.4125
 #define size_strip 2.5
 std::map<int,bool>Warning;
-/*class ToTree
+class ToTree
 {
 public:
 int pI,pJ,pK,pAsic,pDifId,pAsicChannel;
 unsigned int pTime;
 double pX,pY,pZ;
-};*/
+};
 
-/*ToTree totree;
+
+ToTree totree;
 std::string name="Tree";
 TTree* t= new TTree(name.c_str(), name.c_str());
 TBranch* Branch1 =  t->Branch("X",&(totree.pX));
@@ -60,7 +61,8 @@ TBranch* Branch6 =  t->Branch("K",&(totree.pK));
 TBranch* Branch7 =  t->Branch("Time",&(totree.pTime));
 TBranch* Branch8 =  t->Branch("Asic",&(totree.pAsic));
 TBranch* Branch9 =  t->Branch("DifId",&(totree.pDifId));
-TBranch* Branch10 =  t->Branch("AsicChannel",&(totree.pAsicChannel));*/
+TBranch* Branch10 =  t->Branch("AsicChannel",&(totree.pAsicChannel));
+//TBranch* Branch11 = t->Branch("Hit",&(totree));
 std::vector<TH1F*>Time_Distr;
 std::vector<TH1F*>Hits_Distr;
 std::vector<TH1F*>Time_Distr_Events;
@@ -207,7 +209,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
         caloHit->setPosition(pos);
         cd.setCellID( caloHit ) ;
         col->addElement(caloHit);
-        /*totree.pI=I;
+        totree.pI=I;
         totree.pJ=J;
         totree.pK=K;
         totree.pX=pos[0];
@@ -216,15 +218,17 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
         totree.pAsic=asic_id;
         totree.pDifId=dif_id;
         totree.pAsicChannel=chan_id;
-        totree.pTime=(*it)->getTimeStamp();*/
-
+        totree.pTime=(*it)->getTimeStamp();
+        
         //std::cout<<magenta<<totree.pI<<"  "<<totree.pJ<<"  "<<red<<(*it)->getTimeStamp()<<"  "<<totree.pTime<<normal<<std::endl;
-        /*t->Fill();*/
+        t->Fill();
 
     }
-    if(IsNoise==1) {
+    if(IsNoise==1) 
+    {
         for(unsigned int i=0; i<Times_Plates.size(); ++i)for(std::map<int,int>::iterator it = Times_Plates[i].begin(); it!=Times_Plates[i].end(); ++it) Hits_Distr_Noise[i]->Fill(it->second,1);
-    } else {
+    } else 
+    {
         for(unsigned int i=0; i<Times_Plates.size(); ++i)for(std::map<int,int>::iterator it = Times_Plates[i].begin(); it!=Times_Plates[i].end(); ++it) Hits_Distr_Events[i]->Fill(it->second,1);
     }
 
@@ -421,7 +425,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 
                 }
 
-                if(nbrPlanestouched.size()>=(unsigned int)(_LayerCut)) {
+             if(nbrPlanestouched.size()>=(unsigned int)(_LayerCut)) {
                     EventsSelected++;
                     for(middle=before; middle!=after; ) {
                         EventsGrouped.insert(EventsGrouped.end(),middle->second.begin(),middle->second.end());
@@ -439,6 +443,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
                     evt->setRunNumber(evtP->getRunNumber());
                     _EventWriter->writeEvent( evt ) ;
                     delete evt;
+                    
                 }
             }
 
@@ -457,7 +462,8 @@ void TriventProcessor::processEvent( LCEvent * evtP )
                 evt->setEventNumber(EventsNoise);
                 evt->setRunNumber(evtP->getRunNumber());
                 //std::cout<<(timemax-timemin)*200e-9<<std::endl;
-                evt->setTimeStamp(timemax-timemin);
+                //WHAT IS IT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+               // evt->setTimeStamp(timemax-timemin);
                 _NoiseWriter->writeEvent( evt ) ;
                 delete evt;
             }
@@ -509,7 +515,7 @@ void TriventProcessor::end()
         delete Hits_Distr_Events[i];
         delete Hits_Distr_Noise[i];
     }
-    /*t->Write();
+    t->Write();
     delete Branch1;
     delete Branch2;
     delete Branch3;
@@ -520,7 +526,8 @@ void TriventProcessor::end()
     delete Branch8;
     delete Branch9;
     delete Branch10;
-    delete t;*/
+    /*delete Branch11;*/
+    //delete t;
     hfile->Close();
     delete hfile;
     _EventWriter->close();
