@@ -1,274 +1,274 @@
 <Detector>
 
   <Plate x="33.5" y="25" z="-2620" alpha="0" beta="-1,04179884" gamma="0">
-     <Dif DifId="28" x="0" y="0"/>
+     <Dif DifId="28" I="0" J="0"/>
   </Plate>
   <Plate x="33.5" y="25" z="-2527" alpha="0" beta="-1,04179884" gamma="0">
-     <Dif DifId="198" x="0" y="0"/>
+     <Dif DifId="198" I="0" J="0"/>
   </Plate>
   <Plate x="33.5" y="25" z="-2434" alpha="0" beta="-1,04179884" gamma="0">
-     <Dif DifId="32" x="0" y="0"/>
+     <Dif DifId="32" I="0" J="0"/>
   </Plate>
   <Plate x="33.5" y="25" z="-2341" alpha="0" beta="-1,04179884" gamma="0">
-     <Dif DifId="2" x="0" y="0"/>
+     <Dif DifId="2" I="0" J="0"/>
   </Plate>
   <Plate x="33.5" y="25" z="-2250" alpha="0" beta="-1,04179884" gamma="0">
-     <Dif DifId="23" x="0" y="0"/>
+     <Dif DifId="23" I="0" J="0"/>
   </Plate>
 
 
 
   <Plate x="0" y="0" z="0.000" alpha="0" beta="0" gamma="0">
-     <Dif DifId="181" x="0" y="64.0"/>
-     <Dif DifId="94" x="0" y="32.0"/>
-     <Dif DifId="30" x="0" y="0.0"/>
+     <Dif DifId="181" I="0" J="64.0"/>
+     <Dif DifId="94" I="0" J="32.0"/>
+     <Dif DifId="30" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="28" alpha="0" beta="0" gamma="0">
-     <Dif DifId="117" x="0" y="64.0"/>
-     <Dif DifId="149" x="0" y="32.0"/>
-     <Dif DifId="115" x="0" y="0.0"/>
+     <Dif DifId="117" I="0" J="64.0"/>
+     <Dif DifId="149" I="0" J="32.0"/>
+     <Dif DifId="115" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="56" alpha="0" beta="0" gamma="0">
-     <Dif DifId="122" x="0" y="64.0"/>
-     <Dif DifId="123" x="0" y="32.0"/>
-     <Dif DifId="130" x="0" y="0.0"/>
+     <Dif DifId="122" I="0" J="64.0"/>
+     <Dif DifId="123" I="0" J="32.0"/>
+     <Dif DifId="130" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="84" alpha="0" beta="0" gamma="0">
-     <Dif DifId="129" x="0" y="64.0"/>
-     <Dif DifId="118" x="0" y="32.0"/>
-     <Dif DifId="119" x="0" y="0.0"/>
+     <Dif DifId="129" I="0" J="64.0"/>
+     <Dif DifId="118" I="0" J="32.0"/>
+     <Dif DifId="119" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="112" alpha="0" beta="0" gamma="0">
-     <Dif DifId="164" x="0" y="64.0"/>
-     <Dif DifId="152" x="0" y="32.0"/>
-     <Dif DifId="151" x="0" y="0.0"/>
+     <Dif DifId="164" I="0" J="64.0"/>
+     <Dif DifId="152" I="0" J="32.0"/>
+     <Dif DifId="151" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="140" alpha="0" beta="0" gamma="0">
-     <Dif DifId="74" x="0" y="64.0"/>
-     <Dif DifId="61" x="0" y="32.0"/>
-     <Dif DifId="75" x="0" y="0.0"/>
+     <Dif DifId="74" I="0" J="64.0"/>
+     <Dif DifId="61" I="0" J="32.0"/>
+     <Dif DifId="75" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="168" alpha="0" beta="0" gamma="0">
-     <Dif DifId="156" x="0" y="64.0"/>
-     <Dif DifId="111" x="0" y="32.0"/>
-     <Dif DifId="110" x="0" y="0.0"/>
+     <Dif DifId="156" I="0" J="64.0"/>
+     <Dif DifId="111" I="0" J="32.0"/>
+     <Dif DifId="110" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="196" alpha="0" beta="0" gamma="0">
-    <Dif DifId="102" x="0" y="64.0"/>
-     <Dif DifId="177" x="0" y="32.0"/>
-     <Dif DifId="103" x="0" y="0.0"/>
+    <Dif DifId="102" I="0" J="64.0"/>
+     <Dif DifId="177" I="0" J="32.0"/>
+     <Dif DifId="103" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="224" alpha="0" beta="0" gamma="0">
-    <Dif DifId="133" x="0" y="64.0"/>
-     <Dif DifId="136" x="0" y="32.0"/>
-     <Dif DifId="134" x="0" y="0.0"/>
+    <Dif DifId="133" I="0" J="64.0"/>
+     <Dif DifId="136" I="0" J="32.0"/>
+     <Dif DifId="134" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="252" alpha="0" beta="0" gamma="0">
-    <Dif DifId="128" x="0" y="64.0"/>
-     <Dif DifId="120" x="0" y="32.0"/>
-     <Dif DifId="121" x="0" y="0.0"/>
+    <Dif DifId="128" I="0" J="64.0"/>
+     <Dif DifId="120" I="0" J="32.0"/>
+     <Dif DifId="121" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="280" alpha="0" beta="0" gamma="0">
-    <Dif DifId="65" x="0" y="64.0"/>
-     <Dif DifId="64" x="0" y="32.0"/>
-     <Dif DifId="58" x="0" y="0.0"/>
+    <Dif DifId="65" I="0" J="64.0"/>
+     <Dif DifId="64" I="0" J="32.0"/>
+     <Dif DifId="58" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="308" alpha="0" beta="0" gamma="0">
-    <Dif DifId="148" x="0" y="64.0"/>
-     <Dif DifId="72" x="0" y="32.0"/>
-     <Dif DifId="73" x="0" y="0.0"/>
+    <Dif DifId="148" I="0" J="64.0"/>
+     <Dif DifId="72" I="0" J="32.0"/>
+     <Dif DifId="73" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="336" alpha="0" beta="0" gamma="0">
-    <Dif DifId="78" x="0" y="64.0"/>
-     <Dif DifId="79" x="0" y="32.0"/>
-     <Dif DifId="60" x="0" y="0.0"/>
+    <Dif DifId="78" I="0" J="64.0"/>
+     <Dif DifId="79" I="0" J="32.0"/>
+     <Dif DifId="60" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="364" alpha="0" beta="0" gamma="0">
-    <Dif DifId="44" x="0" y="64.0"/>
-     <Dif DifId="43" x="0" y="32.0"/>
-     <Dif DifId="113" x="0" y="0.0"/>
+    <Dif DifId="44" I="0" J="64.0"/>
+     <Dif DifId="43" I="0" J="32.0"/>
+     <Dif DifId="113" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="392" alpha="0" beta="0" gamma="0">
-    <Dif DifId="66" x="0" y="64.0"/>
-     <Dif DifId="69" x="0" y="32.0"/>
-     <Dif DifId="68" x="0" y="0.0"/>
+    <Dif DifId="66" I="0" J="64.0"/>
+     <Dif DifId="69" I="0" J="32.0"/>
+     <Dif DifId="68" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="420" alpha="0" beta="0" gamma="0">
-    <Dif DifId="186" x="0" y="0.0"/>
-     <Dif DifId="127" x="0" y="32.0"/>
-     <Dif DifId="154" x="0" y="64.0"/>
+    <Dif DifId="186" I="0" J="0.0"/>
+     <Dif DifId="127" I="0" J="32.0"/>
+     <Dif DifId="154" I="0" J="64.0"/>
   </Plate>
   <Plate x="0" y="0" z="448" alpha="0" beta="0" gamma="0">
-    <Dif DifId="147" x="0" y="64.0"/>
-     <Dif DifId="70" x="0" y="32.0"/>
-     <Dif DifId="71" x="0" y="0.0"/>
+    <Dif DifId="147" I="0" J="64.0"/>
+     <Dif DifId="70" I="0" J="32.0"/>
+     <Dif DifId="71" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="476" alpha="0" beta="0" gamma="0">
     <Dif DifId="47" x="0" y="64.0"/>
-     <Dif DifId="139" x="0" y="32.0"/>
-     <Dif DifId="140" x="0" y="0.0"/>
+     <Dif DifId="139" I="0" J="32.0"/>
+     <Dif DifId="140" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="504" alpha="0" beta="0" gamma="0">
-    <Dif DifId="143" x="0" y="64.0"/>
-     <Dif DifId="77" x="0" y="32.0"/>
-     <Dif DifId="76" x="0" y="0.0"/>
+    <Dif DifId="143" I="0" J="64.0"/>
+     <Dif DifId="77" I="0" J="32.0"/>
+     <Dif DifId="76" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="532" alpha="0" beta="0" gamma="0">
-    <Dif DifId="159" x="0" y="64.0"/>
-     <Dif DifId="91" x="0" y="32.0"/>
-     <Dif DifId="36" x="0" y="0.0"/>
+    <Dif DifId="159" I="0" J="64.0"/>
+     <Dif DifId="91" I="0" J="32.0"/>
+     <Dif DifId="36" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="560" alpha="0" beta="0" gamma="0">
-    <Dif DifId="179" x="0" y="64.0"/>
-     <Dif DifId="178" x="0" y="32.0"/>
-     <Dif DifId="183" x="0" y="0.0"/>
+    <Dif DifId="179" I="0" J="64.0"/>
+     <Dif DifId="178" I="0" J="32.0"/>
+     <Dif DifId="183" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="588" alpha="0" beta="0" gamma="0">
-    <Dif DifId="41" x="0" y="64.0"/>
-     <Dif DifId="42" x="0" y="32.0"/>
-     <Dif DifId="67" x="0" y="0.0"/>
+    <Dif DifId="41" I="0" J="64.0"/>
+     <Dif DifId="42" I="0" J="32.0"/>
+     <Dif DifId="67" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="616" alpha="0" beta="0" gamma="0">
-    <Dif DifId="137" x="0" y="64.0"/>
-     <Dif DifId="46" x="0" y="32.0"/>
-     <Dif DifId="138" x="0" y="0.0"/>
+    <Dif DifId="137" I="0" J="64.0"/>
+     <Dif DifId="46" I="0" J="32.0"/>
+     <Dif DifId="138" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="644" alpha="0" beta="0" gamma="0">
-    <Dif DifId="131" x="0" y="64.0"/>
-     <Dif DifId="173" x="0" y="32.0"/>
-     <Dif DifId="144" x="0" y="0.0"/>
+    <Dif DifId="131" I="0" J="64.0"/>
+     <Dif DifId="173" I="0" J="32.0"/>
+     <Dif DifId="144" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="672" alpha="0" beta="0" gamma="0">
-    <Dif DifId="189" x="0" y="64.0"/>
-     <Dif DifId="184" x="0" y="32.0"/>
-     <Dif DifId="160" x="0" y="0.0"/>
+    <Dif DifId="189" I="0" J="64.0"/>
+     <Dif DifId="184" I="0" J="32.0"/>
+     <Dif DifId="160" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="700" alpha="0" beta="0" gamma="0">
-    <Dif DifId="172" x="0" y="64.0"/>
-     <Dif DifId="167" x="0" y="32.0"/>
-     <Dif DifId="171" x="0" y="0.0"/>
+    <Dif DifId="172" I="0" J="64.0"/>
+     <Dif DifId="167" I="0" J="32.0"/>
+     <Dif DifId="171" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="728" alpha="0" beta="0" gamma="0">
-    <Dif DifId="146" x="0" y="64.0"/>
-     <Dif DifId="135" x="0" y="32.0"/>
-     <Dif DifId="145" x="0" y="0.0"/>
+    <Dif DifId="146" I="0" J="64.0"/>
+     <Dif DifId="135" I="0" J="32.0"/>
+     <Dif DifId="145" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="756" alpha="0" beta="0" gamma="0">
-    <Dif DifId="185" x="0" y="64.0"/>
-     <Dif DifId="170" x="0" y="32.0"/>
-     <Dif DifId="180" x="0" y="0.0"/>
+    <Dif DifId="185" I="0" J="64.0"/>
+     <Dif DifId="170" I="0" J="32.0"/>
+     <Dif DifId="180" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="784" alpha="0" beta="0" gamma="0">
-    <Dif DifId="187" x="0" y="64.0"/>
-     <Dif DifId="188" x="0" y="32.0"/>
-     <Dif DifId="190" x="0" y="0.0"/>
+    <Dif DifId="187" I="0" J="64.0"/>
+     <Dif DifId="188" I="0" J="32.0"/>
+     <Dif DifId="190" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="812" alpha="0" beta="0" gamma="0">
-    <Dif DifId="169" x="0" y="64.0"/>
-     <Dif DifId="165" x="0" y="32.0"/>
-     <Dif DifId="166" x="0" y="0.0"/>
+    <Dif DifId="169" I="0" J="64.0"/>
+     <Dif DifId="165" I="0" J="32.0"/>
+     <Dif DifId="166" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="840" alpha="0" beta="0" gamma="0">
-    <Dif DifId="155" x="0" y="64.0"/>
-     <Dif DifId="57" x="0" y="32.0"/>
-     <Dif DifId="50" x="0" y="0.0"/>
+    <Dif DifId="155" I="0" J="64.0"/>
+     <Dif DifId="57" I="0" J="32.0"/>
+     <Dif DifId="50" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="868" alpha="0" beta="0" gamma="0">
-    <Dif DifId="153" x="0" y="0.0"/>
-     <Dif DifId="108" x="0" y="32.0"/>
-     <Dif DifId="25" x="0" y="64.0"/>
+    <Dif DifId="153" I="0" J="0.0"/>
+     <Dif DifId="108" I="0" J="32.0"/>
+     <Dif DifId="25" I="0" J="64.0"/>
   </Plate>
   <Plate x="0" y="0" z="896" alpha="0" beta="0" gamma="0">
-    <Dif DifId="51" x="0" y="64.0"/>
-     <Dif DifId="56" x="0" y="32.0"/>
-     <Dif DifId="109" x="0" y="0.0"/>
+    <Dif DifId="51" I="0" J="64.0"/>
+     <Dif DifId="56" I="0" J="32.0"/>
+     <Dif DifId="109" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="924" alpha="0" beta="0" gamma="0">
-    <Dif DifId="107" x="0" y="0.0"/>
-     <Dif DifId="150" x="0" y="32.0"/>
-     <Dif DifId="116" x="0" y="64.0"/>
+    <Dif DifId="107" I="0" J="0.0"/>
+     <Dif DifId="150" I="0" J="32.0"/>
+     <Dif DifId="116" I="0" J="64.0"/>
   </Plate>
   <Plate x="0" y="0" z="952" alpha="0" beta="0" gamma="0">
-    <Dif DifId="126" x="0" y="64.0"/>
-     <Dif DifId="124" x="0" y="32.0"/>
-     <Dif DifId="49" x="0" y="0.0"/>
+    <Dif DifId="126" I="0" J="64.0"/>
+     <Dif DifId="124" I="0" J="32.0"/>
+     <Dif DifId="49" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="980" alpha="0" beta="0" gamma="0">
-    <Dif DifId="174" x="0" y="64.0"/>
-     <Dif DifId="175" x="0" y="32.0"/>
-     <Dif DifId="176" x="0" y="0.0"/>
+    <Dif DifId="174" I="0" J="64.0"/>
+     <Dif DifId="175" I="0" J="32.0"/>
+     <Dif DifId="176" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="1008" alpha="0" beta="0" gamma="0">
-    <Dif DifId="48" x="0" y="64.0"/>
-     <Dif DifId="45" x="0" y="32.0"/>
-     <Dif DifId="114" x="0" y="0.0"/>
+    <Dif DifId="48" I="0" J="64.0"/>
+     <Dif DifId="45" I="0" J="32.0"/>
+     <Dif DifId="114" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="1036" alpha="0" beta="0" gamma="0">
-    <Dif DifId="98" x="0" y="64.0"/>
-     <Dif DifId="93" x="0" y="32.0"/>
-     <Dif DifId="40" x="0" y="0.0"/>
+    <Dif DifId="98" I="0" J="64.0"/>
+     <Dif DifId="93" I="0" J="32.0"/>
+     <Dif DifId="40" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="1064" alpha="0" beta="0" gamma="0">
-    <Dif DifId="92" x="0" y="64.0"/>
-     <Dif DifId="97" x="0" y="32.0"/>
-     <Dif DifId="100" x="0" y="0.0"/>
+    <Dif DifId="92" I="0" J="64.0"/>
+     <Dif DifId="97" I="0" J="32.0"/>
+     <Dif DifId="100" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="1092" alpha="0" beta="0" gamma="0">
-    <Dif DifId="62" x="0" y="64.0"/>
-     <Dif DifId="106" x="0" y="32.0"/>
-     <Dif DifId="132" x="0" y="0.0"/>
+    <Dif DifId="62" I="0" J="64.0"/>
+     <Dif DifId="106" I="0" J="32.0"/>
+     <Dif DifId="132" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="1120" alpha="0" beta="0" gamma="0">
-    <Dif DifId="101" x="0" y="64.0"/>
-     <Dif DifId="35" x="0" y="32.0"/>
-     <Dif DifId="99" x="0" y="0.0"/>
+    <Dif DifId="101" I="0" J="64.0"/>
+     <Dif DifId="35" I="0" J="32.0"/>
+     <Dif DifId="99" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="1148" alpha="0" beta="0" gamma="0">
-    <Dif DifId="158" x="0" y="64.0"/>
-     <Dif DifId="142" x="0" y="32.0"/>
-     <Dif DifId="141" x="0" y="0.0"/>
+    <Dif DifId="158" I="0" J="64.0"/>
+     <Dif DifId="142" I="0" J="32.0"/>
+     <Dif DifId="141" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="1176" alpha="0" beta="0" gamma="0">
-    <Dif DifId="163" x="0" y="64.0"/>
-     <Dif DifId="161" x="0" y="32.0"/>
-     <Dif DifId="162" x="0" y="0.0"/>
+    <Dif DifId="163" I="0" J="64.0"/>
+     <Dif DifId="161" I="0" J="32.0"/>
+     <Dif DifId="162" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="1204" alpha="0" beta="0" gamma="0">
-    <Dif DifId="104" x="0" y="64.0"/>
-     <Dif DifId="29" x="0" y="32.0"/>
-     <Dif DifId="112" x="0" y="0.0"/>
+    <Dif DifId="104" I="0" J="64.0"/>
+     <Dif DifId="29" I="0" J="32.0"/>
+     <Dif DifId="112" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="1232" alpha="0" beta="0" gamma="0">
-    <Dif DifId="59" x="0" y="64.0"/>
-     <Dif DifId="53" x="0" y="32.0"/>
-     <Dif DifId="54" x="0" y="0.0"/>
+    <Dif DifId="59" I="0" J="64.0"/>
+     <Dif DifId="53" I="0" J="32.0"/>
+     <Dif DifId="54" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="1260" alpha="0" beta="0" gamma="0">
-    <Dif DifId="96" x="0" y="64.0"/>
-     <Dif DifId="90" x="0" y="32.0"/>
-     <Dif DifId="27" x="0" y="0.0"/>
+    <Dif DifId="96" I="0" J="64.0"/>
+     <Dif DifId="90" I="0" J="32.0"/>
+     <Dif DifId="27" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="1288" alpha="0" beta="0" gamma="0">
-    <Dif DifId="95" x="0" y="64.0"/>
-     <Dif DifId="8" x="0" y="32.0"/>
-     <Dif DifId="5" x="0" y="0.0"/>
+    <Dif DifId="95" I="0" J="64.0"/>
+     <Dif DifId="8" I="0" J="32.0"/>
+     <Dif DifId="5" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="1316" alpha="0" beta="0" gamma="0">
-    <Dif DifId="63" x="0" y="0.0"/>
-     <Dif DifId="87" x="0" y="32.0"/>
-     <Dif DifId="18" x="0" y="64.0"/>
+    <Dif DifId="63" I="0" J="0.0"/>
+     <Dif DifId="87" I="0" J="32.0"/>
+     <Dif DifId="18" I="0" J="64.0"/>
   </Plate>
   <Plate x="0" y="0" z="1344" alpha="0" beta="0" gamma="0">
-    <Dif DifId="243" x="0" y="0.0"/>
-     <Dif DifId="242" x="0" y="32.0"/>
-     <Dif DifId="241" x="0" y="64.0"/>
+    <Dif DifId="243" I="0" J="0.0"/>
+     <Dif DifId="242" I="0" J="32.0"/>
+     <Dif DifId="241" I="0" J="64.0"/>
   </Plate>
   <Plate x="0" y="0" z="1372" alpha="0" beta="0" gamma="0">
-    <Dif DifId="105" x="0" y="0.0"/>
-     <Dif DifId="182" x="0" y="32.0"/>
-     <Dif DifId="80" x="0" y="64.0"/>
+    <Dif DifId="105" I="0" J="0.0"/>
+     <Dif DifId="182" I="0" J="32.0"/>
+     <Dif DifId="80" I="0" J="64.0"/>
   </Plate>
   <Plate x="0.0" y="0.0" z="0" alpha="0" beta="0" gamma="0">
-     <Dif DifId="1" x="0" y="0.0" DifType="tcherenkov"/>
+     <Dif DifId="1" I="0" J="0.0" DifType="tcherenkov"/>
   </Plate>
 </Detector>
