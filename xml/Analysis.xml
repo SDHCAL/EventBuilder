@@ -21,16 +21,16 @@
 
 
 		</parameter>
-                <parameter name="MaxRecordNumber" value="0"/>
+                <parameter name="MaxRecordNumber" value="NUMBER"/>
                 <parameter name="SkipNEvents" value="0"/>
                 <parameter name="SupressCheck" value="false"/>
               	<parameter name="Verbosity" type="string">MESSAGE0 </parameter>
 	</global>
 	<processor name="MyAnalysisProcessor" type="AnalysisProcessorType">
-        	<parameter name="FileNameGeometry" value="./DetectorGeometry/Dome2.xml"/>
+        	<parameter name="FileNameGeometry" value="./DetectorGeometry/Dome.xml"/>
         	<parameter name="ReaderType" value="XMLReader"/>
         	<parameter name="Chi2" value="10"/>
-        	<parameter name="NbrHitPerPlaneMax" value="50000"/>
+        	<parameter name="NbrHitPerPlaneMax" value="100000"/>
         	<parameter name="NbrPlaneUseForTracking" value="4"/>
                 <parameter name="dlimforPad" value="40"/>
                 <parameter name="dlimforStrip" value="40"/>

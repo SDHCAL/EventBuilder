@@ -1,7 +1,7 @@
  if [ "$#" -eq  "0" ]
    then
  echo "all? streamout? Trivent? Analysis? ... "
-else
+else 
 
   if [[ $1 == all ]]
   then
@@ -41,6 +41,10 @@ else
 	done
 	sed -re "12r DHCAL_"$m".txt" "./xml/streamout.xml">DHCAL_"$m".xml
 	rm DHCAL_"$m".txt
+        if [ "$#" -eq  "1" ] 
+        then sed -i "s|NUMBER|0|" DHCAL_"$m".xml
+        else sed -i "s|NUMBER|$2|" DHCAL_"$m".xml
+        fi
 	sed -i "s|OUTPUT|$(pwd)/DHCAL_Streamout_"$m"_I0.slcio|" DHCAL_"$m".xml
 	Marlin DHCAL_"$m".xml
 	rm DHCAL_"$m".xml
@@ -51,6 +55,10 @@ else
 	do
 	m=$( echo "$n" | cut -c 15-20 ) 
 	cp $(pwd)/xml/Analysis.xml $(pwd)/Analysis_"$m".xml
+        if [ "$#" -eq  "1" ] 
+        then sed -i "s|NUMBER|0|" Analysis_"$m".xml
+        else sed -i "s|NUMBER|$2|" Analysis_"$m".xml
+        fi
 	sed -i "s|FILE|$(pwd)/DHCAL_Trivent_"$m"_I0.slcio|" Analysis_"$m".xml
 	Marlin Analysis_"$m".xml
 	rm Analysis_"$m".xml
@@ -78,6 +86,10 @@ else
 	do
 	m=$( echo "$n" | cut -c 13-18 ) 
 	cp $(pwd)/xml/Noise.xml $(pwd)/Noise_"$m".xml
+        if [ "$#" -eq  "1" ] 
+        then sed -i "s|NUMBER|0|" Noise_"$m".xml
+        else sed -i "s|NUMBER|$2|" Noise_"$m".xml
+        fi
 	sed -i "s|FILE|$(pwd)/DHCAL_Noise_"$m"_I0.slcio|" Noise_"$m".xml
 	Marlin Noise_"$m".xml
 	rm Noise_"$m".xml
@@ -87,7 +99,11 @@ else
 	for n in DHCAL_Streamout_*_I0.slcio
 	do
 	cp $(pwd)/xml/Trivent.xml $(pwd)
-	m=$( echo "$n" | cut -c 17-22 ) 
+	m=$( echo "$n" | cut -c 17-22 )
+        if [ "$#" -eq  "1" ] 
+        then sed -i "s|NUMBER|0|" Trivent.xml
+        else sed -i "s|NUMBER|$2|" Trivent.xml
+        fi
 	sed -i "s|FILE|$(pwd)/DHCAL_Streamout_"$m"_I0.slcio|" Trivent.xml
 	sed -i "s|OUTPUT|$(pwd)/DHCAL_Trivent_"$m"_I0.slcio|" Trivent.xml
 	sed -i "s|NOISES|$(pwd)/DHCAL_Noise_"$m"_I0.slcio|" Trivent.xml
@@ -102,6 +118,7 @@ else
 	do
 	cp $(pwd)/xml/Trivent.xml $(pwd)
 	m=$( echo "$n" | cut -c 17-22 ) 
+        sed -i "s|FILE|$2|" Trivent.xml
 	sed -i "s|FILE|$(pwd)/DHCAL_Streamout_"$m"_I0.slcio|" Trivent.xml
 	sed -i "s|OUTPUT|$(pwd)/DHCAL_Trivent_"$m"_I0.slcio|" Trivent.xml
 	sed -i "s|NOISES| |" Trivent.xml
