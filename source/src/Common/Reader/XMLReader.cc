@@ -2,7 +2,7 @@
 #include<vector>
 #include "marlin/VerbosityLevels.h"
 #include "Reader/XMLReader.h"
-void XMLReader::Read(std::string FileName, Geometry& geom)
+void XMLReader::Read(std::string &FileName, Geometry& geom)
 {
   TiXmlDocument doc(FileName.c_str());
   doc.LoadFile();
