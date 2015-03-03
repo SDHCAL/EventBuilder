@@ -26,6 +26,7 @@
                	<parameter name="XDAQCollectionName" type="string" lcioInType="LCGenericObject">RU_XDAQ </parameter>
                 <parameter name="DebugMode" type="bool"> false </parameter>
                 <parameter name="BitsToSkip" value="24"/>
+                <parameter name="TcherenkovSignalDuration" value="5"/>
 	</processor>
 	<processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
         	<parameter name="LCIOWriteMode" type="string">WRITE_NEW </parameter>

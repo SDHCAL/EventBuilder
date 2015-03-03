@@ -23,6 +23,7 @@
 #include "Reader/Reader.h"
 #include "Streamout/DIFUnpacker.h"
 #include <sstream>
+#include <set>
 namespace patch
 {
 template < typename T > std::string to_string( const T& n )
@@ -131,6 +132,8 @@ SDHCAL_RawData_Processor::SDHCAL_RawData_Processor() : Processor("SDHCAL_RawData
     registerProcessorParameter("FileNameGeometry","Name of the Geometry File",_FileNameGeometry,_FileNameGeometry);
     _BitsToSkip=24;
     registerProcessorParameter("BitsToSkip","BitsToSkip (default 24)",_BitsToSkip,_BitsToSkip);
+    _TcherenkovSignalDuration=5;
+    registerProcessorParameter("TcherenkovSignalDuration","Duration of the Tcherenkov Signal",_TcherenkovSignalDuration,_TcherenkovSignalDuration);
 }
 
 void SDHCAL_RawData_Processor::init()
@@ -156,7 +159,6 @@ void SDHCAL_RawData_Processor::init()
     }
     delete myReader;
     //Prepare a flag to tag data type in RawVec (dit les types de data qu'on va enregistrer?)
-
 }
 
 void SDHCAL_RawData_Processor::processRunHeader( LCRunHeader* run)
@@ -195,10 +197,11 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
         int nElement=col->getNumberOfElements();
         _CollectionSizeCounter[nElement]++;
         for (int iel=0; iel<nElement; iel++) {
-            LCGenericObject* obj=dynamic_cast<LCGenericObject*>(col->getElementAt(iel));
-            LMGeneric *lmobj=(LMGeneric *) obj;
-            if (obj==NULL) {
-                _nWrongObj++;
+            //LCGenericObject* obj=dynamic_cast<LCGenericObject*>(col->getElementAt(iel));
+            //LMGeneric *lmobj=(LMGeneric *) obj;
+            LMGeneric* lmobj=(LMGeneric *)(col->getElementAt(iel));
+            if (lmobj==NULL) {
+                _nWrongObj++ ;
                 continue;
             }
             _nProcessedObject++;
@@ -222,11 +225,40 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
             _SizeAfterDIFPtr[bufferNavigator.getSizeAfterDIFPtr()]++;
 
             //Make something with the Tcherenkov signal
-            if(geom.GetDifType(d->getID())==tcherenkov) {
-                std::cout<<"I'm tchrenkov's Signal !!!!! Dif : "<<d->getID()<<std::endl;
-                IMPL::LCGenericObjectImpl* Tcherenkov= new IMPL::LCGenericObjectImpl(1,0,0) ;
-                Tcherenkov->setIntVal(0,(unsigned long int)(d->getFrameTimeToTrigger(0)));
-                RawVecTcherenkov->addElement(Tcherenkov);
+            if(geom.GetDifType(d->getID())==tcherenkov) 
+	    {
+                std::set<unsigned int>Tche;
+                std::set<unsigned int>Tche2;
+                //std::cout<<"I'm tchrenkov's Signal !!!!! Dif : "<<d->getID()<<" I have " << d->getNumberOfFrames() << " frames" << std::endl;
+                for(unsigned int j=0;j<d->getNumberOfFrames();++j)
+		{
+                  Tche.insert(d->getFrameTimeToTrigger(j));
+                }
+                /*for(std::set<unsigned int>::iterator it=Tche.begin();it!=Tche.end();++it) 
+                {
+			std::cout<<yellow<<(*it)<<"  "<<normal<<"  ";
+                        //if(it==Tche.begin()||(*it)>*(--it)+6) Tche2.insert(*++it);
+		}*/
+                for(std::set<unsigned int>::iterator it=Tche.begin();it!=Tche.end();++it) 
+                {
+                        std::set<unsigned int >::iterator tm = it;
+                        --tm;
+                        if(it==Tche.begin()||(*it)>*(tm)+_TcherenkovSignalDuration) Tche2.insert(*it);
+		}
+               
+                /*for(std::set<unsigned int>::iterator it=Tche2.begin();it!=Tche2.end();++it) 
+                {
+			std::cout<<green<<(*it)<<normal<<"  ";
+		}*/
+                
+                for(std::set<unsigned int>::iterator it=Tche2.begin();it!=Tche2.end();++it)
+		{
+                        IMPL::LCGenericObjectImpl* Tcherenkov= new IMPL::LCGenericObjectImpl(1,0,0) ;
+                	Tcherenkov->setIntVal(0,*(it));
+                        //std::cout<<red<<d->getFrameAsicHeader(j)<<normal<<std::endl;
+                        //std::cout<<green<<*(it)<<std::endl;
+                	RawVecTcherenkov->addElement(Tcherenkov);
+		}
             }
 
             //if Difs are temporal ones -> createCalorimeterHit

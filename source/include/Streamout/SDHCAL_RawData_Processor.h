@@ -189,6 +189,7 @@ private:
     std::string _RawHitCollectionName;
     std::string _RawHitCollectionNameTime;
     std::string _TcherenkovSignal;
+    int _TcherenkovSignalDuration;
 
     /** Parameters
      */
