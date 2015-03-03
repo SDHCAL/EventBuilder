@@ -228,7 +228,6 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
             if(geom.GetDifType(d->getID())==tcherenkov) 
 	    {
                 std::set<unsigned int>Tche;
-                std::set<unsigned int>Tche2;
                 //std::cout<<"I'm tchrenkov's Signal !!!!! Dif : "<<d->getID()<<" I have " << d->getNumberOfFrames() << " frames" << std::endl;
                 for(unsigned int j=0;j<d->getNumberOfFrames();++j)
 		{
@@ -243,7 +242,14 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
                 {
                         std::set<unsigned int >::iterator tm = it;
                         --tm;
-                        if(it==Tche.begin()||(*it)>*(tm)+_TcherenkovSignalDuration) Tche2.insert(*it);
+                        if(it==Tche.begin()||(*it)>*(tm)+_TcherenkovSignalDuration)
+                        {
+			  IMPL::LCGenericObjectImpl* Tcherenkov= new IMPL::LCGenericObjectImpl(1,0,0) ;
+                	  Tcherenkov->setIntVal(0,*(it));
+                        //std::cout<<red<<d->getFrameAsicHeader(j)<<normal<<std::endl;
+                        //std::cout<<green<<*(it)<<std::endl;
+                	   RawVecTcherenkov->addElement(Tcherenkov);
+			} 
 		}
                
                 /*for(std::set<unsigned int>::iterator it=Tche2.begin();it!=Tche2.end();++it) 
@@ -251,14 +257,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 			std::cout<<green<<(*it)<<normal<<"  ";
 		}*/
                 
-                for(std::set<unsigned int>::iterator it=Tche2.begin();it!=Tche2.end();++it)
-		{
-                        IMPL::LCGenericObjectImpl* Tcherenkov= new IMPL::LCGenericObjectImpl(1,0,0) ;
-                	Tcherenkov->setIntVal(0,*(it));
-                        //std::cout<<red<<d->getFrameAsicHeader(j)<<normal<<std::endl;
-                        //std::cout<<green<<*(it)<<std::endl;
-                	RawVecTcherenkov->addElement(Tcherenkov);
-		}
+             
             }
 
             //if Difs are temporal ones -> createCalorimeterHit
