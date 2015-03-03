@@ -104,7 +104,7 @@
      <Dif DifId="71" I="0" J="0.0"/>
   </Plate>
   <Plate x="0" y="0" z="476" alpha="0" beta="0" gamma="0">
-    <Dif DifId="47" x="0" y="64.0"/>
+    <Dif DifId="47" I="0" J="64.0"/>
      <Dif DifId="139" I="0" J="32.0"/>
      <Dif DifId="140" I="0" J="0.0"/>
   </Plate>
@@ -269,6 +269,6 @@
      <Dif DifId="80" I="0" J="64.0"/>
   </Plate>
   <Plate x="0.0" y="0.0" z="0" alpha="0" beta="0" gamma="0">
-     <Dif DifId="1" I="0" J="0.0" DifType="tcherenkov"/>
+     <Dif DifId="1" I="0" J="0" DifType="tcherenkov"/>
   </Plate>
 </Detector>
