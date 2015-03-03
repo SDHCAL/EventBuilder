@@ -118,7 +118,10 @@ else
 	do
 	cp $(pwd)/xml/Trivent.xml $(pwd)
 	m=$( echo "$n" | cut -c 17-22 ) 
-        sed -i "s|FILE|$2|" Trivent.xml
+        if [ "$#" -eq  "1" ] 
+        then sed -i "s|NUMBER|0|" Trivent.xml
+        else sed -i "s|NUMBER|$2|" Trivent.xml
+        fi
 	sed -i "s|FILE|$(pwd)/DHCAL_Streamout_"$m"_I0.slcio|" Trivent.xml
 	sed -i "s|OUTPUT|$(pwd)/DHCAL_Trivent_"$m"_I0.slcio|" Trivent.xml
 	sed -i "s|NOISES| |" Trivent.xml
