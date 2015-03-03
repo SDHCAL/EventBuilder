@@ -48,11 +48,12 @@ void XMLReader::Read(std::string &FileName, Geometry& geom)
         {
          if(strcmp(Diff->Attribute("DifType"), "temporal") == 0) DifType=2;
          else if (strcmp(Diff->Attribute("DifType"), "positional") == 0) DifType=1;
-	else if (strcmp(Diff->Attribute("DifType"), "tcherenkov") == 0) DifType=3;
+	 else if (strcmp(Diff->Attribute("DifType"), "tcherenkov") == 0) DifType=3;
+         else if (strcmp(Diff->Attribute("DifType"), "tricot") == 0) DifType=4;
          else
          {
           
-          DifType=-1;std::cout<<"Error defining the use of the Dif (temporal,posicional)"<<std::endl;
+          DifType=-1;std::cout<<"Error defining the use of the Dif (temporal,posicional,tcherenkov,tricot)"<<std::endl;
          }
         }
         

@@ -16,6 +16,7 @@ inline double GetAngleXY(){return _AngleXY;};
 inline double GetAngleXZ(){return _AngleXZ;};
 inline double GetAngleYZ(){return _AngleYZ;};
 inline int GetNbrDifInPlate(){return _DifInPlate.size();};
+inline std::vector<int> GetDifInPlate(){return _DifInPlate;};
 //double GetType(const std::string& Type);
 //Dif SetType(const int& NbrDif);
 
