@@ -40,12 +40,14 @@ unsigned int _eventNr=0;
 #define size_pad 10.4125
 #define size_strip 2.5
 std::map<int,bool>Warning;
+
 class ToTree
 {
 public:
 int pI,pJ,pK,pAsic,pDifId,pAsicChannel;
 unsigned int pTime;
 double pX,pY,pZ;
+bool pEvent;
 };
 
 
@@ -62,7 +64,7 @@ TBranch* Branch7 =  t->Branch("Time",&(totree.pTime));
 TBranch* Branch8 =  t->Branch("Asic",&(totree.pAsic));
 TBranch* Branch9 =  t->Branch("DifId",&(totree.pDifId));
 TBranch* Branch10 =  t->Branch("AsicChannel",&(totree.pAsicChannel));
-//TBranch* Branch11 = t->Branch("Hit",&(totree));
+TBranch* Branch11 = t->Branch("Event",&(totree.pEvent));
 std::vector<TH1F*>Time_Distr;
 std::vector<TH1F*>Hits_Distr;
 std::vector<TH1F*>Time_Distr_Events;
@@ -74,12 +76,11 @@ std::vector<TH2F*>Flux_Events;
 std::vector<TH2F*>Flux_Noise_Asic;
 std::vector<TH2F*>Flux_Events_Asic;
 std::vector<long>Nbrof0Hits;
+std::vector<long int>local_max;
+std::vector<long int>local_min;
 int _NbrRun=0;
-long long int total_time=0;
-double timemax=0;
-double timemin=2147483647;
-
-
+std::vector<unsigned long long int>total_time;
+double timemax=-10000;
 void TriventProcessor::FillTimes()
 {
     bool eraseFirst=false;
@@ -136,25 +137,24 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
     for(unsigned int j=0; j<Time_Distr.size(); ++j) Times_Plates.emplace_back(std::map<int,int>());
     for(std::vector<RawCalorimeterHit *>::iterator it=vec.begin(); it!=vec.end(); ++it) {
 
-
+       
         CalorimeterHitImpl* caloHit = new CalorimeterHitImpl();
         int dif_id  = (*it)->getCellID0() & 0xFF ;
-        Times_Plates[geom.GetDifNbrPlate(dif_id)-1][(*it)->getTimeStamp()]++;
-
-        if(IsNoise==1) {
-
-            Time_Distr_Noise[geom.GetDifNbrPlate(dif_id)-1]->Fill((*it)->getTimeStamp(),1);
-        } else {
-            Time_Distr_Events[geom.GetDifNbrPlate(dif_id)-1]->Fill((*it)->getTimeStamp(),1);
-        }
+        
         int asic_id = ((*it)->getCellID0() & 0xFF00)>>8;
         int chan_id = ((*it)->getCellID0() & 0x3F0000)>>16;
-        float ca=cos(geom.GetDifAlpha(dif_id)*degtorad);
+        double ca=SinCos[dif_id][0];
+	double sa=SinCos[dif_id][1];
+        double cb=SinCos[dif_id][2];
+	double sb=SinCos[dif_id][3];
+        double cg=SinCos[dif_id][4];
+	double sg=SinCos[dif_id][5];
+        /*float ca=cos(geom.GetDifAlpha(dif_id)*degtorad);
         float sa=sin(geom.GetDifAlpha(dif_id)*degtorad);
         float cb=cos(geom.GetDifBeta(dif_id)*degtorad);
         float sb=sin(geom.GetDifBeta(dif_id)*degtorad);
         float cg=cos(geom.GetDifGamma(dif_id)*degtorad);
-        float sg=sin(geom.GetDifGamma(dif_id)*degtorad);
+        float sg=sin(geom.GetDifGamma(dif_id)*degtorad);*/
 
         unsigned int NbrPlate =geom.GetDifNbrPlate(dif_id)-1;
         float Z= geom.GetPlatePositionZ(NbrPlate);
@@ -194,6 +194,13 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
             pos[1] = sg*cb*I*size_strip+(cg*ca+sg*sb*sa)*J*size_strip+(-cg*sa+sg*sb*ca)*Z+geom.GetPlatePositionY(NbrPlate);
             pos[2] = -sb*I*size_strip+cb*sa*J*size_strip+cb*ca*Z;
         }
+         Times_Plates[geom.GetDifNbrPlate(dif_id)-1][(*it)->getTimeStamp()]++;
+        if(IsNoise==1) {
+
+            Time_Distr_Noise[geom.GetDifNbrPlate(dif_id)-1]->Fill((*it)->getTimeStamp(),1);
+        } else {
+            Time_Distr_Events[geom.GetDifNbrPlate(dif_id)-1]->Fill((*it)->getTimeStamp(),1);
+        }
         if(IsNoise==1) {
             Flux_Noise[geom.GetDifNbrPlate(dif_id)-1]->Fill(I,J);
             if(geom.GetDifType(dif_id)==positional)Flux_Noise_Asic[geom.GetDifNbrPlate(dif_id)-1]->Fill(asic_id,asic_id);
@@ -203,12 +210,10 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
             if(geom.GetDifType(dif_id)==positional)Flux_Events_Asic[geom.GetDifNbrPlate(dif_id)-1]->Fill(asic_id,asic_id);
             else Flux_Events_Asic[geom.GetDifNbrPlate(dif_id)-1]->Fill((AsicShiftI[asic_id]+geom.GetDifPositionX(dif_id))/8,(32-AsicShiftJ[asic_id]+geom.GetDifPositionY(dif_id))/8);
         }
+         
         cd["I"] = I ;
         cd["J"] = J ;
         cd["K"] = K ;
-        caloHit->setPosition(pos);
-        cd.setCellID( caloHit ) ;
-        col->addElement(caloHit);
         totree.pI=I;
         totree.pJ=J;
         totree.pK=K;
@@ -219,6 +224,22 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
         totree.pDifId=dif_id;
         totree.pAsicChannel=chan_id;
         totree.pTime=(*it)->getTimeStamp();
+        if(IsNoise==1)totree.pEvent=0;
+        else totree.pEvent=1;
+        caloHit->setPosition(pos);
+        cd.setCellID( caloHit ) ;
+        //int a,b,c,d;
+        //if(Delimiter.find(dif_id)==Delimiter.end()){a=Delimiter[1][0];b=Delimiter[1][1];c=Delimiter[1][2];d=Delimiter[1][3];}
+        //else {a=Delimiter[dif_id][0];b=Delimiter[dif_id][1];c=Delimiter[dif_id][2];d=Delimiter[dif_id][3];}
+        //std::cout<<Delimiter.size()<<std::endl;
+        //std::cout<<Delimiter[dif_id][0]<<"  "<<std::endl;//<<Delimiter[dif_id][1]<<"  "<<Delimiter[dif_id][2]<<"  "<<Delimiter[dif_id][3]<<std::endl;
+        //if(a<=I&&b>=I&&c<=J&&d>=J)
+        //{
+        
+        col->addElement(caloHit);
+        //}
+    
+        
         
         //std::cout<<magenta<<totree.pI<<"  "<<totree.pJ<<"  "<<red<<(*it)->getTimeStamp()<<"  "<<totree.pTime<<normal<<std::endl;
         t->Fill();
@@ -257,6 +278,9 @@ TriventProcessor::TriventProcessor() : Processor("TriventProcessorType")
     registerProcessorParameter("LayerCut" ,"cut in number of layer 3 in default",_LayerCut ,_LayerCut);
     _TriggerTime = 0;
     registerProcessorParameter("TriggerTime" ,"All Events with Time greater than this number will be ignored (0) in case of Triggerless",_TriggerTime ,_TriggerTime);
+    //_Delimiters="";
+    //registerProcessorParameter("Delimiters" ,"Delimiters",_Delimiters,_Delimiters);
+    
 }
 
 TriventProcessor::~TriventProcessor() {}
@@ -272,12 +296,13 @@ void TriventProcessor::processRunHeader( LCRunHeader* run)
 void TriventProcessor::init()
 {
     printParameters();
+    if(_LayerCut==-1){std::cout<<red<<"LayerCut set to -1, assuming that you want use trigger to see events"<<normal<<std::endl;}
     _EventWriter = LCFactory::getInstance()->createLCWriter() ;
-    _EventWriter->setCompressionLevel( 0 ) ;
+    _EventWriter->setCompressionLevel( 2 ) ;
     _EventWriter->open(_outFileName.c_str(),LCIO::WRITE_NEW) ;
     if(_noiseFileName!="") {
         _NoiseWriter = LCFactory::getInstance()->createLCWriter() ;
-        _NoiseWriter->setCompressionLevel( 0 ) ;
+        _NoiseWriter->setCompressionLevel( 2 ) ;
         _NoiseWriter->open(_noiseFileName.c_str(),LCIO::WRITE_NEW) ;
     }
     ReaderFactory readerFactory;
@@ -287,8 +312,10 @@ void TriventProcessor::init()
         geom.PrintGeom();
         std::map<int, Dif > Difs=geom.GetDifs();
         std::map<int,int> PlansType;
+
         for(std::map<int, Dif >::iterator it=Difs.begin(); it!=Difs.end(); ++it) {
             if(geom.GetDifType(it->first)!=temporal) {
+                SinCos[it->first]=std::vector<double>{cos(geom.GetDifAlpha(it->first)*degtorad),sin(geom.GetDifAlpha(it->first)*degtorad),cos(geom.GetDifBeta(it->first)*degtorad),sin(geom.GetDifBeta(it->first)*degtorad),cos(geom.GetDifGamma(it->first)*degtorad),sin(geom.GetDifGamma(it->first)*degtorad)};
                 PlansType.insert(std::pair<int,int>(geom.GetDifNbrPlate(it->first)-1,geom.GetDifType(it->first)));
             }
         }
@@ -333,8 +360,13 @@ void TriventProcessor::init()
             std::string m="Number_hit_per_clock_Noise"+ std::to_string( (long long int) it->first +1 );
             Hits_Distr_Noise.emplace_back(new TH1F(m.c_str(),m.c_str(),25000,0,25000));
             Nbrof0Hits.push_back(0);
+            local_max.push_back(-1);
+            local_min.push_back(99999);
+            total_time.push_back(0);
+            
+            
         }
-
+        //FillDelimiter(_Delimiters,PlansType.size());
     } else {
         std::cout << "Reader type n'existe pas !!" << std::endl;
         std::exit(1);
@@ -351,26 +383,24 @@ void TriventProcessor::processEvent( LCEvent * evtP )
         for(unsigned int i=0; i< _hcalCollections.size(); i++) {
             Times.clear();
             RawHits.clear();
-
+            BehondTrigger.clear();
             RawTimeDifs.clear();
             LCCollection* col = evtP ->getCollection(_hcalCollections[i].c_str());
             LCCollection* col2 = evtP ->getCollection("DHCALRawTimes");
-            if(col2!=NULL) {
-                for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) {
-                    EVENT::CalorimeterHit* raw_time = dynamic_cast<EVENT::CalorimeterHit* >( col2->getElementAt(ihit)) ;
-                    std::cout<<raw_time->getTime()<<"  "<<raw_time->getEnergyError()<<std::endl;
-                    //RawTimeDifs[raw_time->getTimeStamp()].push_back(raw_time);
-                }
-            }
-
-            if(col == NULL) {
+            if(col2 == NULL || col==NULL) 
+            {
                 std::cout<< "TRIGGER SKIPED ..."<<std::endl;
                 _trig_count++;
                 break;
             }
+	    if(col2!=NULL) {
+                for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) {
+                    EVENT::CalorimeterHit* raw_time = dynamic_cast<EVENT::CalorimeterHit* >( col2->getElementAt(ihit)) ;
+                   // std::cout<<raw_time->getTime()<<"  "<<raw_time->getEnergyError()<<std::endl;
+                    //RawTimeDifs[raw_time->getTimeStamp()].push_back(raw_time);
+                }
+            }
             int numElements = col->getNumberOfElements();
-            long timemax_local=0;
-            long timemin_local=17976931348620;
             for(unsigned int i=0; i<Times_Plates_perRun.size(); ++i)Times_Plates_perRun[i].clear();
             for (int ihit=0; ihit < numElements; ++ihit) {
 
@@ -384,70 +414,106 @@ void TriventProcessor::processEvent( LCEvent * evtP )
                         }
                         continue;
                     }
-                    //std::cout<<red<<dif_id<<blue<<geom.GetDifNbrPlate(dif_id)-1<<"  "<<dif_id<<normal<<std::endl;
-                    if(_TriggerTime==0 || raw_hit->getTimeStamp()<=_TriggerTime)
+
+                    if(_TriggerTime==0 || (raw_hit->getTimeStamp()<=_TriggerTime&&raw_hit->getTimeStamp()>=0))
                     {
+                    
 		    Times[raw_hit->getTimeStamp()]++;
-                    }
-                    Times_Plates[geom.GetDifNbrPlate(dif_id)-1][raw_hit->getTimeStamp()]++;
-                    Times_Plates_perRun[geom.GetDifNbrPlate(dif_id)-1][raw_hit->getTimeStamp()]++;
+                    
                     if(raw_hit->getTimeStamp()>timemax)timemax=raw_hit->getTimeStamp();
-                    if(raw_hit->getTimeStamp()>timemax_local)timemax_local=raw_hit->getTimeStamp();
-                    if(raw_hit->getTimeStamp()<timemin_local)timemin_local=raw_hit->getTimeStamp();
+                    if(raw_hit->getTimeStamp()>local_max[geom.GetDifNbrPlate(dif_id)-1])local_max[geom.GetDifNbrPlate(dif_id)-1]=raw_hit->getTimeStamp();
+                    if(raw_hit->getTimeStamp()<local_min[geom.GetDifNbrPlate(dif_id)-1])local_min[geom.GetDifNbrPlate(dif_id)-1]=raw_hit->getTimeStamp();
                     RawHits[raw_hit->getTimeStamp()].push_back(raw_hit);
+                    //std::cout<<yellow<<raw_hit->getTimeStamp()<<"  "<<RawHits.size()<<normal<<std::endl;
+                    }
+                    else
+                    {
+                       
+                       BehondTrigger[raw_hit->getTimeStamp()].push_back(raw_hit);
+                       //std::cout<<blue<<raw_hit->getTimeStamp()<<"  "<<BehondTrigger.size()<<normal<<std::endl;
+                    }
+                    Times_Plates_perRun[geom.GetDifNbrPlate(dif_id)-1][raw_hit->getTimeStamp()]++;
+                    Times_Plates[geom.GetDifNbrPlate(dif_id)-1][raw_hit->getTimeStamp()]++;
                 }
             }
             if(Times.size()==0) std::cout<<red<<" 0 hits within the the TriggerTime given... You should verify your TriggerTime or your run is triggerless "<<normal<<std::endl;
-            double delta=timemax_local-timemin_local;
-            total_time+=delta;
+            for(unsigned int i=0;i<total_time.size();++i) total_time[i]+=local_max[i]-local_min[i];
             for(unsigned int j =0; j<Nbrof0Hits.size(); ++j) {
-                Nbrof0Hits[j]+=(delta-Times_Plates_perRun[j].size());
+                Nbrof0Hits[j]+=(local_max[j]-local_min[j]-Times_Plates_perRun[j].size());
             }
             //std::cout<<red<<timemax_local<<"  "<<timemin_local<<"  "<<delta<<"  "<<green<<Times_Plates_perRun[0].size()<<yellow<<"  "<<delta-Times_Plates_perRun[0].size()<<red<<"  "<<Nbrof0Hits[0]<<normal<<std::endl;
+           
+            if(_LayerCut!=-1)
+	    {
+		FillTimes();
 
-            FillTimes();
+            	for(std::map< int,int>::iterator itt=Times.begin(); itt!=Times.end(); ++itt) 
+		{
+                	EventsGrouped.clear();
+                	std::map<int,std::vector<RawCalorimeterHit *> >::iterator middle=RawHits.find(itt->first);
+                	std::map<int,std::vector<RawCalorimeterHit *> >::iterator after=middle;
+                	std::map<int,std::vector<RawCalorimeterHit *> >::iterator before=middle;
+                	while(fabs(middle->first-before->first)<=_timeWin && before!=RawHits.begin()) --before;
+                	++before;
+                	while(fabs(after->first-middle->first)<=_timeWin && after!=RawHits.end()) ++after;
+                	std::map<int,int> nbrPlanestouched;
+                	for(middle=before; middle!=after; ++middle ) 
+			{
 
-            for(std::map< int,int>::iterator itt=Times.begin(); itt!=Times.end(); ++itt) {
-                EventsGrouped.clear();
-                std::map<int,std::vector<RawCalorimeterHit *> >::iterator middle=RawHits.find(itt->first);
-                std::map<int,std::vector<RawCalorimeterHit *> >::iterator after=middle;
-                std::map<int,std::vector<RawCalorimeterHit *> >::iterator before=middle;
-                while(fabs(middle->first-before->first)<=_timeWin && before!=RawHits.begin()) --before;
-                ++before;
-                while(fabs(after->first-middle->first)<=_timeWin && after!=RawHits.end()) ++after;
-                std::map<int,int> nbrPlanestouched;
-                for(middle=before; middle!=after; ++middle ) {
+                    		for(int unsigned i=0; i<(middle->second).size(); ++i) 
+				{
+                        		int dif_id=((middle->second)[i])->getCellID0() & 0xFF;
+                        		nbrPlanestouched[geom.GetDifNbrPlate(dif_id)]++;
+                    		}
 
-                    for(int unsigned i=0; i<(middle->second).size(); ++i) {
-                        int dif_id=((middle->second)[i])->getCellID0() & 0xFF;
-                        nbrPlanestouched[geom.GetDifNbrPlate(dif_id)]++;
-                    }
-
-                }
-
-             if(nbrPlanestouched.size()>=(unsigned int)(_LayerCut)) {
-                    EventsSelected++;
-                    for(middle=before; middle!=after; ) {
-                        EventsGrouped.insert(EventsGrouped.end(),middle->second.begin(),middle->second.end());
-                        RawHits.erase(middle++);
-                    }
-                    LCEventImpl*  evt = new LCEventImpl() ;
-                    LCCollectionVec* col_event = new LCCollectionVec(LCIO::CALORIMETERHIT);
-                    col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_LONG));
-                    col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_TIME));
-                    CellIDEncoder<CalorimeterHitImpl> cd( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event) ;
-                    FillIJK(EventsGrouped, col_event,cd,0);
-                    evt->addCollection(col_event, "SDHCAL_HIT");
-                    evt->setEventNumber(EventsSelected);
+                	}
+             
+             		if(nbrPlanestouched.size()>=(unsigned int)(_LayerCut)) 
+			{
+                    		EventsSelected++;
+                    		for(middle=before; middle!=after; ) 
+				{
+                        		EventsGrouped.insert(EventsGrouped.end(),middle->second.begin(),middle->second.end());
+                        		RawHits.erase(middle++);
+                    		}
+                    		LCEventImpl*  evt = new LCEventImpl() ;
+                    		LCCollectionVec* col_event = new LCCollectionVec(LCIO::CALORIMETERHIT);
+                    		col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_LONG));
+                    		col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_TIME));
+                    		CellIDEncoder<CalorimeterHitImpl> cd( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event) ;
+                    		FillIJK(EventsGrouped, col_event,cd,0);
+                    		evt->addCollection(col_event, "SDHCAL_HIT");
+                    		evt->setEventNumber(EventsSelected);
                     evt->setTimeStamp(evtP->getTimeStamp());
                     evt->setRunNumber(evtP->getRunNumber());
                     _EventWriter->writeEvent( evt ) ;
                     delete evt;
                     
                 }
-            }
+              }}
+              else
+              {
+                EventsSelected++;
+                    LCEventImpl*  evt = new LCEventImpl() ;
+                    LCCollectionVec* col_event = new LCCollectionVec(LCIO::CALORIMETERHIT);
+                    col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_LONG));
+                    col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_TIME));
+                    CellIDEncoder<CalorimeterHitImpl> cd( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event) ;
+                    for(std::map<int,std::vector<RawCalorimeterHit *> >::iterator itt=RawHits.begin(); itt!=RawHits.end(); ++itt) {
+                    FillIJK((itt->second),col_event,cd,0);
+                }
+                    evt->addCollection(col_event, "SDHCAL_HIT");
+                    evt->setEventNumber(EventsSelected);
+                    evt->setTimeStamp(evtP->getTimeStamp());
+                    evt->setRunNumber(evtP->getRunNumber());
+                    _EventWriter->writeEvent( evt ) ;
+                    delete evt;
+              
 
-            if(_noiseFileName!="") {
+              }
+            
+
+            if(_noiseFileName!=""&&_LayerCut!=-1) {
                 EventsNoise++;
                 LCEventImpl*  evt = new LCEventImpl() ;
                 LCCollectionVec* col_event = new LCCollectionVec(LCIO::CALORIMETERHIT);
@@ -458,7 +524,42 @@ void TriventProcessor::processEvent( LCEvent * evtP )
                 for(std::map<int,std::vector<RawCalorimeterHit *> >::iterator itt=RawHits.begin(); itt!=RawHits.end(); ++itt) {
                     FillIJK((itt->second),col_event,cd,1);
                 }
-                evt->addCollection(col_event, "SDHCAL_HIT");
+                evt->addCollection(col_event, "SDHCAL_HIT_NOISE_IN_TRIGGER_TIME");
+                evt->setEventNumber(EventsNoise);
+                evt->setRunNumber(evtP->getRunNumber());
+                //std::cout<<(timemax-timemin)*200e-9<<std::endl;
+                //WHAT IS IT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+               // evt->setTimeStamp(timemax-timemin);
+                _NoiseWriter->writeEvent( evt ) ;
+                LCEventImpl*  evt2 = new LCEventImpl() ;
+                LCCollectionVec* col_event2 = new LCCollectionVec(LCIO::CALORIMETERHIT);
+                col_event2->setFlag(col_event2->getFlag()|( 1 << LCIO::RCHBIT_LONG));
+                col_event2->setFlag(col_event2->getFlag()|( 1 << LCIO::RCHBIT_TIME));
+
+                CellIDEncoder<CalorimeterHitImpl> cd2( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event2) ;
+                //std::cout<<green<<BehondTrigger.size()<<normal<<std::endl;
+                for(std::map<int,std::vector<RawCalorimeterHit *> >::iterator itt=BehondTrigger.begin(); itt!=BehondTrigger.end(); ++itt) {
+                    FillIJK((itt->second),col_event2,cd2,1);
+                }
+                evt2->addCollection(col_event2, "SDHCAL_HIT_NOISE");
+                evt2->setEventNumber(EventsNoise);
+                evt2->setRunNumber(evtP->getRunNumber());
+                _NoiseWriter->writeEvent( evt2 ) ;
+                delete evt;
+            }
+           if(_noiseFileName!=""&&_LayerCut==-1)
+	   {
+             EventsNoise++;
+                LCEventImpl*  evt = new LCEventImpl() ;
+                LCCollectionVec* col_event = new LCCollectionVec(LCIO::CALORIMETERHIT);
+                col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_LONG));
+                col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_TIME));
+
+                CellIDEncoder<CalorimeterHitImpl> cd( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event) ;
+                for(std::map<int,std::vector<RawCalorimeterHit *> >::iterator itt=BehondTrigger.begin(); itt!=BehondTrigger.end(); ++itt) {
+                    FillIJK((itt->second),col_event,cd,1);
+                }
+                evt->addCollection(col_event, "SDHCAL_HIT_NOISE");
                 evt->setEventNumber(EventsNoise);
                 evt->setRunNumber(evtP->getRunNumber());
                 //std::cout<<(timemax-timemin)*200e-9<<std::endl;
@@ -466,7 +567,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
                // evt->setTimeStamp(timemax-timemin);
                 _NoiseWriter->writeEvent( evt ) ;
                 delete evt;
-            }
+           }
         }
     }
 }
@@ -478,12 +579,22 @@ void TriventProcessor::end()
     for(unsigned int i=0; i<Flux_Noise.size(); ++i) {
         //Flux_Hits[i]->Scale(total_time*200e-9);
         //Flux_Hits[i]->Write();
-        //Flux_Noise[i]->Scale(total_time*200e-9);
+        
         Flux_Noise[i]->Write();
         Flux_Noise_Asic[i]->Write();
-        //Flux_Events[i]->Scale(total_time*200e-9);
-        Flux_Events[i]->Write();
         Flux_Events_Asic[i]->Write();
+        Flux_Events[i]->Write();
+	if(_LayerCut!=-1)
+	{        
+	Flux_Events_Asic[i]->Scale(1/(total_time[i]*2e-7));
+        Flux_Noise[i]->Scale(1/(total_time[i]*2e-7));
+        Flux_Noise_Asic[i]->Scale(1/(total_time[i]*2e-7));
+        Flux_Events[i]->Scale(1/(total_time[i]*2e-7));
+        Flux_Noise[i]->Write();
+        Flux_Noise_Asic[i]->Write();
+        Flux_Events_Asic[i]->Write();
+        Flux_Events[i]->Write();
+        }
         //Noise3D->Scale(total_time*200e-9);
         //Events3D->Scale(total_time*200e-9);
         //Noise3D->Write();
@@ -526,7 +637,7 @@ void TriventProcessor::end()
     delete Branch8;
     delete Branch9;
     delete Branch10;
-    /*delete Branch11;*/
+    delete Branch11;
     //delete t;
     hfile->Close();
     delete hfile;
@@ -535,6 +646,6 @@ void TriventProcessor::end()
     std::cout << "TriventProcess::end() !! "<<_trig_count<<" Events Trigged"<< std::endl;
     std::cout <<TouchedEvents<<" Events were overlaping "<<"("<<(TouchedEvents*1.0/(TouchedEvents+eventtotal))*100<<"%)"<<std::endl;
     std::cout <<"Total nbr Events : "<<eventtotal<<" Events with nbr of plates >="<<_LayerCut<<" : "<<EventsSelected<<" ("<<EventsSelected*1.0/eventtotal*100<<"%)"<< std::endl;
-    std::cout <<"Total Time : "<<total_time <<std::endl;
+    for(unsigned int i=0;i<total_time.size();++i)std::cout <<"Total Time "<<i<<" : "<<total_time[i]*200e-9<<"  "; std::cout<<std::endl;
     for(std::map<int,bool>::iterator it=Warning.begin(); it!=Warning.end(); it++) std::cout<<red<<"REMINDER::Data from Dif "<<it->first<<" are skipped !"<<normal<<std::endl;
 }

@@ -8,7 +8,8 @@
 #include "UTIL/CellIDEncoder.h"
 #include "IMPL/CalorimeterHitImpl.h"
 #include <EVENT/LCRunHeader.h>
-
+//std::string _Delimiters;
+//std::map<int ,std::vector<double> >Delimiter;
 class TriventProcessor : public marlin::Processor
 {
 public:
@@ -26,6 +27,7 @@ public:
     void FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollectionVec* col,CellIDEncoder<CalorimeterHitImpl>& cd,bool IsNoise);
 protected:
     Geometry geom;
+    std::map<int,std::vector<double>>SinCos;
     std::string _FileNameGeometry;
     std::string _ReaderType;
     std::string _noiseFileName;
@@ -43,6 +45,7 @@ protected:
     std::vector<std::map<int,int> >Times_Plates;
     std::vector<std::map<int,int> >Times_Plates_perRun;
     std::map< int,std::vector<EVENT::RawCalorimeterHit*> > RawHits;
+    std::map< int,std::vector<EVENT::RawCalorimeterHit*> > BehondTrigger;
     std::vector<RawCalorimeterHit *>EventsGrouped;
     std::map< int,std::vector<EVENT::RawCalorimeterHit*> > RawTimeDifs;
     float pos[3];
