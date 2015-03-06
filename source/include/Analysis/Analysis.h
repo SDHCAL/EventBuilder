@@ -210,7 +210,10 @@ public:
         //double e=fabs(maxY()-minY());
         //if(this->GetType()==pad)return (e<1 ? 1 : e);
         //else return 0;
+        //return 2.5;
         return 10;
+        if(this->GetType()==pad)return 0;
+        
     }
     inline double ErrorZ()
     {

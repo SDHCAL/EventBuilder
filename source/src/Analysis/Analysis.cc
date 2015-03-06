@@ -246,7 +246,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
     double  pyz1 = myfityz->GetParameter(1);
     counts[YZTRACKFITPASSED]++;
     double Zexp=this->GetZexp(pxz0,pyz0,pxz1,pyz1);
-    std::cout<<blue<<pxz0<<"  "<<myfit.GetParErrors()[0]<<"  "<<pxz1<<"  "<<myfit.GetParErrors()[1]<<"  "<<pyz0<<"  "<<myfit2.GetParErrors()[0]<<"  "<<pyz1<<"  "<<myfit2.GetParErrors()[1]<<normal<<std::endl;
+    //std::cout<<blue<<pxz0<<"  "<<myfit.GetParErrors()[0]<<"  "<<pxz1<<"  "<<myfit.GetParErrors()[1]<<"  "<<pyz0<<"  "<<myfit2.GetParErrors()[0]<<"  "<<pyz1<<"  "<<myfit2.GetParErrors()[1]<<normal<<std::endl;
     
     ///////////////////////////////
     //double Xexp = pxz0+pxz1*Zexp;
