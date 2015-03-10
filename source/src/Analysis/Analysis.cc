@@ -36,7 +36,7 @@ std::vector<TH2F*>Distribution_exp;
 unsigned NbrReadOut=0;
 void AnalysisProcessor::processRunHeader( LCRunHeader* run)
 {
-
+run->getNumberOfEvents();
 }
 
 void AnalysisProcessor::PrintStatShort()
@@ -159,7 +159,7 @@ int plan::countHitAtStrip(double& x, double dlim)
     for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!= hits.end(); ++it) {
         if(fabs(x-(*it)->getPosition()[0])<dlim) {
             n++;
-            std::cout<<fabs(x-(*it)->getPosition()[0])<<"  "<<dlim<<std::endl;
+            //std::cout<<fabs(x-(*it)->getPosition()[0])<<"  "<<dlim<<std::endl;
             Distribution_hits[cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
         }
     }
@@ -224,23 +224,17 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
         }
         grxz.SetPointError(i,p.ErrorZ(),p.ErrorX());
     }
-    TF1 myfit = TF1("myfit","[1]*x + [0]", 0, 50);
-    TF1 myfit2 = TF1("myfit2","[1]*x + [0]", 0, 50);
-    myfit.SetParameter(1, 0.1);
-    myfit.SetParameter(0, 0.1);
-    grxz.Fit("myfit","Q");
-    TF1 *myfitxz = (TF1*) grxz.GetFunction("myfit");
+    grxz.Fit("pol1","QRO","",-50000.0,50000.0);
+    TF1 *myfitxz = (TF1*) grxz.GetFunction("pol1");
     double  kxz = myfitxz->GetChisquare();
     if (kxz>= _Chi2) return;
-
     double pxz0 = myfitxz->GetParameter(0);
     double  pxz1 = myfitxz->GetParameter(1);
     counts[XZTRACKFITPASSED]++;
-    myfit2.SetParameter(1, 0.1);
-    myfit2.SetParameter(0, 0.1);
-    gryz.Fit("myfit2","Q");
-    TF1 *myfityz = (TF1*) gryz.GetFunction("myfit2");
+    gryz.Fit("pol1","QRO","",-50000.0,50000.0);
+    TF1 *myfityz = (TF1*) gryz.GetFunction("pol1");
     double  kyz = myfityz->GetChisquare();
+    if(this->GetType()==positional) kyz=0;
     if (kyz>= _Chi2) return;
     double pyz0 = myfityz->GetParameter(0);
     double  pyz1 = myfityz->GetParameter(1);
