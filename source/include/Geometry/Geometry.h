@@ -2,6 +2,7 @@
 #define GEOMETRY_H
 #include<vector>
 #include<map>
+#include<string>
 #include"Plate.h"
 #include"Dif.h"
 enum Types {pad,positional,temporal,tcherenkov,tricot};
