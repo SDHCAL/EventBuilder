@@ -1,6 +1,7 @@
 #ifndef TRIVENT_PROCESSOR
 #define TRIVENT_PROCESSOR
-
+#include <map>
+#include <vector>
 #include "marlin/Processor.h"
 #include "EVENT/RawCalorimeterHit.h"
 #include "Geometry/Geometry.h"
@@ -8,6 +9,7 @@
 #include "UTIL/CellIDEncoder.h"
 #include "IMPL/CalorimeterHitImpl.h"
 #include <EVENT/LCRunHeader.h>
+#include "UTIL/LCTOOLS.h"
 //std::string _Delimiters;
 //std::map<int ,std::vector<double> >Delimiter;
 class TriventProcessor : public marlin::Processor
@@ -20,6 +22,7 @@ public:
         return new TriventProcessor();
     }
     void init();
+    void Writer(IO::LCWriter* file,const char* name,std::map<int,std::vector<EVENT::RawCalorimeterHit *>> & vec,EVENT::LCEvent * event,unsigned int& nbr,unsigned int IsNoise);
     void processEvent(EVENT::LCEvent *evtP);
     void processRunHeader( LCRunHeader* run);
     void end();

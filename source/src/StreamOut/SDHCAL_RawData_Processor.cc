@@ -24,15 +24,8 @@
 #include "Streamout/DIFUnpacker.h"
 #include <sstream>
 #include <set>
-namespace patch
-{
-template < typename T > std::string to_string( const T& n )
-{
-    std::ostringstream stm ;
-    stm << n ;
-    return stm.str() ;
-}
-}
+std::map<int,unsigned long long> BCID_old;
+
 int _NbrRun=0;
 std::map<int,TH1F*>HistoTimeAsic1;
 std::map<int,TH1F*>HistoTimeAsic2;
@@ -61,6 +54,9 @@ DIFPtr* SDHCAL_RawBuffer_Navigator::getDIFPtr()
     if (NULL==_theDIFPtr) _theDIFPtr=new DIFPtr(getDIFBufferStart(),getDIFBufferSize());
     return _theDIFPtr;
 }
+
+
+
 
 uint32_t SDHCAL_RawBuffer_Navigator::getDIF_CRC()
 {
@@ -151,6 +147,7 @@ void SDHCAL_RawData_Processor::init()
                 std::string name2="Times_given_by_TDC_Asics_2"+patch::to_string(it->first);
                 HistoTimeAsic1.insert ( std::pair<int,TH1F*>(it->first,new TH1F(name1.c_str(),name1.c_str(),501,-250,250)) );
                 HistoTimeAsic2.insert ( std::pair<int,TH1F*>(it->first,new TH1F(name2.c_str(),name2.c_str(),501,-250,250)) );
+                BCID_old.insert(std::pair<int,unsigned long long int>(it->first,0));
             }
         }
     } else {
@@ -212,6 +209,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
             //streamlog_out(DEBUG)<<"DIF BUFFER END "<<(unsigned int *) debug_variable_1<<" "<< (unsigned int *) debug_variable_2 << std::endl;
             //if (_debugMode) assert (debug_variable_1 == debug_variable_2);
             uint32_t idstart=bufferNavigator.getStartOfDIF();
+            
             //streamlog_out(DEBUG)<<"DIF header starts at "<<idstart<<" and is equal to "<<std::hex<<(unsigned int)lmobj->getCharBuffer()[idstart] << std::dec << std::endl;
             if(idstart==0 && streamlog::out.write< streamlog::DEBUG >() ) lmobj->getSDHCALBuffer().printBuffer( 0 , streamlog::out() );
             _DIFStarter[idstart]++;
@@ -225,6 +223,11 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
             _SizeAfterDIFPtr[bufferNavigator.getSizeAfterDIFPtr()]++;
 
             //Make something with the Tcherenkov signal
+            long long unsigned difAbsoluteBCID = (d->getAbsoluteBCID() - BCID_old[d->getID()]);
+            //std::cout<<blue<<d->getAbsoluteBCID()<<"  "<<BCID_old[d->getID()]<<"  "<<d->getAbsoluteBCID() - BCID_old[d->getID()]<<normal<<std::endl;
+            long long unsigned rolling=(difAbsoluteBCID/16777216)*16777216;
+            BCID_old[d->getID()]=d->getAbsoluteBCID();
+            //if(rolling>0) std::cout<<red<<rolling<<normal<<std::endl;
             if(geom.GetDifType(d->getID())==tcherenkov) 
 	    {
                 std::set<unsigned int>Tche;
@@ -261,7 +264,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
             }
 
             //if Difs are temporal ones -> createCalorimeterHit
-
+            
             else if(geom.GetDifType(d->getID())==temporal) {
 
                 for (uint32_t i=0; i<d->getNumberOfFrames(); i++) {
@@ -311,7 +314,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
                                                  //j
                                                  ,1);
                     //ThStatus[2]=isSynchronised; //I'm not computing the synchronisation here.
-
+                    
                     TTT = (unsigned long int)(d->getFrameTimeToTrigger(i));
 
                     //Use setTime to stock TimeStamp !!!!!!!
@@ -346,8 +349,11 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
                         hit->setCellID0((unsigned long int)ID0);
                         hit->setCellID1(ID1);
                         hit->setAmplitude(ThStatus.to_ulong());
-                        unsigned long int TTT = (unsigned long int)(d->getFrameTimeToTrigger(i));
-                        hit->setTimeStamp(TTT);			      		//Time stamp of this event from Run Begining
+                        unsigned long long int TTT = (unsigned long int)(d->getFrameTimeToTrigger(i));
+                        //hit->setTimeStamp(TTT);		      		//Time stamp of this event from Run Begining
+                        unsigned long int Tjj=  d->getBCID()-d->getFrameBCID(i)+rolling;
+                        hit->setTimeStamp(Tjj);
+                        //std::cout<<yellow<<TTT<<"  "<<Tjj<<normal<<std::endl;
                         RawVec->addElement(hit);
                     }//for (uint32_t j=0;j<64;j++)
                 }//for (uint32_t i=0;i<d->getNumberOfFrames();i++)
