@@ -36,7 +36,6 @@ std::vector<TH2F*>Distribution_exp;
 unsigned NbrReadOut=0;
 void AnalysisProcessor::processRunHeader( LCRunHeader* run)
 {
-run->getNumberOfEvents();
 }
 
 void AnalysisProcessor::PrintStatShort()
