@@ -5,6 +5,7 @@
 #include<string>
 #include"Plate.h"
 #include"Dif.h"
+#include"Patch.h"
 enum Types {pad,positional,temporal,tcherenkov,tricot};
 
 
