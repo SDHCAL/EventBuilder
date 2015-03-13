@@ -19,7 +19,6 @@
 #include "Colors.h"
 #include "TBranch.h"
 #include "TObject.h"
-#include <algorithm>
 #ifndef COLORS_H
 #define normal " "
 #define red "  "
@@ -136,7 +135,6 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
     std::vector<std::map<int,int> >Times_Plates;
     for(unsigned int j=0; j<Time_Distr.size(); ++j) Times_Plates.emplace_back(std::map<int,int>());
     for(std::vector<RawCalorimeterHit *>::iterator it=vec.begin(); it!=vec.end(); ++it) {
-
        
         CalorimeterHitImpl* caloHit = new CalorimeterHitImpl();
         int dif_id  = (*it)->getCellID0() & 0xFF ;
@@ -170,7 +168,8 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
         unsigned int I=0;
         unsigned int J=0;
 
-        if(geom.GetDifType(dif_id)==pad) {
+        if(geom.GetDifType(dif_id)==pad) 
+	{
             I =(1+MapILargeHR2[chan_id]+AsicShiftI[asic_id])+geom.GetDifPositionX(dif_id);
             J =(32-(MapJLargeHR2[chan_id]+AsicShiftJ[asic_id]))+geom.GetDifPositionY(dif_id);
 
@@ -238,9 +237,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
         
         col->addElement(caloHit);
         //}
-    
-        
-        
+       
         //std::cout<<magenta<<totree.pI<<"  "<<totree.pJ<<"  "<<red<<(*it)->getTimeStamp()<<"  "<<totree.pTime<<normal<<std::endl;
         t->Fill();
 
@@ -252,8 +249,6 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
     {
         for(unsigned int i=0; i<Times_Plates.size(); ++i)for(std::map<int,int>::iterator it = Times_Plates[i].begin(); it!=Times_Plates[i].end(); ++it) Hits_Distr_Events[i]->Fill(it->second,1);
     }
-
-
 }
 
 TriventProcessor aTriventProcessor;
@@ -283,8 +278,6 @@ TriventProcessor::TriventProcessor() : Processor("TriventProcessorType")
     
 }
 
-
-
 void TriventProcessor::Writer(IO::LCWriter* file,const char * name,std::map<int,std::vector<EVENT::RawCalorimeterHit *> >& vec, EVENT::LCEvent* event,unsigned int & nbr,unsigned int IsNoise)
 {
 	LCEventImpl*  evt = new LCEventImpl() ;
@@ -304,23 +297,12 @@ void TriventProcessor::Writer(IO::LCWriter* file,const char * name,std::map<int,
         delete evt;
 }
 
-
-
-
-
-
-
-
-
 TriventProcessor::~TriventProcessor() {}
-
 
 void TriventProcessor::processRunHeader( LCRunHeader* run)
 {
     LCTOOLS::dumpRunHeader(run);
 }
-
-
 
 void TriventProcessor::init()
 {
@@ -377,15 +359,15 @@ void TriventProcessor::init()
                 Flux_Noise_Asic.emplace_back(new TH2F(e.c_str(),e.c_str(),100,0,100,100,0,100));
             }
             std::string h="Time_Distribution"+ std::to_string( (long long int) it->first +1 );
-            Time_Distr.emplace_back(new TH1F(h.c_str(),h.c_str(),25000,0,25000));
+            Time_Distr.emplace_back(new TH1F(h.c_str(),h.c_str(),25000000,0,25000000));
             std::string i="Number_hit_per_clock"+ std::to_string( (long long int) it->first +1 );
-            Hits_Distr.emplace_back(new TH1F(i.c_str(),i.c_str(),25000,0,25000));
+            Hits_Distr.emplace_back(new TH1F(i.c_str(),i.c_str(),2500,0,2500));
             std::string j="Time_Distribution_Events"+ std::to_string( (long long int) it->first +1 );
-            Time_Distr_Events.emplace_back(new TH1F(j.c_str(),j.c_str(),25000,0,25000));
+            Time_Distr_Events.emplace_back(new TH1F(j.c_str(),j.c_str(),2500,0,2500));
             std::string k="Number_hit_per_clock_Events"+ std::to_string( (long long int) it->first +1 );
-            Hits_Distr_Events.emplace_back(new TH1F(k.c_str(),k.c_str(),25000,0,25000));
+            Hits_Distr_Events.emplace_back(new TH1F(k.c_str(),k.c_str(),2500,0,2500));
             std::string l="Time_Distribution_Noise"+ std::to_string( (long long int) it->first +1 );
-            Time_Distr_Noise.emplace_back(new TH1F(l.c_str(),l.c_str(),25000,0,25000));
+            Time_Distr_Noise.emplace_back(new TH1F(l.c_str(),l.c_str(),25000000,0,25000000));
             std::string m="Number_hit_per_clock_Noise"+ std::to_string( (long long int) it->first +1 );
             Hits_Distr_Noise.emplace_back(new TH1F(m.c_str(),m.c_str(),25000,0,25000));
             Nbrof0Hits.push_back(0);
@@ -533,25 +515,8 @@ void TriventProcessor::processEvent( LCEvent * evtP )
               }}
               else
               {
-              
                 EventsSelected++;
                 Writer(_EventWriter,"SDHCAL_HIT",RawHits, evtP,EventsSelected,0);
-                    /*LCEventImpl*  evt = new LCEventImpl() ;
-                    LCCollectionVec* col_event = new LCCollectionVec(LCIO::CALORIMETERHIT);
-                    col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_LONG));
-                    col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_TIME));
-                    CellIDEncoder<CalorimeterHitImpl> cd( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event) ;
-                    for(std::map<int,std::vector<RawCalorimeterHit *> >::iterator itt=RawHits.begin(); itt!=RawHits.end(); ++itt) {
-                    FillIJK((itt->second),col_event,cd,0);
-                }
-                    evt->addCollection(col_event, "SDHCAL_HIT");
-                    evt->setEventNumber(EventsSelected);
-                    evt->setTimeStamp(evtP->getTimeStamp());
-                    evt->setRunNumber(evtP->getRunNumber());
-                    _EventWriter->writeEvent( evt ) ;
-                    delete evt;*/
-              
-
               }
             
 
@@ -559,60 +524,11 @@ void TriventProcessor::processEvent( LCEvent * evtP )
                 EventsNoise++;
                 Writer(_NoiseWriter,"SDHCAL_HIT_NOISE_IN_TRIGGER_TIME",RawHits, evtP,EventsNoise,1);
                 Writer(_NoiseWriter,"SDHCAL_HIT_NOISE",BehondTrigger, evtP,EventsNoise,1);
-
-               /* LCEventImpl*  evt = new LCEventImpl() ;
-                LCCollectionVec* col_event = new LCCollectionVec(LCIO::CALORIMETERHIT);
-                col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_LONG));
-                col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_TIME));
-
-                CellIDEncoder<CalorimeterHitImpl> cd( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event) ;
-                for(std::map<int,std::vector<RawCalorimeterHit *> >::iterator itt=RawHits.begin(); itt!=RawHits.end(); ++itt) {
-                    FillIJK((itt->second),col_event,cd,1);
-                }
-                evt->addCollection(col_event, "SDHCAL_HIT_NOISE_IN_TRIGGER_TIME");
-                evt->setEventNumber(EventsNoise);
-                evt->setRunNumber(evtP->getRunNumber());
-                //std::cout<<(timemax-timemin)*200e-9<<std::endl;
-                //WHAT IS IT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-               // evt->setTimeStamp(timemax-timemin);
-                _NoiseWriter->writeEvent( evt ) ;
-                LCEventImpl*  evt2 = new LCEventImpl() ;
-                LCCollectionVec* col_event2 = new LCCollectionVec(LCIO::CALORIMETERHIT);
-                col_event2->setFlag(col_event2->getFlag()|( 1 << LCIO::RCHBIT_LONG));
-                col_event2->setFlag(col_event2->getFlag()|( 1 << LCIO::RCHBIT_TIME));
-
-                CellIDEncoder<CalorimeterHitImpl> cd2( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event2) ;
-                //std::cout<<green<<BehondTrigger.size()<<normal<<std::endl;
-                for(std::map<int,std::vector<RawCalorimeterHit *> >::iterator itt=BehondTrigger.begin(); itt!=BehondTrigger.end(); ++itt) {
-                    FillIJK((itt->second),col_event2,cd2,1);
-                }
-                evt2->addCollection(col_event2, "SDHCAL_HIT_NOISE");
-                evt2->setEventNumber(EventsNoise);
-                evt2->setRunNumber(evtP->getRunNumber());
-                _NoiseWriter->writeEvent( evt2 ) ;
-                delete evt;*/
             }
            if(_noiseFileName!=""&&_LayerCut==-1)
 	   {
              EventsNoise++;
              Writer(_NoiseWriter,"SDHCAL_HIT_NOISE",BehondTrigger, evtP,EventsNoise,1);
-                /*LCEventImpl*  evt = new LCEventImpl() ;
-                LCCollectionVec* col_event = new LCCollectionVec(LCIO::CALORIMETERHIT);
-                col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_LONG));
-                col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_TIME));
-
-                CellIDEncoder<CalorimeterHitImpl> cd( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event) ;
-                for(std::map<int,std::vector<RawCalorimeterHit *> >::iterator itt=BehondTrigger.begin(); itt!=BehondTrigger.end(); ++itt) {
-                    FillIJK((itt->second),col_event,cd,1);
-                }
-                evt->addCollection(col_event, "SDHCAL_HIT_NOISE");
-                evt->setEventNumber(EventsNoise);
-                evt->setRunNumber(evtP->getRunNumber());
-                //std::cout<<(timemax-timemin)*200e-9<<std::endl;
-                //WHAT IS IT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-               // evt->setTimeStamp(timemax-timemin);
-                _NoiseWriter->writeEvent( evt ) ;
-                delete evt;*/
            }
         }
     }
