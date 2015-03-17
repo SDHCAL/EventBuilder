@@ -29,6 +29,7 @@
 #include "Reader/Reader.h"
 #include "Trivent/Mapping.h"
 #include "TGraph.h"
+#include "Trivent/HistoPlane.h"
 using namespace marlin;
 #define degtorad 0.0174532925
 unsigned int EventsNoise=0;
@@ -64,22 +65,9 @@ TBranch* Branch8 =  t->Branch("Asic",&(totree.pAsic));
 TBranch* Branch9 =  t->Branch("DifId",&(totree.pDifId));
 TBranch* Branch10 =  t->Branch("AsicChannel",&(totree.pAsicChannel));
 TBranch* Branch11 = t->Branch("Event",&(totree.pEvent));
-std::vector<TH1F*>Time_Distr;
-std::vector<TH1F*>Hits_Distr;
-std::vector<TH1F*>Time_Distr_Events;
-std::vector<TH1F*>Hits_Distr_Events;
-std::vector<TH1F*>Time_Distr_Noise;
-std::vector<TH1F*>Hits_Distr_Noise;
-std::vector<TH2F*>Flux_Noise;
-std::vector<TH2F*>Flux_Events;
-std::vector<TH2F*>Flux_Noise_Asic;
-std::vector<TH2F*>Flux_Events_Asic;
-std::vector<long>Nbrof0Hits;
-std::vector<long int>local_max;
-std::vector<long int>local_min;
+std::vector<std::string  > th1 {"Time_Distr","Hits_Distr","Time_Distr_Events","Hits_Distr_Events","Time_Distr_Noise","Hits_Distr_Noise"};
+std::vector<std::string> th2 {"Flux_Noise","Flux_Events","Flux_Noise_Asic","Flux_Events_Asic"};
 int _NbrRun=0;
-std::vector<unsigned long long int>total_time;
-double timemax=-10000;
 void TriventProcessor::FillTimes()
 {
     bool eraseFirst=false;
@@ -133,8 +121,9 @@ void TriventProcessor::FillTimes()
 void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollectionVec* col,CellIDEncoder<CalorimeterHitImpl>& cd, bool IsNoise)
 {
     std::vector<std::map<int,int> >Times_Plates;
-    for(unsigned int j=0; j<Time_Distr.size(); ++j) Times_Plates.emplace_back(std::map<int,int>());
+    for(unsigned int j=0; j<HistoPlanes.size(); ++j) Times_Plates.emplace_back(std::map<int,int>());
     for(std::vector<RawCalorimeterHit *>::iterator it=vec.begin(); it!=vec.end(); ++it) {
+
        
         CalorimeterHitImpl* caloHit = new CalorimeterHitImpl();
         int dif_id  = (*it)->getCellID0() & 0xFF ;
@@ -168,8 +157,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
         unsigned int I=0;
         unsigned int J=0;
 
-        if(geom.GetDifType(dif_id)==pad) 
-	{
+        if(geom.GetDifType(dif_id)==pad) {
             I =(1+MapILargeHR2[chan_id]+AsicShiftI[asic_id])+geom.GetDifPositionX(dif_id);
             J =(32-(MapJLargeHR2[chan_id]+AsicShiftJ[asic_id]))+geom.GetDifPositionY(dif_id);
 
@@ -195,19 +183,18 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
         }
          Times_Plates[geom.GetDifNbrPlate(dif_id)-1][(*it)->getTimeStamp()]++;
         if(IsNoise==1) {
-
-            Time_Distr_Noise[geom.GetDifNbrPlate(dif_id)-1]->Fill((*it)->getTimeStamp(),1);
+              HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Return_TH1F("Time_Distr_Noise")->Fill((*it)->getTimeStamp(),1);
         } else {
-            Time_Distr_Events[geom.GetDifNbrPlate(dif_id)-1]->Fill((*it)->getTimeStamp(),1);
+            HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Return_TH1F("Time_Distr_Events")->Fill((*it)->getTimeStamp(),1);
         }
         if(IsNoise==1) {
-            Flux_Noise[geom.GetDifNbrPlate(dif_id)-1]->Fill(I,J);
-            if(geom.GetDifType(dif_id)==positional)Flux_Noise_Asic[geom.GetDifNbrPlate(dif_id)-1]->Fill(asic_id,asic_id);
-            else Flux_Noise_Asic[geom.GetDifNbrPlate(dif_id)-1]->Fill((AsicShiftI[asic_id]+geom.GetDifPositionX(dif_id))/8,(32-AsicShiftJ[asic_id]+geom.GetDifPositionY(dif_id))/8);
+            HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Return_TH2F("Flux_Noise")->Fill(I,J);
+            if(geom.GetDifType(dif_id)==positional)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Return_TH2F("Flux_Noise_Asic")->Fill(asic_id,asic_id);
+            else HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Return_TH2F("Flux_Noise_Asic")->Fill((AsicShiftI[asic_id]+geom.GetDifPositionX(dif_id))/8,(32-AsicShiftJ[asic_id]+geom.GetDifPositionY(dif_id))/8);
         } else {
-            Flux_Events[geom.GetDifNbrPlate(dif_id)-1]->Fill(I,J);
-            if(geom.GetDifType(dif_id)==positional)Flux_Events_Asic[geom.GetDifNbrPlate(dif_id)-1]->Fill(asic_id,asic_id);
-            else Flux_Events_Asic[geom.GetDifNbrPlate(dif_id)-1]->Fill((AsicShiftI[asic_id]+geom.GetDifPositionX(dif_id))/8,(32-AsicShiftJ[asic_id]+geom.GetDifPositionY(dif_id))/8);
+            HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Return_TH2F("Flux_Events")->Fill(I,J);
+            if(geom.GetDifType(dif_id)==positional)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Return_TH2F("Flux_Events_Asic")->Fill(asic_id,asic_id);
+            else HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Return_TH2F("Flux_Events_Asic")->Fill((AsicShiftI[asic_id]+geom.GetDifPositionX(dif_id))/8,(32-AsicShiftJ[asic_id]+geom.GetDifPositionY(dif_id))/8);
         }
          
         cd["I"] = I ;
@@ -237,17 +224,16 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
         
         col->addElement(caloHit);
         //}
-       
         //std::cout<<magenta<<totree.pI<<"  "<<totree.pJ<<"  "<<red<<(*it)->getTimeStamp()<<"  "<<totree.pTime<<normal<<std::endl;
         t->Fill();
 
     }
     if(IsNoise==1) 
     {
-        for(unsigned int i=0; i<Times_Plates.size(); ++i)for(std::map<int,int>::iterator it = Times_Plates[i].begin(); it!=Times_Plates[i].end(); ++it) Hits_Distr_Noise[i]->Fill(it->second,1);
+        for(unsigned int i=0; i<Times_Plates.size(); ++i)for(std::map<int,int>::iterator it = Times_Plates[i].begin(); it!=Times_Plates[i].end(); ++it) HistoPlanes[i].Return_TH1F("Hits_Distr_Noise")->Fill(it->second,1);
     } else 
     {
-        for(unsigned int i=0; i<Times_Plates.size(); ++i)for(std::map<int,int>::iterator it = Times_Plates[i].begin(); it!=Times_Plates[i].end(); ++it) Hits_Distr_Events[i]->Fill(it->second,1);
+        for(unsigned int i=0; i<Times_Plates.size(); ++i)for(std::map<int,int>::iterator it = Times_Plates[i].begin(); it!=Times_Plates[i].end(); ++it) HistoPlanes[i].Return_TH1F("Hits_Distr_Events")->Fill(it->second,1);
     }
 }
 
@@ -328,57 +314,9 @@ void TriventProcessor::init()
             if(geom.GetDifType(it->first)!=temporal) {
                 SinCos[it->first]=std::vector<double>{cos(geom.GetDifAlpha(it->first)*degtorad),sin(geom.GetDifAlpha(it->first)*degtorad),cos(geom.GetDifBeta(it->first)*degtorad),sin(geom.GetDifBeta(it->first)*degtorad),cos(geom.GetDifGamma(it->first)*degtorad),sin(geom.GetDifGamma(it->first)*degtorad)};
                 PlansType.insert(std::pair<int,int>(geom.GetDifNbrPlate(it->first)-1,geom.GetDifType(it->first)));
+                HistoPlanes.insert(std::pair<int,HistoPlane>(geom.GetDifNbrPlate(it->first)-1,HistoPlane(geom.GetDifNbrPlate(it->first)-1,50,50,th1,th2)));
             }
         }
-        for(std::map<int, int >::iterator it=PlansType.begin(); it!=PlansType.end(); ++it) {
-            std::string b="Number_hits_Events"+ std::to_string( (long long int) it->first +1 );
-            Times_Plates.emplace_back(std::map<int ,int>());
-            Times_Plates_perRun.emplace_back(std::map<int ,int>());
-
-            if(it->second==positional) {
-                Flux_Events.emplace_back(new TH2F(b.c_str(),b.c_str(),128,0,128,1,0,50));
-            } else {
-                Flux_Events.emplace_back(new TH2F(b.c_str(),b.c_str(),100,0,100,100,0,100));
-            }
-            std::string c="Number_hits_Noise"+ std::to_string( (long long int) it->first +1 );
-            if(it->second==positional) {
-                Flux_Noise.emplace_back(new TH2F(c.c_str(),c.c_str(),128,0,128,1,0,50));
-            } else {
-                Flux_Noise.emplace_back(new TH2F(c.c_str(),c.c_str(),100,0,100,100,0,100));
-            }
-            std::string d="Number_hits_Events_Asic"+ std::to_string( (long long int) it->first +1 );
-            if(it->second==positional) {
-                Flux_Events_Asic.emplace_back(new TH2F(d.c_str(),d.c_str(),2,0,3,1,0,50));
-            } else {
-                Flux_Events_Asic.emplace_back(new TH2F(d.c_str(),d.c_str(),100,0,100,100,0,100));
-            }
-            std::string e="Number_hits_Noise_Asic"+ std::to_string( (long long int) it->first +1 );
-            if(it->second==positional) {
-                Flux_Noise_Asic.emplace_back(new TH2F(e.c_str(),e.c_str(),2,1,3,1,0,50));
-            } else {
-                Flux_Noise_Asic.emplace_back(new TH2F(e.c_str(),e.c_str(),100,0,100,100,0,100));
-            }
-            std::string h="Time_Distribution"+ std::to_string( (long long int) it->first +1 );
-            Time_Distr.emplace_back(new TH1F(h.c_str(),h.c_str(),25000000,0,25000000));
-            std::string i="Number_hit_per_clock"+ std::to_string( (long long int) it->first +1 );
-            Hits_Distr.emplace_back(new TH1F(i.c_str(),i.c_str(),2500,0,2500));
-            std::string j="Time_Distribution_Events"+ std::to_string( (long long int) it->first +1 );
-            Time_Distr_Events.emplace_back(new TH1F(j.c_str(),j.c_str(),2500,0,2500));
-            std::string k="Number_hit_per_clock_Events"+ std::to_string( (long long int) it->first +1 );
-            Hits_Distr_Events.emplace_back(new TH1F(k.c_str(),k.c_str(),2500,0,2500));
-            std::string l="Time_Distribution_Noise"+ std::to_string( (long long int) it->first +1 );
-            Time_Distr_Noise.emplace_back(new TH1F(l.c_str(),l.c_str(),25000000,0,25000000));
-            std::string m="Number_hit_per_clock_Noise"+ std::to_string( (long long int) it->first +1 );
-            Hits_Distr_Noise.emplace_back(new TH1F(m.c_str(),m.c_str(),25000,0,25000));
-            Nbrof0Hits.push_back(0);
-            local_max.push_back(0);
-            local_min.push_back(HUGE_VAL);
-            total_time.push_back(0);
-            
-            
-        }
-        
-            
         //FillDelimiter(_Delimiters,PlansType.size());
     } else {
         std::cout << "Reader type n'existe pas !!" << std::endl;
@@ -396,7 +334,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
         for(unsigned int i=0; i< _hcalCollections.size(); i++) {
             Times.clear();
             RawHits.clear();
-            for(int i=0;i<local_max.size();++i){local_min[i]=HUGE_VAL;local_max[i]=0;}
+            for(unsigned int i =0;i<HistoPlanes.size();++i)HistoPlanes[i].Init_local_min_max();
             BehondTrigger.clear();
             RawTimeDifs.clear();
             LCCollection* col = evtP ->getCollection(_hcalCollections[i].c_str());
@@ -415,7 +353,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
                 }
             }
             int numElements = col->getNumberOfElements();
-            for(unsigned int i=0; i<Times_Plates_perRun.size(); ++i)Times_Plates_perRun[i].clear();
+            for(unsigned int i=0; i<HistoPlanes.size(); ++i)HistoPlanes[i].Clear_Time_Plates_perRun();
             for (int ihit=0; ihit < numElements; ++ihit) 
             {
                 RawCalorimeterHit *raw_hit = dynamic_cast<RawCalorimeterHit*>( col->getElementAt(ihit)) ;
@@ -432,38 +370,28 @@ void TriventProcessor::processEvent( LCEvent * evtP )
                     if(_TriggerTime==0 || (raw_hit->getTimeStamp()<=_TriggerTime&&raw_hit->getTimeStamp()>=0))
                     {
                     
+                    HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Set_hit_trigger();
 		    Times[raw_hit->getTimeStamp()]++;
                     
-                    
+              
                     RawHits[raw_hit->getTimeStamp()].push_back(raw_hit);
-                    if(raw_hit->getTimeStamp()<0)std::cout<<yellow<<raw_hit->getTimeStamp()<<"  "<<((raw_hit)->getCellID0() & 0xFF)<<normal<<std::endl;
+                    //if(raw_hit->getTimeStamp()<0)std::cout<<yellow<<raw_hit->getTimeStamp()<<"  "<<((raw_hit)->getCellID0() & 0xFF)<<normal<<std::endl;
                     }
                     else
                     {
-                       
+                       HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Set_hit_other();
                        BehondTrigger[raw_hit->getTimeStamp()].push_back(raw_hit);
                        //std::cout<<blue<<raw_hit->getTimeStamp()<<"  "<<BehondTrigger.size()<<normal<<std::endl;
                     }
-                    if(raw_hit->getTimeStamp()>timemax)timemax=raw_hit->getTimeStamp();
-                    if(raw_hit->getTimeStamp()>local_max[geom.GetDifNbrPlate(dif_id)-1])local_max[geom.GetDifNbrPlate(dif_id)-1]=raw_hit->getTimeStamp();
-                    if(raw_hit->getTimeStamp()<local_min[geom.GetDifNbrPlate(dif_id)-1]&&raw_hit->getTimeStamp()>=0)local_min[geom.GetDifNbrPlate(dif_id)-1]=raw_hit->getTimeStamp();
-                    Times_Plates_perRun[geom.GetDifNbrPlate(dif_id)-1][raw_hit->getTimeStamp()]++;
-                    Times_Plates[geom.GetDifNbrPlate(dif_id)-1][raw_hit->getTimeStamp()]++;
+                    if(raw_hit->getTimeStamp()>HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Get_local_max())HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Set_local_max(raw_hit->getTimeStamp());
+                    if(raw_hit->getTimeStamp()<HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Get_local_min()&&raw_hit->getTimeStamp()>=0)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Set_local_min(raw_hit->getTimeStamp());
+                    HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Fill_Time_Plates(raw_hit->getTimeStamp());
+	            HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Fill_Time_Plates_perRun(raw_hit->getTimeStamp());
+                    
                 }
             }
             if(Times.size()==0) std::cout<<red<<" 0 hits within the the TriggerTime given... You should verify your TriggerTime or your run is triggerless "<<normal<<std::endl;
-            
-            for(unsigned int i=0;i<total_time.size();++i) 
-            {
-		if(local_max[i]==0)continue;
-                else if(local_max[i]==local_min[i])total_time[i]+=local_max[i];
-		else total_time[i]+=local_max[i]-local_min[i];
-		//std::cout<<red<<local_max[i]<<"  "<<local_min[i]<<"  "<<local_max[i]-local_min[i]<<"  "<<total_time[i]<<normal<<std::endl;
-	    }
-            for(unsigned int j =0; j<Nbrof0Hits.size(); ++j) {
-                Nbrof0Hits[j]+=(local_max[j]-local_min[j]-Times_Plates_perRun[j].size());
-            }
-            //std::cout<<red<<timemax_local<<"  "<<timemin_local<<"  "<<delta<<"  "<<green<<Times_Plates_perRun[0].size()<<yellow<<"  "<<delta-Times_Plates_perRun[0].size()<<red<<"  "<<Nbrof0Hits[0]<<normal<<std::endl;
+            for(unsigned int i=0;i<HistoPlanes.size();++i) { HistoPlanes[i].Set_Total_Time(); HistoPlanes[i].Set_Nbrof0Hits();}
            
             if(_LayerCut!=-1)
 	    {
@@ -535,73 +463,14 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 }
 
 void TriventProcessor::end()
-{   std::vector<double>Means(Flux_Noise.size(),0);
+{  
     std::string name="Results_Trivent_"+ std::to_string( (long long int) _NbrRun)+".root";
     TFile *hfile = new TFile(name.c_str(),"RECREATE","Results");
     //t->Write();
-        //Flux_Hits[i]->Scale(total_time*200e-9);
-        //Flux_Hits[i]->Write();
-        
-        for(unsigned int i=0; i<Flux_Noise.size(); ++i) 
+    for(unsigned int i=0; i<HistoPlanes.size(); ++i) 
 	{
-    std::string plate="Plate "+ std::to_string( (long long int) i+1);
-    hfile->mkdir(plate.c_str(),plate.c_str());
-    hfile->cd(plate.c_str());
-    Flux_Noise[i]->Write();
-    Flux_Noise_Asic[i]->Write();
-    Flux_Events_Asic[i]->Write();
-    Flux_Events[i]->Write();
-		 
-      std::string name="Noise_Flux";
-      Flux_Noise[i]->Scale(1/(total_time[i]*2e-7));
-      Flux_Noise[i]->Write(name.c_str());
-      name="Flux_Noise_Mean_Scaled";
-      Means[i]=Flux_Noise[i]->Integral()*1.0/(32*32);
-      Flux_Noise[i]->Scale(1/Means[i]);
-      Flux_Noise[i]->Write(name.c_str());
-      name="Asic_Noise_Flux";
-      Flux_Noise_Asic[i]->Scale(1/(total_time[i]*2e-7));
-      Flux_Noise_Asic[i]->Write(name.c_str());
-      name="Asic_Noise_Flux_Mean_Scaled";
-      Flux_Noise_Asic[i]->Scale(1/(Means[i]));
-      Flux_Noise_Asic[i]->Write(name.c_str());
-      name="Event_Flux";
-      Flux_Events[i]->Scale(1/(total_time[i]*2e-7));
-      Flux_Events[i]->Write(name.c_str());
-      name="Asic_Event_Flux";
-      Flux_Events_Asic[i]->Scale(1/(total_time[i]*2e-7));
-      Flux_Events_Asic[i]->Write(name.c_str());
-   
-    for(std::map<int,int>::iterator it = Times_Plates[i].begin(); it!=Times_Plates[i].end(); ++it) 
-		{
-    	Time_Distr[i]->Fill(it->first,it->second);
-      Hits_Distr[i]->Fill(it->second,1);
+    HistoPlanes[i].Save(hfile);
     }
-    Hits_Distr[i]->Fill(0.0,Nbrof0Hits[i]);
-    Hits_Distr_Noise[i]->Fill(0.0,Nbrof0Hits[i]);
-    Time_Distr[i]->GetXaxis()->SetRange(0,Times_Plates[i].size()+10);
-    Hits_Distr[i]->GetXaxis()->SetRange(0,150);
-    Time_Distr[i]->Write();
-    Hits_Distr[i]->Write();
-    Time_Distr_Events[i]->Write();
-		Time_Distr_Noise[i]->Write();
-    Hits_Distr_Noise[i]->Write();
-    Hits_Distr_Events[i]->Write();
-    }
-
-    for(unsigned int i=0; i<Flux_Noise.size(); ++i) {
-        delete Flux_Noise[i];
-        delete Flux_Events[i];
-        delete Flux_Noise_Asic[i];
-        delete Flux_Events_Asic[i];
-        delete Time_Distr[i];
-        delete Hits_Distr[i];
-        delete Time_Distr_Events[i];
-        delete Time_Distr_Noise[i];
-        delete Hits_Distr_Events[i];
-        delete Hits_Distr_Noise[i];
-    }
-    
     delete Branch1;
     delete Branch2;
     delete Branch3;
@@ -621,7 +490,8 @@ void TriventProcessor::end()
     std::cout << "TriventProcess::end() !! "<<_trig_count<<" Events Trigged"<< std::endl;
     std::cout <<TouchedEvents<<" Events were overlaping "<<"("<<(TouchedEvents*1.0/(TouchedEvents+eventtotal))*100<<"%)"<<std::endl;
     std::cout <<"Total nbr Events : "<<eventtotal<<" Events with nbr of plates >="<<_LayerCut<<" : "<<EventsSelected<<" ("<<EventsSelected*1.0/eventtotal*100<<"%)"<< std::endl;
-    for(unsigned int i=0;i<total_time.size();++i)std::cout <<"Total Time "<<i<<" : "<<total_time[i]*200e-9<<"  "; std::cout<<std::endl;
+    for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Total Time "<<i<<" : "<<HistoPlanes[i].Get_Total_Time()*200e-9<<"  "; std::cout<<std::endl;
     for(std::map<int,bool>::iterator it=Warning.begin(); it!=Warning.end(); it++) std::cout<<red<<"REMINDER::Data from Dif "<<it->first<<" are skipped !"<<normal<<std::endl;
-for(unsigned int i=0; i<Means.size(); ++i) std::cout <<"Mean noise in plane "<<i+1<<" : "<<Means[i]<<" Hz.cm-2 "; std::cout<<std::endl;
+    for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Mean noise in plane "<<i+1<<" : "<<HistoPlanes[i].Get_Means()<<" Hz.cm-2 "; std::cout<<std::endl;
+    if(_LayerCut==-1) for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Efficiency "<<i<<" : "<<HistoPlanes[i].Efficiency()<<"  "; std::cout<<std::endl;
 }

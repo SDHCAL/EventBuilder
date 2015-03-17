@@ -10,6 +10,7 @@
 #include "IMPL/CalorimeterHitImpl.h"
 #include <EVENT/LCRunHeader.h>
 #include "UTIL/LCTOOLS.h"
+#include "Trivent/HistoPlane.h"
 //std::string _Delimiters;
 //std::map<int ,std::vector<double> >Delimiter;
 class TriventProcessor : public marlin::Processor
@@ -45,13 +46,13 @@ protected:
     int _LayerCut;
     int _TriggerTime;
     std::map<int,int>Times;
-    std::vector<std::map<int,int> >Times_Plates;
-    std::vector<std::map<int,int> >Times_Plates_perRun;
+    //std::vector<std::map<int,int> >Times_Plates_perRun;
     std::map< int,std::vector<EVENT::RawCalorimeterHit*> > RawHits;
     std::map< int,std::vector<EVENT::RawCalorimeterHit*> > BehondTrigger;
     std::vector<RawCalorimeterHit *>EventsGrouped;
     std::map< int,std::vector<EVENT::RawCalorimeterHit*> > RawTimeDifs;
     float pos[3];
+    std::map<int,HistoPlane>HistoPlanes;
 };
 
 
