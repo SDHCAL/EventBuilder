@@ -1,5 +1,5 @@
 <Detector>
-  <Plate x="0" y="0" z="0" alpha="0" beta="0" gamma="0">
+  <Plate x="0" y="0" z="0" alpha="0" beta="0" gamma="0" SizeX="100" SizeY="100">
      <Dif DifId="218" I="0" J="64"/>
      <Dif DifId="244" I="0" J="32"/>
      <Dif DifId="220" I="0" J="0"/>
@@ -8,7 +8,7 @@
      <Dif DifId="225" I="48" J="0"/>
   </Plate>
   
-  <Plate x="28" y="-33" z="600" alpha="0" beta="0" gamma="0">
+  <Plate x="28" y="-33" z="600" alpha="0" beta="0" gamma="0" SizeX="100" SizeY="100">
      <Dif DifId="230" I="0" J="64"/>
      <Dif DifId="228" I="0" J="32"/>
      <Dif DifId="229" I="0" J="0"/>
@@ -17,7 +17,7 @@
      <Dif DifId="237" I="48" J="0"/> 
   </Plate>
   
-  <Plate x="-28" y="33" z="1200" alpha="0" beta="0" gamma="0">
+  <Plate x="-28" y="33" z="1200" alpha="0" beta="0" gamma="0" SizeX="100" SizeY="100">
      <Dif DifId="245" I="0" J="64"/>
      <Dif DifId="242" I="0" J="32"/>
      <Dif DifId="240" I="0" J="0"/>
@@ -26,7 +26,7 @@
      <Dif DifId="239" I="48" J="0"/> 
   </Plate>
   
-  <Plate x="0" y="0" z="1800" alpha="0" beta="0" gamma="0">
+  <Plate x="0" y="0" z="1800" alpha="0" beta="0" gamma="0" SizeX="100" SizeY="100">
      <Dif DifId="231" I="0" J="64"/>
      <Dif DifId="233" I="0" J="32"/>
      <Dif DifId="232" I="0" J="0"/>

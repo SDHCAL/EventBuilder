@@ -6,17 +6,17 @@
     <Dif DifId="2" I="0" J="0"/>
   </Plate>
   
-  <Plate x="0" y="0" z="235" alpha="0" beta="0" gamma="0"SizeX="33" SizeY="33">
+  <Plate x="0" y="0" z="235" alpha="0" beta="0" gamma="0" SizeX="33" SizeY="33">
     <Dif DifId="32" I="0" J="0" />  
   </Plate>
   
   
-  <Plate x="0" y="0" z="335" alpha="0" beta="0" gamma="0" SizeX="33" SizeY="33">
+ <Plate x="0" y="0" z="335" alpha="0" beta="0" gamma="0" SizeX="33" SizeY="33">
     <Dif DifId="28" I="0" J="0" /> 
-  </Plate>
+  </Plate> 
   
     <Plate x="0" y="0" z="435" alpha="0" beta="0" gamma="0" SizeX="50" SizeY="33">
-    <Dif DifId="23" I="0" J="0"/>
+    <Dif DifId="105" I="0" J="0"/>
   </Plate>
 
 <!--   <Plate x="0" y="0" z="535" alpha="0" beta="0" gamma="0">
