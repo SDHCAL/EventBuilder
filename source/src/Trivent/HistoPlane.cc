@@ -7,19 +7,25 @@
 #include<map>
 #include<iostream>
 #include "Colors.h"
+#include "Patch.h"
 
-
-
-
-HistoPlane::HistoPlane(int NbrPlate,int NbrI, int NbrJ, std::vector< std::string  >& vec_name_th1,std::vector< std::string >& vec_name_th2):NbrPlatee(NbrPlate),Means(0),Nbrof0Hits(0),local_max(-1),local_min(99999999),total_time(0)
+HistoPlane::HistoPlane(int NbrPlate,int SizeX, int SizeY, std::vector< std::string  >& vec_name_th1,std::vector< std::string >& vec_name_th2,std::vector< std::string >& vec_name_th2_Asic):NbrPlatee(NbrPlate),Means(0),Nbrof0Hits(0),local_max(-1),local_min(99999999),total_time(0),_SizeX(SizeX),_SizeY(SizeY)
 {  
+        std::string addnbr;
 	for(std::vector< std::basic_string<char>  >::iterator it=vec_name_th1.begin();it!=vec_name_th1.end();++it)
 	{
-  		TH1Fs.insert(std::pair<std::string,TH1F*>((*it),new TH1F((*it).c_str(),(*it).c_str(),25000,0,25000)));
+                addnbr=(*it)+patch::to_string(NbrPlate);
+  		TH1Fs.insert(std::pair<std::string,TH1F*>((*it),new TH1F(addnbr.c_str(),(*it).c_str(),25000,0,25000)));
 	}
 	for(std::vector< std::basic_string<char>  >::iterator it=vec_name_th2.begin();it!=vec_name_th2.end();++it)
 	{
-  		TH2Fs.insert(std::pair<std::string,TH2F*>((*it),new TH2F((*it).c_str(),(*it).c_str(),NbrI,0,NbrI,NbrJ,0,NbrJ)));
+                addnbr=(*it)+patch::to_string(NbrPlate);
+  		TH2Fs.insert(std::pair<std::string,TH2F*>((*it),new TH2F(addnbr.c_str(),(*it).c_str(),(int)SizeX+1,0,(int)SizeX+1,(int)SizeY+1,0,(int)SizeY+1)));
+	}
+        for(std::vector< std::basic_string<char>  >::iterator it=vec_name_th2_Asic.begin();it!=vec_name_th2_Asic.end();++it)
+	{
+                addnbr=(*it)+patch::to_string(NbrPlate);
+  		TH2Fs.insert(std::pair<std::string,TH2F*>((*it),new TH2F(addnbr.c_str(),(*it).c_str(),(int)SizeX/8,0,(int)SizeX/8,(int)SizeY/8,1,(int)SizeY/8+1)));
 	}
         std::cout<<red<<"Creating "<<TH1Fs.size()<<" TH1 and "<<TH2Fs.size()<<" TH2F "<<normal<<std::endl;
 }
@@ -30,7 +36,7 @@ HistoPlane::~HistoPlane()
 	{
   		
 		std::cout<<it->first<<std::endl;
-                delete it->second;
+                delete it->second;          
                 TH1Fs.erase(it->first);
                 std::cout<<green<<TH1Fs.size()<<normal<<std::endl;
   		
@@ -102,7 +108,7 @@ void HistoPlane::Save(TFile* file)
     TH2Fs["Flux_Noise"]->Scale(1/(total_time*2e-7));
     TH2Fs["Flux_Noise"]->Write(name.c_str());
     name="Flux_Noise_Mean_Scaled";
-    Means=TH2Fs["Flux_Noise"]->Integral()/(32*32);
+    Means=TH2Fs["Flux_Noise"]->Integral()/(1.0*GetArea());
     TH2Fs["Flux_Noise"]->Scale(1/Means);
     TH2Fs["Flux_Noise"]->Write(name.c_str());
     name="Asic_Noise_Flux";

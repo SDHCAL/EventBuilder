@@ -5,7 +5,7 @@ void Geometry::PrintGeom()
 { 
     for(int i=0;i<GetNumberPlates();++i)
     {
-    std::cout<<"Plane : "<<i+1<<"  "<<green<<"X : "<<GetPlatePositionX(i)<<"  Y : "<<GetPlatePositionY(i)<<"  Z : "<<GetPlatePositionZ(i)<<" Alpha : "<<GetDifPlateAlpha(i)<<" Beta : "<<GetDifPlateBeta(i)<<" Gamma : "<<GetDifPlateGamma(i)<<normal<<std::endl;
+    std::cout<<"Plane : "<<i+1<<"  "<<green<<"X : "<<GetPlatePositionX(i)<<"  Y : "<<GetPlatePositionY(i)<<"  Z : "<<GetPlatePositionZ(i)<<" Alpha : "<<GetDifPlateAlpha(i)<<" Beta : "<<GetDifPlateBeta(i)<<" Gamma : "<<GetDifPlateGamma(i)<<" SizeX : "<<GetSizeX(i)<<" SizeY : "<<GetSizeY(i)<<normal<<std::endl;
     for(std::map<int,Dif>::iterator it=Difs.begin();it!=Difs.end();++it)
     {
      if(GetDifNbrPlate((it->first))-1==i)

@@ -29,6 +29,8 @@ void XMLReader::Read(std::string &FileName, Geometry& geom)
       double xy=atof(Platee->Attribute("alpha"));
       double xz=atof(Platee->Attribute("beta"));
       double yz=atof(Platee->Attribute("gamma"));
+      double SizeX=atof(Platee->Attribute("SizeX"));
+      double SizeY=atof(Platee->Attribute("SizeY"));
       
       Diff=Platee->FirstChildElement();
       while (Diff)
@@ -62,7 +64,7 @@ void XMLReader::Read(std::string &FileName, Geometry& geom)
 	      geom.AddDif(atof(Diff->Attribute("I")),atof(Diff->Attribute("J")),atof(Diff->Attribute("DifId")),xy,xz,yz,PlateNumber,up_down,DifType);
 	      Diff= Diff->NextSiblingElement();
 	    }
-	    geom.AddPlate(x,y,z,xy,xz,yz,DifM);
+	    geom.AddPlate(x,y,z,xy,xz,yz,DifM,SizeX,SizeY);
 	    DifM.clear();
 	    Platee=Platee->NextSiblingElement(); 
     }
