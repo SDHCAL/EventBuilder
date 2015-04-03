@@ -7,8 +7,7 @@
 #include <map>
 #include<iostream>
 #include "Colors.h"
-#include <fstream>
-extern std::ofstream file;
+
 
 class HistoPlane
 {
@@ -58,7 +57,7 @@ class HistoPlane
 	else (it->second)=((1-(it->second-min)/(max-min))*254+1); 
       }
   }
-  void inline Print_Calibration(){for(std::map<std::vector<int>,double>::iterator it=Calibration.begin();it!=Calibration.end();++it){/*std::cout<<"s.ChangeGain("<<(it->first)[0]<<","<<(it->first)[1]<<","<<(it->first)[2]<<","<<(it->second)<<")"<<std::endl;*/file<<"s.SetGain("<<(it->first)[0]<<","<<(it->first)[1]<<","<<(it->first)[2]<<","<<(it->second)<<")"<<std::endl;}};
+  void inline Print_Calibration(std::ostream& file){for(std::map<std::vector<int>,double>::iterator it=Calibration.begin();it!=Calibration.end();++it){/*std::cout<<"s.ChangeGain("<<(it->first)[0]<<","<<(it->first)[1]<<","<<(it->first)[2]<<","<<(it->second)<<")"<<std::endl;*/file<<"s.SetGain("<<(it->first)[0]<<","<<(it->first)[1]<<","<<(it->first)[2]<<","<<(it->second)<<")"<<std::endl;}};
   TH1F* Return_TH1F(const char* name);
   TH2F* Return_TH2F(const char* name);
   double inline GetArea(){return _SizeX*_SizeY;};
