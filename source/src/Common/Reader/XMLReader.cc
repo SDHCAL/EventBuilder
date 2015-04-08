@@ -38,35 +38,33 @@ void XMLReader::Read(std::string &FileName, Geometry& geom)
         int DifType=0;
         int up_down=0;
         if(Diff->Attribute("up_down")!=NULL)
-        {
-         if(strcmp(Diff->Attribute("up_down"), "up") == 0) up_down=1;
-         else if (strcmp(Diff->Attribute("up_down"), "down") == 0) up_down=0;
-         else
-         {
-          
-          up_down=-1;std::cout<<"Error defining the position of the Dif (up, down)"<<std::endl;
-         }
-        }if(Diff->Attribute("DifType")!=NULL)
-        {
-         if(strcmp(Diff->Attribute("DifType"), "temporal") == 0) DifType=2;
-         else if (strcmp(Diff->Attribute("DifType"), "positional") == 0) DifType=1;
-	 else if (strcmp(Diff->Attribute("DifType"), "tcherenkov") == 0) DifType=3;
-         else if (strcmp(Diff->Attribute("DifType"), "tricot") == 0) DifType=4;
-         else
-         {
-          
-          DifType=-1;std::cout<<"Error defining the use of the Dif (temporal,posicional,tcherenkov,tricot)"<<std::endl;
-         }
-        }
+	  {
+	    if(strcmp(Diff->Attribute("up_down"), "up") == 0) up_down=1;
+	    else if (strcmp(Diff->Attribute("up_down"), "down") == 0) up_down=0;
+	    else
+	      {
+		up_down=-1;std::cout<<"Error defining the position of the Dif (up, down)"<<std::endl;
+	      }
+	  }if(Diff->Attribute("DifType")!=NULL)
+	     {
+	       if(strcmp(Diff->Attribute("DifType"), "temporal") == 0) DifType=2;
+	       else if (strcmp(Diff->Attribute("DifType"), "positional") == 0) DifType=1;
+	       else if (strcmp(Diff->Attribute("DifType"), "tcherenkov") == 0) DifType=3;
+	       else if (strcmp(Diff->Attribute("DifType"), "tricot") == 0) DifType=4;
+	       else
+		 {
+		   DifType=-1;std::cout<<"Error defining the use of the Dif (temporal,posicional,tcherenkov,tricot)"<<std::endl;
+		 }
+	     }
         
-              //streamlog_out( MESSAGE ) << Diff->Value() << std::endl;
-	      DifM.push_back(atof(Diff->Attribute("DifId")));
-	      geom.AddDif(atof(Diff->Attribute("I")),atof(Diff->Attribute("J")),atof(Diff->Attribute("DifId")),xy,xz,yz,PlateNumber,up_down,DifType);
-	      Diff= Diff->NextSiblingElement();
-	    }
-	    geom.AddPlate(x,y,z,xy,xz,yz,DifM,SizeX,SizeY);
-	    DifM.clear();
-	    Platee=Platee->NextSiblingElement(); 
+	//streamlog_out( MESSAGE ) << Diff->Value() << std::endl;
+	DifM.push_back(atof(Diff->Attribute("DifId")));
+	geom.AddDif(atof(Diff->Attribute("I")),atof(Diff->Attribute("J")),atof(Diff->Attribute("DifId")),xy,xz,yz,PlateNumber,up_down,DifType);
+	Diff= Diff->NextSiblingElement();
+      }
+      geom.AddPlate(x,y,z,xy,xz,yz,DifM,SizeX,SizeY);
+      DifM.clear();
+      Platee=Platee->NextSiblingElement(); 
     }
-	}
+  }
 }
