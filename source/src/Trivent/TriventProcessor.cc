@@ -38,7 +38,6 @@
 #include "TColor.h"
 #include "TMath.h"
 using namespace marlin;
-std::ofstream file( "Calibration.py", std::ios_base::out ); 
 #define degtorad 0.0174532925
 unsigned int EventsNoise=0;
 unsigned int eventtotal=0;
@@ -511,6 +510,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 
 void TriventProcessor::end()
 {  
+    std::ofstream file( "Calibration.py", std::ios_base::out ); 
     std::string name="Results_Trivent_"+ std::to_string( (long long int) _NbrRun)+".root";
     TFile *hfile = new TFile(name.c_str(),"RECREATE","Results");
     t->Write();
@@ -561,7 +561,7 @@ void TriventProcessor::end()
     for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i].Get_Flux();
     file<<"import OracleAccess as oa"<<std::endl;
     file<<"s=oa.OracleAccess(\"T9_AOUT2014_76\")"<<std::endl;
-    for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i].Print_Calibration();
+    for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i].Print_Calibration(file);
     if(Negative.size()!=0)
     {
 	std::cout<<red<<"WARNING !!! : Negative Value(s) of timeStamp found"<<normal<<std::endl;
