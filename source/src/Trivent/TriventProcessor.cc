@@ -47,7 +47,7 @@ unsigned int _eventNr=0;
 #define size_pad 10.4125
 #define size_strip 2.5
 std::map<int,bool>Warningg;
-std::map<std::vector<int>,std::map<int,int>>Negative;
+std::map<std::vector<unsigned int>,std::map<unsigned int,unsigned int>>Negative;
 Double_t my_transfer_function(const Double_t *x, const Double_t * /*param*/)
 {
    if (*x <=0)return 0.00;
@@ -392,7 +392,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
             {
                 RawCalorimeterHit *raw_hit = dynamic_cast<RawCalorimeterHit*>( col->getElementAt(ihit)) ;
                 if (raw_hit != NULL) {
-                    int dif_id  = (raw_hit)->getCellID0() & 0xFF ;
+                    unsigned int dif_id  = (raw_hit)->getCellID0() & 0xFF ;
                     if(geom.GetDifNbrPlate(dif_id)==-1) {
                         if(Warningg[dif_id]!=true) {
                             Warningg[dif_id]=true;
@@ -402,7 +402,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
                     }
                     if(raw_hit->getTimeStamp()<0)
                     {
-			std::vector<int>b{dif_id,(raw_hit->getCellID0() & 0xFF00)>>8,(raw_hit->getCellID0() & 0xFF00)>>16}; Negative[b][raw_hit->getTimeStamp()]++;
+			std::vector<unsigned int>b{dif_id,(unsigned int)((raw_hit->getCellID0() & 0xFF00)>>8),(unsigned int)((raw_hit->getCellID0() & 0xFF00)>>16)}; Negative[b][raw_hit->getTimeStamp()]++;
                     }
                     if(_TriggerTime==0 || (raw_hit->getTimeStamp()<=_TriggerTime&&raw_hit->getTimeStamp()>=0))
                     {
@@ -565,10 +565,10 @@ void TriventProcessor::end()
     if(Negative.size()!=0)
     {
 	std::cout<<red<<"WARNING !!! : Negative Value(s) of timeStamp found"<<normal<<std::endl;
-	for(std::map<std::vector<int>,std::map<int,int>>::iterator it=Negative.begin();it!=Negative.end();++it)
+	for(std::map<std::vector<unsigned int>,std::map<unsigned int,unsigned int>>::iterator it=Negative.begin();it!=Negative.end();++it)
     	{
 		std::cout<<red<<"Dif_Id : "<<it->first[0]<<" Asic_Id : "<<it->first[1]<<" Channel_Id : "<<it->first[2]<<normal;
-                for(std::map<int,int>::iterator itt=it->second.begin();itt!=it->second.end();++itt)std::cout<<" Value : "<<itt->first<<","<<itt->second<<" Times; ";
+                for(std::map<unsigned int,unsigned int>::iterator itt=it->second.begin();itt!=it->second.end();++itt)std::cout<<" Value : "<<itt->first<<" - "<<itt->second<<" Times; ";
                 std::cout<<std::endl;
     	}
     }
