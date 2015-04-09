@@ -407,12 +407,22 @@ void TriventProcessor::processEvent( LCEvent * evtP )
                     }
                     if(_TriggerTime==0 || (raw_hit->getTimeStamp()<=_TriggerTime&&raw_hit->getTimeStamp()>=0))
                     {
-                    
-                    HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Set_hit_trigger();
-		    Times[raw_hit->getTimeStamp()]++;
-                    
-              
-                    RawHits[raw_hit->getTimeStamp()].push_back(raw_hit);
+                     
+                      /////supress this in case of emergency
+                      //int a,b,c,d;
+                      //if(Delimiter.find(dif_id)==Delimiter.end()){a=Delimiter[1][0];b=Delimiter[1][1];c=Delimiter[1][2];d=Delimiter[1][3];}
+                      //else {a=Delimiter[dif_id][0];b=Delimiter[dif_id][1];c=Delimiter[dif_id][2];d=Delimiter[dif_id][3];}
+                      //std::cout<<Delimiter.size()<<std::endl;
+                      //std::cout<<Delimiter[dif_id][0]<<"  "<<std::endl;//<<Delimiter[dif_id][1]<<"  "<<Delimiter[dif_id][2]<<"  "<<Delimiter[dif_id][3]<<std::endl;
+                     //if(a<=I&&b>=I&&c<=J&&d>=J)
+                     //{
+                     ///////////////////////////////////////
+                      	HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Set_hit_trigger();
+		     	Times[raw_hit->getTimeStamp()]++;
+                         RawHits[raw_hit->getTimeStamp()].push_back(raw_hit);
+                     ////////////////////////////////////////
+              	     //}
+                    /////////////////////////////////////////
                     //if(raw_hit->getTimeStamp()<0)std::cout<<yellow<<raw_hit->getTimeStamp()<<"  "<<((raw_hit)->getCellID0() & 0xFF)<<normal<<std::endl;
                     }
                     else
@@ -544,7 +554,7 @@ void TriventProcessor::end()
     std::cout << "TriventProcess::end() !! "<<_trig_count<<" Events Trigged"<< std::endl;
     std::cout <<TouchedEvents<<" Events were overlaping "<<"("<<(TouchedEvents*1.0/(TouchedEvents+eventtotal))*100<<"%)"<<std::endl;
     std::cout <<"Total nbr Events : "<<eventtotal<<" Events with nbr of plates >="<<_LayerCut<<" : "<<EventsSelected<<" ("<<EventsSelected*1.0/eventtotal*100<<"%)"<< std::endl;
-    for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Total Time "<<i<<" : "<<HistoPlanes[i].Get_Total_Time()*200e-9<<"  "; std::cout<<std::endl;
+    for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Total Time "<<i+1<<" : "<<HistoPlanes[i].Get_Total_Time()*200e-9<<"  "; std::cout<<std::endl;
     for(std::map<int,bool>::iterator it=Warningg.begin(); it!=Warningg.end(); it++) std::cout<<red<<"REMINDER::Data from Dif "<<it->first<<" are skipped !"<<normal<<std::endl;
     for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Mean noise in plane "<<i+1<<" : "<<HistoPlanes[i].Get_Means()<<" Hz.cm-2 "; std::cout<<std::endl;
     if(_LayerCut==-1) for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Efficiency "<<i<<" : "<<HistoPlanes[i].Efficiency()<<"  "; std::cout<<std::endl;
@@ -558,10 +568,10 @@ void TriventProcessor::end()
 	for(std::map<std::vector<int>,std::map<int,int>>::iterator it=Negative.begin();it!=Negative.end();++it)
     	{
 		std::cout<<red<<"Dif_Id : "<<it->first[0]<<" Asic_Id : "<<it->first[1]<<" Channel_Id : "<<it->first[2]<<normal;
-                //for(unsigned j=0;j<it->second.size();++j)std::cout<<it->second[j]<<" ";
                 for(std::map<int,int>::iterator itt=it->second.begin();itt!=it->second.end();++itt)std::cout<<" Value : "<<itt->first<<","<<itt->second<<" Times; ";
                 std::cout<<std::endl;
     	}
     }
+    std::cout<<green<<"DONEEE!!"<<normal<<std::endl;
     file.close();
 }
