@@ -572,6 +572,5 @@ void TriventProcessor::end()
                 std::cout<<std::endl;
     	}
     }
-    std::cout<<green<<"DONEEE!!"<<normal<<std::endl;
     file.close();
 }

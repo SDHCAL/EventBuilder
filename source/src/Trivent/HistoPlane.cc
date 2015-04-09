@@ -8,6 +8,7 @@
 #include<iostream>
 #include "Colors.h"
 #include "Patch.h"
+#include "TROOT.h"
 
 HistoPlane::HistoPlane(int NbrPlate,int SizeX, int SizeY, std::vector< std::string  >& vec_name_th1,std::vector< std::string >& vec_name_th2,std::vector< std::string >& vec_name_th2_Asic):NbrPlatee(NbrPlate),Means(0),Nbrof0Hits(0),local_max(-1),local_min(99999999),total_time(0),_SizeX(SizeX),_SizeY(SizeY)
 {  
@@ -15,19 +16,22 @@ HistoPlane::HistoPlane(int NbrPlate,int SizeX, int SizeY, std::vector< std::stri
 	for(std::vector< std::basic_string<char>  >::iterator it=vec_name_th1.begin();it!=vec_name_th1.end();++it)
 	{
                 addnbr=(*it)+patch::to_string(NbrPlate);
+                if (gROOT->FindObject(addnbr.c_str()) != NULL) continue;
   		TH1Fs.insert(std::pair<std::string,TH1F*>((*it),new TH1F(addnbr.c_str(),(*it).c_str(),25000,0,25000)));
 	}
 	for(std::vector< std::basic_string<char>  >::iterator it=vec_name_th2.begin();it!=vec_name_th2.end();++it)
 	{
                 addnbr=(*it)+patch::to_string(NbrPlate);
+                 if (gROOT->FindObject(addnbr.c_str()) != NULL) continue;
   		TH2Fs.insert(std::pair<std::string,TH2F*>((*it),new TH2F(addnbr.c_str(),(*it).c_str(),(int)SizeX+1,0,(int)SizeX+1,(int)SizeY+1,0,(int)SizeY+1)));
 	}
         for(std::vector< std::basic_string<char>  >::iterator it=vec_name_th2_Asic.begin();it!=vec_name_th2_Asic.end();++it)
 	{
                 addnbr=(*it)+patch::to_string(NbrPlate);
+                if (gROOT->FindObject(addnbr.c_str()) != NULL) continue;
   		TH2Fs.insert(std::pair<std::string,TH2F*>((*it),new TH2F(addnbr.c_str(),(*it).c_str(),(int)SizeX/8,0,(int)SizeX/8,(int)SizeY/8,1,(int)SizeY/8+1)));
 	}
-        std::cout<<red<<"Creating "<<TH1Fs.size()<<" TH1 and "<<TH2Fs.size()<<" TH2F "<<normal<<std::endl;
+        if (TH1Fs.size()!=0&&TH2Fs.size()!=0) std::cout<<red<<"Creating "<<TH1Fs.size()<<" TH1 and "<<TH2Fs.size()<<" TH2F "<<normal<<std::endl;
 }
 
 HistoPlane::~HistoPlane()
