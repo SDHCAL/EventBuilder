@@ -29,6 +29,8 @@ public:
     void end();
     void FillTimes();
     void FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollectionVec* col,CellIDEncoder<CalorimeterHitImpl>& cd,bool IsNoise);
+private:
+    void processCollection(EVENT::LCEvent *evtP,LCCollection* col);    
 protected:
     Geometry geom;
     std::map<int,std::vector<double>>SinCos;
