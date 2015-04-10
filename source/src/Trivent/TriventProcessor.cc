@@ -366,6 +366,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
   if(_eventNr %1000 ==0)std::cout<<"Event Number : "<<_eventNr<<std::endl;
 
   LCCollection* col2 = evtP ->getCollection("DHCALRawTimes");
+  RawTimeDifs.clear();
   if(col2!=NULL) 
     {
       for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) 
@@ -378,11 +379,6 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 
 
   for(unsigned int i=0; i< _hcalCollections.size(); i++) {
-    Times.clear();
-    RawHits.clear();
-    for(unsigned int i =0;i<HistoPlanes.size();++i)HistoPlanes[i].Init_local_min_max();
-    BehondTrigger.clear();
-    RawTimeDifs.clear();
     LCCollection* col = evtP ->getCollection(_hcalCollections[i].c_str());
     if(col2 == NULL || col==NULL) 
       {
@@ -390,6 +386,10 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	_trig_count++;
 	break;
       }
+    Times.clear();
+    RawHits.clear();
+    for(unsigned int i =0;i<HistoPlanes.size();++i)HistoPlanes[i].Init_local_min_max();
+    BehondTrigger.clear();
     int numElements = col->getNumberOfElements();
     for(unsigned int i=0; i<HistoPlanes.size(); ++i)HistoPlanes[i].Clear_Time_Plates_perRun();
     for (int ihit=0; ihit < numElements; ++ihit) 
