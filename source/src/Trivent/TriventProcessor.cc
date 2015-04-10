@@ -359,154 +359,155 @@ void TriventProcessor::init()
 
 void TriventProcessor::processEvent( LCEvent * evtP )
 {
-    _NbrRun=evtP->getRunNumber();
-    if (evtP != NULL) {
-        _eventNr=evtP->getEventNumber();
-        if(_eventNr %1000 ==0)std::cout<<"Event Number : "<<_eventNr<<std::endl;
-        for(unsigned int i=0; i< _hcalCollections.size(); i++) {
-            Times.clear();
-            RawHits.clear();
-            for(unsigned int i =0;i<HistoPlanes.size();++i)HistoPlanes[i].Init_local_min_max();
-            BehondTrigger.clear();
-            RawTimeDifs.clear();
-            LCCollection* col = evtP ->getCollection(_hcalCollections[i].c_str());
-            LCCollection* col2 = evtP ->getCollection("DHCALRawTimes");
-            if(col2 == NULL || col==NULL) 
-            {
-                std::cout<< "TRIGGER SKIPED ..."<<std::endl;
-                _trig_count++;
-                break;
-            }
-	    if(col2!=NULL) 
+  if (NULL == evtP) return;
+
+  _NbrRun=evtP->getRunNumber();
+  _eventNr=evtP->getEventNumber();
+  if(_eventNr %1000 ==0)std::cout<<"Event Number : "<<_eventNr<<std::endl;
+  for(unsigned int i=0; i< _hcalCollections.size(); i++) {
+    Times.clear();
+    RawHits.clear();
+    for(unsigned int i =0;i<HistoPlanes.size();++i)HistoPlanes[i].Init_local_min_max();
+    BehondTrigger.clear();
+    RawTimeDifs.clear();
+    LCCollection* col = evtP ->getCollection(_hcalCollections[i].c_str());
+    LCCollection* col2 = evtP ->getCollection("DHCALRawTimes");
+    if(col2 == NULL || col==NULL) 
+      {
+	std::cout<< "TRIGGER SKIPED ..."<<std::endl;
+	_trig_count++;
+	break;
+      }
+    if(col2!=NULL) 
+      {
+	for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) 
+	  {
+	    EVENT::CalorimeterHit* raw_time = dynamic_cast<EVENT::CalorimeterHit* >( col2->getElementAt(ihit)) ;
+	    // std::cout<<raw_time->getTime()<<"  "<<raw_time->getEnergyError()<<std::endl;
+	    //RawTimeDifs[raw_time->getTimeStamp()].push_back(raw_time);
+	  }
+      }
+    int numElements = col->getNumberOfElements();
+    for(unsigned int i=0; i<HistoPlanes.size(); ++i)HistoPlanes[i].Clear_Time_Plates_perRun();
+    for (int ihit=0; ihit < numElements; ++ihit) 
+      {
+	RawCalorimeterHit *raw_hit = dynamic_cast<RawCalorimeterHit*>( col->getElementAt(ihit)) ;
+	if (raw_hit != NULL) {
+	  unsigned int dif_id  = (raw_hit)->getCellID0() & 0xFF ;
+	  if(geom.GetDifNbrPlate(dif_id)==-1) {
+	    if(Warningg[dif_id]!=true) {
+	      Warningg[dif_id]=true;
+	      std::cout<<"Please add DIF "<<dif_id<<" to your geometry file; I'm Skipping its data."<<std::endl;
+	    }
+	    continue;
+	  }
+	  if(raw_hit->getTimeStamp()<0)
 	    {
-                for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) 
-		{
-                    EVENT::CalorimeterHit* raw_time = dynamic_cast<EVENT::CalorimeterHit* >( col2->getElementAt(ihit)) ;
-                   // std::cout<<raw_time->getTime()<<"  "<<raw_time->getEnergyError()<<std::endl;
-                    //RawTimeDifs[raw_time->getTimeStamp()].push_back(raw_time);
-                }
-            }
-            int numElements = col->getNumberOfElements();
-            for(unsigned int i=0; i<HistoPlanes.size(); ++i)HistoPlanes[i].Clear_Time_Plates_perRun();
-            for (int ihit=0; ihit < numElements; ++ihit) 
-            {
-                RawCalorimeterHit *raw_hit = dynamic_cast<RawCalorimeterHit*>( col->getElementAt(ihit)) ;
-                if (raw_hit != NULL) {
-                    unsigned int dif_id  = (raw_hit)->getCellID0() & 0xFF ;
-                    if(geom.GetDifNbrPlate(dif_id)==-1) {
-                        if(Warningg[dif_id]!=true) {
-                            Warningg[dif_id]=true;
-                            std::cout<<"Please add DIF "<<dif_id<<" to your geometry file; I'm Skipping its data."<<std::endl;
-                        }
-                        continue;
-                    }
-                    if(raw_hit->getTimeStamp()<0)
-                    {
-			std::vector<unsigned int>b{dif_id,(unsigned int)((raw_hit->getCellID0() & 0xFF00)>>8),(unsigned int)((raw_hit->getCellID0() & 0xFF00)>>16)}; Negative[b][raw_hit->getTimeStamp()]++;
-                    }
-                    if(_TriggerTime==0 || (raw_hit->getTimeStamp()<=_TriggerTime&&raw_hit->getTimeStamp()>=0))
-                    {
-                     
-                      /////supress this in case of emergency
-                      //int a,b,c,d;
-                      //if(Delimiter.find(dif_id)==Delimiter.end()){a=Delimiter[1][0];b=Delimiter[1][1];c=Delimiter[1][2];d=Delimiter[1][3];}
-                      //else {a=Delimiter[dif_id][0];b=Delimiter[dif_id][1];c=Delimiter[dif_id][2];d=Delimiter[dif_id][3];}
-                      //std::cout<<Delimiter.size()<<std::endl;
-                      //std::cout<<Delimiter[dif_id][0]<<"  "<<std::endl;//<<Delimiter[dif_id][1]<<"  "<<Delimiter[dif_id][2]<<"  "<<Delimiter[dif_id][3]<<std::endl;
-                     //if(a<=I&&b>=I&&c<=J&&d>=J)
-                     //{
-                     ///////////////////////////////////////
-                      	HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Set_hit_trigger();
-		     	Times[raw_hit->getTimeStamp()]++;
-                         RawHits[raw_hit->getTimeStamp()].push_back(raw_hit);
-                     ////////////////////////////////////////
-              	     //}
-                    /////////////////////////////////////////
-                    //if(raw_hit->getTimeStamp()<0)std::cout<<yellow<<raw_hit->getTimeStamp()<<"  "<<((raw_hit)->getCellID0() & 0xFF)<<normal<<std::endl;
-                    }
-                    else
-                    {
-                       HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Set_hit_other();
-                       BehondTrigger[raw_hit->getTimeStamp()].push_back(raw_hit);
-                       //std::cout<<blue<<raw_hit->getTimeStamp()<<"  "<<BehondTrigger.size()<<normal<<std::endl;
-                    }
-                    if(raw_hit->getTimeStamp()>HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Get_local_max())HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Set_local_max(raw_hit->getTimeStamp());
-                    if(raw_hit->getTimeStamp()<HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Get_local_min()&&raw_hit->getTimeStamp()>=0)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Set_local_min(raw_hit->getTimeStamp());
-                    HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Fill_Time_Plates(raw_hit->getTimeStamp());
-	            HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Fill_Time_Plates_perRun(raw_hit->getTimeStamp());
-                    
-                }
-            }
-            if(Times.size()==0) std::cout<<red<<" 0 hits within the the TriggerTime given... You should verify your TriggerTime or your run is triggerless "<<normal<<std::endl;
-            for(unsigned int i=0;i<HistoPlanes.size();++i) { HistoPlanes[i].Set_Total_Time(); HistoPlanes[i].Set_Nbrof0Hits();}
-           
-            if(_LayerCut!=-1)
+	      std::vector<unsigned int>b{dif_id,(unsigned int)((raw_hit->getCellID0() & 0xFF00)>>8),(unsigned int)((raw_hit->getCellID0() & 0xFF00)>>16)}; Negative[b][raw_hit->getTimeStamp()]++;
+	    }
+	  if(_TriggerTime==0 || (raw_hit->getTimeStamp()<=_TriggerTime&&raw_hit->getTimeStamp()>=0))
 	    {
-		FillTimes();
-
-            	for(std::map< int,int>::iterator itt=Times.begin(); itt!=Times.end(); ++itt) 
-		{
-                	EventsGrouped.clear();
-                	std::map<int,std::vector<RawCalorimeterHit *> >::iterator middle=RawHits.find(itt->first);
-                	std::map<int,std::vector<RawCalorimeterHit *> >::iterator after=middle;
-                	std::map<int,std::vector<RawCalorimeterHit *> >::iterator before=middle;
-                	while(fabs(middle->first-before->first)<=_timeWin && before!=RawHits.begin()) --before;
-                	++before;
-                	while(fabs(after->first-middle->first)<=_timeWin && after!=RawHits.end()) ++after;
-                	std::map<int,int> nbrPlanestouched;
-                	for(middle=before; middle!=after; ++middle ) 
-			{
-
-                    		for(int unsigned i=0; i<(middle->second).size(); ++i) 
-				{
-                        		int dif_id=((middle->second)[i])->getCellID0() & 0xFF;
-                        		nbrPlanestouched[geom.GetDifNbrPlate(dif_id)]++;
-                    		}
-
-                	}
-             
-             		if(nbrPlanestouched.size()>=(unsigned int)(_LayerCut)) 
-			{
-                    		EventsSelected++;
-                    		for(middle=before; middle!=after; ) 
-				{
-                        		EventsGrouped.insert(EventsGrouped.end(),middle->second.begin(),middle->second.end());
-                        		RawHits.erase(middle++);
-                    		}
-                    		LCEventImpl*  evt = new LCEventImpl() ;
-                    		LCCollectionVec* col_event = new LCCollectionVec(LCIO::CALORIMETERHIT);
-                    		col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_LONG));
-                    		col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_TIME));
-                    		CellIDEncoder<CalorimeterHitImpl> cd( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event) ;
-                    		FillIJK(EventsGrouped, col_event,cd,0);
-                    		evt->addCollection(col_event, "SDHCAL_HIT");
-                    		evt->setEventNumber(EventsSelected);
-                    		evt->setTimeStamp(evtP->getTimeStamp());
-                    		evt->setRunNumber(evtP->getRunNumber());
-                    		_EventWriter->writeEvent( evt ) ;
-                    		delete evt;
-                }
-              }}
-              else
-              {
-                EventsSelected++;
-                Writer(_EventWriter,"SDHCAL_HIT",RawHits, evtP,EventsSelected,0);
-              }
-            
-
-            if(_noiseFileName!=""&&_LayerCut!=-1) {
-                EventsNoise++;
-                Writer(_NoiseWriter,"SDHCAL_HIT_NOISE_IN_TRIGGER_TIME",RawHits, evtP,EventsNoise,1);
-                Writer(_NoiseWriter,"SDHCAL_HIT_NOISE",BehondTrigger, evtP,EventsNoise,1);
-            }
-           if(_noiseFileName!=""&&_LayerCut==-1)
-	   {
-             EventsNoise++;
-             Writer(_NoiseWriter,"SDHCAL_HIT_NOISE",BehondTrigger, evtP,EventsNoise,1);
-           }
-        }
+	      
+	      /////supress this in case of emergency
+	      //int a,b,c,d;
+	      //if(Delimiter.find(dif_id)==Delimiter.end()){a=Delimiter[1][0];b=Delimiter[1][1];c=Delimiter[1][2];d=Delimiter[1][3];}
+	      //else {a=Delimiter[dif_id][0];b=Delimiter[dif_id][1];c=Delimiter[dif_id][2];d=Delimiter[dif_id][3];}
+	      //std::cout<<Delimiter.size()<<std::endl;
+	      //std::cout<<Delimiter[dif_id][0]<<"  "<<std::endl;//<<Delimiter[dif_id][1]<<"  "<<Delimiter[dif_id][2]<<"  "<<Delimiter[dif_id][3]<<std::endl;
+	      //if(a<=I&&b>=I&&c<=J&&d>=J)
+	      //{
+	      ///////////////////////////////////////
+	          HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Set_hit_trigger();
+		  Times[raw_hit->getTimeStamp()]++;
+		  RawHits[raw_hit->getTimeStamp()].push_back(raw_hit);
+	      ////////////////////////////////////////
+	      //}
+	      /////////////////////////////////////////
+	      //if(raw_hit->getTimeStamp()<0)std::cout<<yellow<<raw_hit->getTimeStamp()<<"  "<<((raw_hit)->getCellID0() & 0xFF)<<normal<<std::endl;
+	    }
+	  else
+	    {
+	      HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Set_hit_other();
+	      BehondTrigger[raw_hit->getTimeStamp()].push_back(raw_hit);
+	      //std::cout<<blue<<raw_hit->getTimeStamp()<<"  "<<BehondTrigger.size()<<normal<<std::endl;
+	    }
+	  if(raw_hit->getTimeStamp()>HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Get_local_max())HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Set_local_max(raw_hit->getTimeStamp());
+	  if(raw_hit->getTimeStamp()<HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Get_local_min()&&raw_hit->getTimeStamp()>=0)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Set_local_min(raw_hit->getTimeStamp());
+	  HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Fill_Time_Plates(raw_hit->getTimeStamp());
+	  HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Fill_Time_Plates_perRun(raw_hit->getTimeStamp());
+          
+	}
+      }
+    if(Times.size()==0) std::cout<<red<<" 0 hits within the the TriggerTime given... You should verify your TriggerTime or your run is triggerless "<<normal<<std::endl;
+    for(unsigned int i=0;i<HistoPlanes.size();++i) { HistoPlanes[i].Set_Total_Time(); HistoPlanes[i].Set_Nbrof0Hits();}
+    
+    if(_LayerCut!=-1)
+      {
+	FillTimes();
+	
+	for(std::map< int,int>::iterator itt=Times.begin(); itt!=Times.end(); ++itt) 
+	  {
+	    EventsGrouped.clear();
+	    std::map<int,std::vector<RawCalorimeterHit *> >::iterator middle=RawHits.find(itt->first);
+	    std::map<int,std::vector<RawCalorimeterHit *> >::iterator after=middle;
+	    std::map<int,std::vector<RawCalorimeterHit *> >::iterator before=middle;
+	    while(fabs(middle->first-before->first)<=_timeWin && before!=RawHits.begin()) --before;
+	    ++before;
+	    while(fabs(after->first-middle->first)<=_timeWin && after!=RawHits.end()) ++after;
+	    std::map<int,int> nbrPlanestouched;
+	    for(middle=before; middle!=after; ++middle ) 
+	      {
+		
+		for(int unsigned i=0; i<(middle->second).size(); ++i) 
+		  {
+		    int dif_id=((middle->second)[i])->getCellID0() & 0xFF;
+		    nbrPlanestouched[geom.GetDifNbrPlate(dif_id)]++;
+		  }
+		
+	      }
+	    
+	    if(nbrPlanestouched.size()>=(unsigned int)(_LayerCut)) 
+	      {
+		EventsSelected++;
+		for(middle=before; middle!=after; ) 
+		  {
+		    EventsGrouped.insert(EventsGrouped.end(),middle->second.begin(),middle->second.end());
+		    RawHits.erase(middle++);
+		  }
+		LCEventImpl*  evt = new LCEventImpl() ;
+		LCCollectionVec* col_event = new LCCollectionVec(LCIO::CALORIMETERHIT);
+		col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_LONG));
+		col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_TIME));
+		CellIDEncoder<CalorimeterHitImpl> cd( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event) ;
+		FillIJK(EventsGrouped, col_event,cd,0);
+		evt->addCollection(col_event, "SDHCAL_HIT");
+		evt->setEventNumber(EventsSelected);
+		evt->setTimeStamp(evtP->getTimeStamp());
+		evt->setRunNumber(evtP->getRunNumber());
+		_EventWriter->writeEvent( evt ) ;
+		delete evt;
+	      }
+	  }}
+    else
+      {
+	EventsSelected++;
+	Writer(_EventWriter,"SDHCAL_HIT",RawHits, evtP,EventsSelected,0);
+      }
+    
+    
+    if(_noiseFileName!=""&&_LayerCut!=-1) {
+      EventsNoise++;
+      Writer(_NoiseWriter,"SDHCAL_HIT_NOISE_IN_TRIGGER_TIME",RawHits, evtP,EventsNoise,1);
+      Writer(_NoiseWriter,"SDHCAL_HIT_NOISE",BehondTrigger, evtP,EventsNoise,1);
     }
+    if(_noiseFileName!=""&&_LayerCut==-1)
+      {
+	EventsNoise++;
+	Writer(_NoiseWriter,"SDHCAL_HIT_NOISE",BehondTrigger, evtP,EventsNoise,1);
+      }
+  }
 }
+
 
 void TriventProcessor::end()
 {  
