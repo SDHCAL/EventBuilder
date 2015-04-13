@@ -233,6 +233,7 @@ public:
     }
     inline int countHitAt(double& x, double& y, double dlim);
     inline int countHitAtStrip(double& x, double dlim);
+    void GivePoint();
 private:
     int _type;
     std::vector<CalorimeterHit*> hits;

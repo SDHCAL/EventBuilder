@@ -31,7 +31,7 @@ HistoPlane::HistoPlane(int NbrPlate,int SizeX, int SizeY, std::vector< std::stri
                 if (gROOT->FindObject(addnbr.c_str()) != NULL) continue;
   		TH2Fs.insert(std::pair<std::string,TH2F*>((*it),new TH2F(addnbr.c_str(),(*it).c_str(),(int)SizeX/8,0,(int)SizeX/8,(int)SizeY/8,1,(int)SizeY/8+1)));
 	}
-        if (TH1Fs.size()!=0&&TH2Fs.size()!=0) std::cout<<red<<"Creating "<<TH1Fs.size()<<" TH1 and "<<TH2Fs.size()<<" TH2F "<<normal<<std::endl;
+        if (TH1Fs.size()!=0&&TH2Fs.size()!=0) std::cout<<red<<"Creating "<<TH1Fs.size()<<" TH1 and "<<TH2Fs.size()<<" TH2F for plate "<<patch::to_string(NbrPlate+1)<<normal<<std::endl;
 }
 
 HistoPlane::~HistoPlane()

@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <cmath>
 #include "TH2F.h"
+#include "TTree.h"
 #ifndef COLORS_H
 #define normal " "
 #define red "  "
@@ -28,6 +29,25 @@
 #include <fstream>
 #define size_pad 10.4125
 #define size_strip 2.5
+int totalTrace=0;
+int eventnbrr=0;
+std::ofstream Verif( "Verif.txt", std::ios_base::out ); 
+
+class ToTreee
+{
+public:
+double ChiXZ, ChiYZ, CDXZ, CDYZ, OrdXZ, OrdYZ;
+};
+ToTreee totreee;
+std::string name="Treee";
+TTree* tt= new TTree(name.c_str(), name.c_str());
+TBranch* Branch1 =  tt->Branch("ChiXZ",&(totreee.ChiXZ));
+TBranch* Branch2 =  tt->Branch("ChiYZ",&(totreee.ChiYZ));
+TBranch* Branch3 =  tt->Branch("CDXZ",&(totreee.CDXZ));
+TBranch* Branch4 =  tt->Branch("CDYZ",&(totreee.CDYZ));
+TBranch* Branch5 =  tt->Branch("OrdXZ",&(totreee.OrdXZ));
+TBranch* Branch6 =  tt->Branch("OrdYZ",&(totreee.OrdYZ));
+
 
 using namespace std;
 std::vector<TH2F*>Distribution_hits;
@@ -37,7 +57,7 @@ unsigned NbrReadOut=0;
 void AnalysisProcessor::processRunHeader( LCRunHeader* run)
 {
 }
-
+unsigned NbrRunn=0;
 void AnalysisProcessor::PrintStatShort()
 {
     ofstream fichier;
@@ -193,7 +213,16 @@ void plan::computeMaxima()
         }
     }
 }
-
+void plan::GivePoint()
+{
+    for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!=hits.end(); ++it) 
+    {
+        for (int i=0; i<2; i++) 
+        {
+           Verif<<(*it)->getPosition()[i]<<"  ";
+        }
+    }
+}
 
 void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
 {
@@ -265,6 +294,19 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
         }
         if (nhit>0) nombreTestsOK++;
         sommeNombreHits+=nhit;
+        totalTrace++;
+	Verif<<NbrRunn<<"  "<<eventnbrr<<"  "<<totalTrace<<"  "<<kxz<<"  "<<kyz<<"  "<<pxz0<<"  "<<pyz0<<"  "<<pxz1<<"  "<<pyz1<<"  "<<plansUsedForTrackMaking.size()<<"  ";
+        totreee.ChiXZ=kxz;
+        totreee.ChiYZ=kyz;
+        totreee.CDXZ=pxz1;
+        totreee.CDYZ=pyz1;
+        totreee.OrdXZ=pxz0;
+        totreee.OrdYZ=pyz0;
+        tt->Fill();
+	for (unsigned int i=0; i < plansUsedForTrackMaking.size(); ++i){plan &p=*(plansUsedForTrackMaking[i]);p.computeBarycentre();Verif<<p.barycentreX()/10<<"  ";}
+        for (unsigned int i=0; i < plansUsedForTrackMaking.size(); ++i){plan &p=*(plansUsedForTrackMaking[i]);p.computeBarycentre();Verif<<p.barycentreY()/10<<"  ";}
+	Verif<<std::endl;
+        
     }
     delete myfityz;
     delete myfitxz;
@@ -275,7 +317,7 @@ void testedPlan::print()
 {
     std::cout<<yellow<<"Plane Number (in geometry file): "<<Nbr+1<<" Z = "<<Z0<<" NombreTests = "<<nombreTests<<" nombreTestsOk = "<<nombreTestsOK<<"  sommeNHits = "<<sommeNombreHits<< "  ( type = " <<GetType()<<" )"<<normal<<std::endl;
     std::cout<<"List of counters"<<std::endl;
-    std::vector<std::string>Text{"TESTYOUCALLED","NOTOOMUCHHITSINPLAN","XZTRACKFITPASSED","YZTRACKFITPASSED","NOHITINPLAN"};
+    std::vector<std::string>Text{"TESTYOUCALLED","NOTOOMUCHHITSINPLAN","XZTRACKFITPASSED","YZTRACKFITPASSED","PRESENCEOFHITINPLAN"};
     for (int i=0; i<NCOUNTERS; i++) std::cout <<yellow<< Text[i]<<" : "<<counts[i]<<"  "<<normal;
     std::cout<<std::endl;
 }
@@ -331,7 +373,7 @@ AnalysisProcessor::~AnalysisProcessor() {}
 void AnalysisProcessor::init()
 {
     printParameters();
-
+    Verif<<"Run Event Num trace ChiXZ ChiYZ CDXZ CDYZ OrdXZ OrdYZ LayTouch PosX1 PosX2 PosX3 PosX4 PosX5 PosX6 PosX7 PosX8 PosY1 PosY2 PosY3 PosY4PosY5 PosY6 PosY7 PosY8"<<std::endl;
     ReaderFactory readerFactory;
     Reader* myReader = readerFactory.CreateReader(_ReaderType);
 
@@ -376,11 +418,14 @@ void AnalysisProcessor::init()
     }
     delete myReader;
 }
+
 void AnalysisProcessor::processEvent( LCEvent * evtP )
 { 
     _eventNr=evtP->getEventNumber();
+    eventnbrr=_eventNr;
     if(_eventNr %1000 ==0)std::cout<<"Event Number : "<<_eventNr<<std::endl;
     _NbrRun=evtP->getRunNumber();
+    NbrRunn=_NbrRun;
     Plans.clear();
     if (evtP != nullptr) {
         _eventNr=evtP->getEventNumber();
@@ -426,9 +471,11 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 
 void AnalysisProcessor::end()
 {
+    
     for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->print();
     std::string b="Results_Analysis_"+std::to_string( (long long int) _NbrRun)+".root";
     TFile *hfile = new TFile(b.c_str(),"RECREATE");
+    tt->Write();
     for(unsigned int i=0; i<Distribution_hits.size(); ++i) {
         Distribution_hits[i]->Write();
         Distribution_exp[i]->Write();

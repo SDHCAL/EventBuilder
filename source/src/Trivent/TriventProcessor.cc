@@ -48,40 +48,40 @@ unsigned int _eventNr=0;
 #define size_strip 2.5
 std::map<int,bool>Warningg;
 std::map<std::vector<unsigned int>,std::map<unsigned int,unsigned int>>Negative;
-Double_t my_transfer_function(const Double_t *x, const Double_t * /*param*/)
-{
-   if (*x <=0)return 0.00;
-   else return 0.99;
-}
+//Double_t my_transfer_function(const Double_t *x, const Double_t * /*param*/)
+//{
+  // if (*x <=0)return 0.00;
+   //else return 0.99;
+//}
 
-TF1* tf =new TF1("TransferFunction", my_transfer_function);
+//TF1* tf =new TF1("TransferFunction", my_transfer_function);
 
-TH3F* hist=NULL;
-TH3F* histt=NULL; 
-TH3F* histtt=NULL;
-class ToTree
-{
-public:
-int pI,pJ,pK,pAsic,pDifId,pAsicChannel;
-unsigned long long int pTime;
-double pX,pY,pZ;
-bool pEvent;
-};
+//TH3F* hist=NULL;
+//TH3F* histt=NULL; 
+//TH3F* histtt=NULL;
+//class ToTree
+//{
+//public:
+//int pI,pJ,pK,pAsic,pDifId,pAsicChannel;
+//unsigned long long int pTime;
+//double pX,pY,pZ;
+//bool pEvent;
+//};
 std::map<std::vector<int>,double>Calibration;
-ToTree totree;
-std::string name="Tree";
-TTree* t= new TTree(name.c_str(), name.c_str());
-TBranch* Branch1 =  t->Branch("X",&(totree.pX));
-TBranch* Branch2 =  t->Branch("Y",&(totree.pY));
-TBranch* Branch3 =  t->Branch("Z",&(totree.pZ));
-TBranch* Branch4 =  t->Branch("I",&(totree.pI));
-TBranch* Branch5 =  t->Branch("J",&(totree.pJ));
-TBranch* Branch6 =  t->Branch("K",&(totree.pK));
-TBranch* Branch7 =  t->Branch("Time",&(totree.pTime));
-TBranch* Branch8 =  t->Branch("Asic",&(totree.pAsic));
-TBranch* Branch9 =  t->Branch("DifId",&(totree.pDifId));
-TBranch* Branch10 =  t->Branch("AsicChannel",&(totree.pAsicChannel));
-TBranch* Branch11 = t->Branch("Event",&(totree.pEvent));
+//ToTree totree;
+//std::string name="Tree";
+//TTree* t= new TTree(name.c_str(), name.c_str());
+//TBranch* Branch1 =  t->Branch("X",&(totree.pX));
+//TBranch* Branch2 =  t->Branch("Y",&(totree.pY));
+//TBranch* Branch3 =  t->Branch("Z",&(totree.pZ));
+//TBranch* Branch4 =  t->Branch("I",&(totree.pI));
+//TBranch* Branch5 =  t->Branch("J",&(totree.pJ));
+//TBranch* Branch6 =  t->Branch("K",&(totree.pK));
+//TBranch* Branch7 =  t->Branch("Time",&(totree.pTime));
+//TBranch* Branch8 =  t->Branch("Asic",&(totree.pAsic));
+//TBranch* Branch9 =  t->Branch("DifId",&(totree.pDifId));
+//TBranch* Branch10 =  t->Branch("AsicChannel",&(totree.pAsicChannel));
+//TBranch* Branch11 = t->Branch("Event",&(totree.pEvent));
 std::vector<std::string  > th1 {"Time_Distr","Hits_Distr","Time_Distr_Events","Hits_Distr_Events","Time_Distr_Noise","Hits_Distr_Noise"};
 std::vector<std::string> th2 {"Flux_Noise","Flux_Events"};
 std::vector<std::string>th2_Asic{"Flux_Noise_Asic","Flux_Events_Asic"};
@@ -220,24 +220,24 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
         cd["I"] = I ;
         cd["J"] = J ;
         cd["K"] = K ;
-        totree.pI=I;
-        totree.pJ=J;
-        totree.pK=K;
-        totree.pX=pos[0];
-        totree.pY=pos[1];
-        totree.pZ=pos[2];
-        totree.pAsic=asic_id;
-        totree.pDifId=dif_id;
-        totree.pAsicChannel=chan_id;
-        totree.pTime=(*it)->getTimeStamp();
-        if(IsNoise==1)totree.pEvent=0;
-        else totree.pEvent=1;
+        //totree.pI=I;
+        //totree.pJ=J;
+        //totree.pK=K;
+        //totree.pX=pos[0];
+        //totree.pY=pos[1];
+        //totree.pZ=pos[2];
+        //totree.pAsic=asic_id;
+        //totree.pDifId=dif_id;
+        //totree.pAsicChannel=chan_id;
+        //totree.pTime=(*it)->getTimeStamp();
+        //if(IsNoise==1)totree.pEvent=0;
+        //else totree.pEvent=1;
         caloHit->setPosition(pos);
         cd.setCellID( caloHit ) ;
-        if(IsNoise==1) 
-        {
-        	hist->Fill(I,J,10*K,1);
-        }
+        //if(IsNoise==1) 
+        //{
+        //	hist->Fill(I,J,10*K,1);
+        //}
         //int a,b,c,d;
         //if(Delimiter.find(dif_id)==Delimiter.end()){a=Delimiter[1][0];b=Delimiter[1][1];c=Delimiter[1][2];d=Delimiter[1][3];}
         //else {a=Delimiter[dif_id][0];b=Delimiter[dif_id][1];c=Delimiter[dif_id][2];d=Delimiter[dif_id][3];}
@@ -248,7 +248,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
         col->addElement(caloHit);
         //}
         //std::cout<<magenta<<totree.pI<<"  "<<totree.pJ<<"  "<<red<<(*it)->getTimeStamp()<<"  "<<totree.pTime<<normal<<std::endl;
-        t->Fill();
+        //t->Fill();
 
     }
     if(IsNoise==1) 
@@ -332,11 +332,11 @@ void TriventProcessor::init()
     if(myReader) {
         myReader->Read(_FileNameGeometry,geom);
         geom.PrintGeom();
-        hist=new TH3F("g","g",100,0,100,100,0,100,10*geom.GetNumberPlates()+1,10,10*geom.GetNumberPlates()+1);
-        histt=new TH3F("fg","fg",100,0,100,100,0,100,10*geom.GetNumberPlates()+1,10,10*geom.GetNumberPlates()+1);
-        histtt=new TH3F("ffg","ffg",100,0,100,100,0,100,10*geom.GetNumberPlates()+1,10,10*geom.GetNumberPlates()+1);
-        histt->GetListOfFunctions()->Add(tf);
-        histtt->GetListOfFunctions()->Add(tf);
+        //hist=new TH3F("g","g",100,0,100,100,0,100,10*geom.GetNumberPlates()+1,10,10*geom.GetNumberPlates()+1);
+        //histt=new TH3F("fg","fg",100,0,100,100,0,100,10*geom.GetNumberPlates()+1,10,10*geom.GetNumberPlates()+1);
+        //histtt=new TH3F("ffg","ffg",100,0,100,100,0,100,10*geom.GetNumberPlates()+1,10,10*geom.GetNumberPlates()+1);
+        //histt->GetListOfFunctions()->Add(tf);
+        //histtt->GetListOfFunctions()->Add(tf);
         
         std::map<int, Dif > Difs=geom.GetDifs();
         std::map<int,int> PlansType;
@@ -523,24 +523,24 @@ void TriventProcessor::end()
     std::ofstream file( "Calibration.py", std::ios_base::out ); 
     std::string name="Results_Trivent_"+ std::to_string( (long long int) _NbrRun)+".root";
     TFile *hfile = new TFile(name.c_str(),"RECREATE","Results");
-    t->Write();
+    //t->Write();
     for(unsigned int i=0; i<HistoPlanes.size(); ++i) 
     {
     	HistoPlanes[i].Save(hfile);
     }
-    delete Branch1;
-    delete Branch2;
-    delete Branch3;
-    delete Branch4;
-    delete Branch5;
-    delete Branch6;
-    delete Branch7;
-    delete Branch8;
-    delete Branch9;
-    delete Branch10;
-    hist->Write();
+    //delete Branch1;
+    //delete Branch2;
+    //delete Branch3;
+    //delete Branch4;
+    //delete Branch5;
+    //delete Branch6;
+    //delete Branch7;
+    //delete Branch8;
+    //delete Branch9;
+    //delete Branch10;
+    //hist->Write();
    
-    for(int i = 1; i <= hist->GetNbinsX(); ++i)
+    /*for(int i = 1; i <= hist->GetNbinsX(); ++i)
     {
         	for(int j = 1; j <= hist->GetNbinsY(); ++j)
         	{
@@ -551,11 +551,11 @@ void TriventProcessor::end()
                 		 if(val>=1000) histt->SetBinContent(i, j, k, val);
             		}
         	}
-    }   
-    histt->Write();
+    } */  
+    //histt->Write();
     //histtt->Write();
     //tf->Write();
-    delete Branch11;
+    //delete Branch11;
     //delete t;
     hfile->Close();
     delete hfile;
