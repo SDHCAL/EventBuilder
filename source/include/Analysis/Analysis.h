@@ -4,7 +4,6 @@
 #include "marlin/Processor.h"
 #include "EVENT/RawCalorimeterHit.h"
 #include "EVENT/CalorimeterHit.h"
-#include "EVENT/SimCalorimeterHit.h"
 #include "Geometry/Geometry.h"
 #include <cmath>
 #include "UTIL/CellIDDecoder.h"
