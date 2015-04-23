@@ -12,7 +12,22 @@
 
 HistoPlane::HistoPlane(int NbrPlate,int SizeX, int SizeY, std::vector< std::string  >& vec_name_th1,std::vector< std::string >& vec_name_th2,std::vector< std::string >& vec_name_th2_Asic):NbrPlatee(NbrPlate),Means(0),Nbrof0Hits(0),local_max(-1),local_min(99999999),total_time(0),_SizeX(SizeX),_SizeY(SizeY)
 {  
+        
         std::string addnbr;
+        std::string a = "Distribution Nbr Hits in Plane : "+patch::to_string(NbrPlate+1);
+        Dif_Dist=new TH1F (a.c_str(),a.c_str(),1000,0.,1000.);
+        for(unsigned int i=1;i<=24;++i)
+        {
+                addnbr="Distribution Nbr Hits in Asic : "+patch::to_string(i)+" Plane : "+patch::to_string(NbrPlate+1);
+		std::string a = "Distribution Nbr Hits in Asic : "+patch::to_string(i);
+		Asic.push_back(new TH1F (addnbr.c_str(),a.c_str(),100,0.,100.) );
+                for(unsigned int j=1;j<=64;++j)
+                {
+ 			addnbr="Distribution Nbr Hits in Pad : "+patch::to_string(j)+"Asic : "+patch::to_string(i)+" Plane : "+patch::to_string(NbrPlate+1);
+			std::string a = "Distribution Nbr Hits in Pad : "+patch::to_string(j)+"Asic : "+patch::to_string(i);
+                        Difs_Distr[i].push_back(new TH1F (addnbr.c_str(),a.c_str(),100,0.,100.));
+		}
+        }
 	for(std::vector< std::basic_string<char>  >::iterator it=vec_name_th1.begin();it!=vec_name_th1.end();++it)
 	{
                 addnbr=(*it)+patch::to_string(NbrPlate);
@@ -94,7 +109,7 @@ void HistoPlane::WriteAll()
 
 void HistoPlane::Save(TFile* file)
 {
-    std::string plate="Plate "+ std::to_string( (long long int) NbrPlatee+1);
+    std::string plate="Plate "+ patch::to_string(NbrPlatee+1);
     file->mkdir(plate.c_str(),plate.c_str());
     file->cd(plate.c_str());
     for(std::map<int,int>::iterator it = Time_Plates.begin(); it!=Time_Plates.end(); ++it) 
@@ -105,7 +120,7 @@ void HistoPlane::Save(TFile* file)
     TH1Fs["Hits_Distr"]->Fill(0.0,(double)Nbrof0Hits);
     
     TH1Fs["Time_Distr"]->GetXaxis()->SetRange(0.0,Time_Plates.size()+10);
-    TH1Fs["Hits_Distr"]->GetXaxis()->SetRange(0,150);
+    TH1Fs["Hits_Distr"]->GetXaxis()->SetRange(0,2000);
     Return_TH1F("Hits_Distr_Noise")->Fill(0.0,(double)Nbrof0Hits);
     WriteAll();
     std::string name="Noise_Flux_Hz";
@@ -127,4 +142,7 @@ void HistoPlane::Save(TFile* file)
     name="Asic_Event_Flux";
     TH2Fs["Flux_Events_Asic"]->Scale(1/(total_time*2e-7));
     TH2Fs["Flux_Events_Asic"]->Write(name.c_str());
+    Write_TH1_Hit_In_Asic_Per_RamFull(file,plate);
+    Dif_Dist->Write();
+    
 }

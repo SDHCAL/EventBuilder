@@ -47,7 +47,7 @@ unsigned int _eventNr=0;
 #define size_pad 10.4125
 #define size_strip 2.5
 std::map<int,bool>Warningg;
-std::map<std::vector<unsigned int>,std::map<unsigned int,unsigned int>>Negative;
+std::map<std::vector<unsigned int>,std::map< int, int>>Negative;
 //Double_t my_transfer_function(const Double_t *x, const Double_t * /*param*/)
 //{
   // if (*x <=0)return 0.00;
@@ -206,6 +206,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
             HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Return_TH1F("Time_Distr_Events")->Fill((*it)->getTimeStamp(),1);
         }
         if(IsNoise==1) {
+            HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Fill_Hit_In_Asic_Per_RamFull(asic_id,chan_id);
             HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Return_TH2F("Flux_Noise")->Fill(I,J);
             if(geom.GetDifType(dif_id)==positional)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Return_TH2F("Flux_Noise_Asic")->Fill(asic_id,asic_id);
             else HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Return_TH2F("Flux_Noise_Asic")->Fill((AsicShiftI[asic_id]+geom.GetDifPositionX(dif_id))/8,(32-AsicShiftJ[asic_id]+geom.GetDifPositionY(dif_id))/8);
@@ -394,7 +395,11 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 {
   Times.clear();
   RawHits.clear();
-  for(unsigned int i =0;i<HistoPlanes.size();++i)HistoPlanes[i].Init_local_min_max();
+  for(unsigned int i =0;i<HistoPlanes.size();++i)
+  {
+	HistoPlanes[i].Init_local_min_max();
+        HistoPlanes[i].Init_Hit_In_Asic_Per_RamFull();
+  }
   BehondTrigger.clear();
   int numElements = col->getNumberOfElements();
   for(unsigned int i=0; i<HistoPlanes.size(); ++i)HistoPlanes[i].Clear_Time_Plates_perRun();
@@ -514,6 +519,7 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
       EventsNoise++;
       Writer(_NoiseWriter,"SDHCAL_HIT_NOISE",BehondTrigger, evtP,EventsNoise,1);
     }
+    for(unsigned int i=0;i<HistoPlanes.size();++i)HistoPlanes[i].Fill_TH1_Hit_In_Asic_Per_RamFull();
 }
 
 
@@ -571,14 +577,17 @@ void TriventProcessor::end()
     for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i].Get_Flux();
     file<<"import OracleAccess as oa"<<std::endl;
     file<<"s=oa.OracleAccess(\"T9_AOUT2014_76\")"<<std::endl;
-    for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i].Print_Calibration(file);
+    for(unsigned int i=0;i<HistoPlanes.size();++i)
+    {
+      HistoPlanes[i].Print_Calibration(file);
+    }
     if(Negative.size()!=0)
     {
 	std::cout<<red<<"WARNING !!! : Negative Value(s) of timeStamp found"<<normal<<std::endl;
-	for(std::map<std::vector<unsigned int>,std::map<unsigned int,unsigned int>>::iterator it=Negative.begin();it!=Negative.end();++it)
+	for(std::map<std::vector<unsigned int>,std::map< int, int>>::iterator it=Negative.begin();it!=Negative.end();++it)
     	{
 		std::cout<<red<<"Dif_Id : "<<it->first[0]<<" Asic_Id : "<<it->first[1]<<" Channel_Id : "<<it->first[2]<<normal;
-                for(std::map<unsigned int,unsigned int>::iterator itt=it->second.begin();itt!=it->second.end();++itt)std::cout<<" Value : "<<itt->first<<" - "<<itt->second<<" Times; ";
+                for(std::map< int, int>::iterator itt=it->second.begin();itt!=it->second.end();++itt)std::cout<<" Value : "<<itt->first<<" - "<<itt->second<<" Times; ";
                 std::cout<<std::endl;
     	}
     }
