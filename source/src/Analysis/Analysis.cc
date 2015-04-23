@@ -7,6 +7,7 @@
 #include "UTIL/CellIDDecoder.h"
 #include "IMPL/CalorimeterHitImpl.h"
 #include "Reader/ReaderFactory.h"
+#include "EVENT/SimCalorimeterHit.h"
 #include "Reader/Reader.h"
 #include "TFile.h"
 #include "TGraphErrors.h"
@@ -160,12 +161,13 @@ void FillDelimiter(std::string ToParse,int size)
 
 int plan::countHitAt(double& x, double& y, double dlim)
 {
-    CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
+    //CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
+    CellIDDecoder<CalorimeterHit>cd("M:3,S-1:3,I:9,J:9,K-1:6");
     int n=0;
     for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!= hits.end(); ++it) {
-        if(fabs(x-(*it)->getPosition()[0])<dlim&&fabs(y-(*it)->getPosition()[1])<dlim) {
+        if(fabs(x-((*it)->getPosition()[0]+499.584))<dlim&&fabs(y-((*it)->getPosition()[1]+499.584))<dlim) {
             n++;
-            Distribution_hits[cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
+            Distribution_hits[cd(*it)["K-1"]]->Fill(cd(*it)["I"],cd(*it)["J"]);
         }
     }
     return n;
@@ -174,12 +176,13 @@ int plan::countHitAt(double& x, double& y, double dlim)
 int plan::countHitAtStrip(double& x, double dlim)
 {
     int n=0;
-    CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
+    //CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
+    CellIDDecoder<CalorimeterHit>cd("M:3,S-1:3,I:9,J:9,K-1:6");
     for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!= hits.end(); ++it) {
         if(fabs(x-(*it)->getPosition()[0])<dlim) {
             n++;
             //std::cout<<fabs(x-(*it)->getPosition()[0])<<"  "<<dlim<<std::endl;
-            Distribution_hits[cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
+            Distribution_hits[cd(*it)["K-1"]]->Fill(cd(*it)["I"],cd(*it)["J"]);
         }
     }
     return n;
@@ -189,10 +192,11 @@ void plan::computeBarycentre( )
 {
     for (int i=0; i<3; i++) barycentre[i]=0;
     for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!=hits.end(); ++it) {
-        for (int i=0; i<3; i++) {
-            barycentre[i]+=(*it)->getPosition()[i];
+        for (int i=0; i<2; i++) {
+            barycentre[i]+=((*it)->getPosition()[i])+499.584;
             // std::cout<<green<<(*it)->getPosition()[i]<<normal<<"  ";
         }
+        barycentre[2]+=((*it)->getPosition()[2])+625.213;
     }
     //std::cout<<std::endl;
     if (nHits() != 0)
@@ -207,10 +211,12 @@ void plan::computeMaxima()
         max[i]=-10000000;
     }
     for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!=hits.end(); ++it) {
-        for (int i=0; i<3; i++) {
-            if((*it)->getPosition()[i]<min[i])min[i]=(*it)->getPosition()[i];
-            if((*it)->getPosition()[i]>max[i])max[i]=(*it)->getPosition()[i];
+        for (int i=0; i<2; i++) {
+            if((*it)->getPosition()[i]+499.584<min[i])min[i]=(*it)->getPosition()[i]+499.584;
+            if((*it)->getPosition()[i]+499.584>max[i])max[i]=(*it)->getPosition()[i]+499.584;
         }
+        if((*it)->getPosition()[2]+625.213<min[2])min[2]=(*it)->getPosition()[2]+625.213;
+        if((*it)->getPosition()[2]+625.213>max[2])max[2]=(*it)->getPosition()[2]+625.213;
     }
 }
 void plan::GivePoint()
@@ -235,7 +241,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
     }
 
     for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((*it)->nHits()>=_NbrHitPerPlaneMax ) return;
-    //std::cout<<yellow<<plansUsedForTrackMaking.size()<<std::endl;
+    //std::cout<<blue<<plansUsedForTrackMaking.size()<<std::endl;
     if(plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
     counts[NOTOOMUCHHITSINPLAN]++;
     ////////////////////////////////////////////////////////////////////////////////////
@@ -283,6 +289,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
     else Pass=Projectioni<=this->GetIp()&&Projectioni>=this->GetIm()&&Projectionj<=this->GetJp()&&Projectionj>=this->GetJm();
     if(Pass) {
         nombreTests++;
+        
         if (nullptr==thisPlan) return;
         Distribution_exp[this->NbrPlate()]->Fill(Projectioni,Projectionj);
         counts[NOHITINPLAN]++;
@@ -315,10 +322,12 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
 
 void testedPlan::print()
 {
-    std::cout<<yellow<<"Plane Number (in geometry file): "<<Nbr+1<<" Z = "<<Z0<<" NombreTests = "<<nombreTests<<" nombreTestsOk = "<<nombreTestsOK<<"  sommeNHits = "<<sommeNombreHits<< "  ( type = " <<GetType()<<" )"<<normal<<std::endl;
-    std::cout<<"List of counters"<<std::endl;
-    std::vector<std::string>Text{"TESTYOUCALLED","NOTOOMUCHHITSINPLAN","XZTRACKFITPASSED","YZTRACKFITPASSED","PRESENCEOFHITINPLAN"};
-    for (int i=0; i<NCOUNTERS; i++) std::cout <<yellow<< Text[i]<<" : "<<counts[i]<<"  "<<normal;
+    std::cout<<blue<<"Plane Number (in geometry file): "<<Nbr+1<<" Z = "<<Z0<<" : "<<normal<<std::endl;
+    std::cout<<blue<<"Number of Test : "<<counts[0]<<"; with >="<<_NbrPlaneUseForTracking<<" planes for tracking : "<<counts[1]<<"; with ChiXZ <"<<_Chi2<<" : "<<counts[2]<<"; with ChiYZ <"<<_Chi2<<" : "<<counts[3]<<" ; with track in the Delimiters "<<nombreTests<<"; with hits in it : "<<counts[4]<<" ; with hits in dlim : "<<nombreTestsOK<<normal<<std::endl;
+    std::cout<<blue<<"Sum of hits in dlim : "<<sommeNombreHits<<normal<<std::endl;
+//<<" NombreTests = "<<nombreTests<<" nombreTestsOk = "<<nombreTestsOK<<"  sommeNHits = "<<sommeNombreHits<< "  ( type = " <<GetType()<<" )"<<normal<<std::endl;
+  //  std::vector<std::string>Text{"TESTYOUCALLED","NOTOOMUCHHITSINPLAN","XZTRACKFITPASSED","YZTRACKFITPASSED","PRESENCEOFHITINPLAN"};
+    //for (int i=0; i<NCOUNTERS; i++) std::cout <<blue<< Text[i]<<" : "<<counts[i]<<"  "<<normal;
     std::cout<<std::endl;
 }
 
@@ -346,8 +355,9 @@ using namespace marlin;
 AnalysisProcessor aAnalysisProcessor;
 AnalysisProcessor::AnalysisProcessor() : Processor("AnalysisProcessorType")
 {
-    std::vector<std::string> hcalCollections(1,"SDHCAL_HIT");
-    registerInputCollections( LCIO::RAWCALORIMETERHIT,"HCALCollections","HCAL Collection Names",_hcalCollections,hcalCollections);
+    //std::vector<std::string> hcalCollections(1,"SDHCAL_HIT");
+    std::vector<std::string> hcalCollections(1,"HCALEndcap");            
+    registerInputCollections( LCIO::SIMCALORIMETERHIT,"HCALCollections","HCAL Collection Names",_hcalCollections,hcalCollections);
     _FileNameGeometry="";
     registerProcessorParameter("FileNameGeometry","Name of the Geometry File",_FileNameGeometry,_FileNameGeometry);
     _ReaderType="";
@@ -437,14 +447,18 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
             }
             CellIDDecoder<CalorimeterHit> cd(col);
             int numElements = col->getNumberOfElements();
+            //std::cout<<red<<numElements<<normal<<std::endl;
             for (int ihit=0; ihit < numElements; ++ihit) {
                 CalorimeterHit *raw_hit = dynamic_cast<CalorimeterHit*>( col->getElementAt(ihit)) ;
+                if(raw_hit==nullptr) std::cout<<"Dommage"<<std::endl;
                 if (raw_hit != nullptr) {
-                    int dif_id=cd(raw_hit)["Dif_id"];
+                    //int dif_id=cd(raw_hit)["Dif_id"];
+                    int dif_id=cd(raw_hit)["K-1"];
+                    //std::cout<<blue<<dif_id<<normal<<std::endl;
                     int I=cd(raw_hit)["I"];
                     int J=cd(raw_hit)["J"];
-                    Plans[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
-                    Plans[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
+                    Plans[dif_id].addHit(raw_hit);
+                    Plans[dif_id].SetType(geom.GetDifType(dif_id));
                     /*for(int jhit=ihit+1; jhit<numElements; ++jhit) {
                         CalorimeterHit *raw_hit2 = dynamic_cast<CalorimeterHit*>( col->getElementAt(jhit)) ;
                         int dif_id2=cd(raw_hit2)["Dif_id"];
@@ -472,6 +486,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 void AnalysisProcessor::end()
 {
     
+    std::cout<<"List of counters : "<<std::endl;
     for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->print();
     std::string b="Results_Analysis_"+std::to_string( (long long int) _NbrRun)+".root";
     TFile *hfile = new TFile(b.c_str(),"RECREATE");
