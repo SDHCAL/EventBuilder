@@ -9,6 +9,7 @@
 #include <iostream>
 #include "Colors.h"
 #include <cmath>
+#include <array>
 
 class HistoPlane
 {
@@ -48,7 +49,7 @@ class HistoPlane
   {
         for(std::map<std::vector<int>,double>::iterator it=Hit_In_Pad_Per_RamFull.begin();it!=Hit_In_Pad_Per_RamFull.end();++it)
         {
-			//std::cout<<(it->first)[0]<<"  "<<(it->first)[1]<<" "<<(it->first)[2]<<"  "<<it->second<<std::endl;
+			std::cout<<(it->first)[0]<<"  "<<(it->first)[1]<<" "<<(it->first)[2]<<"  "<<it->second<<std::endl;
 			Pads_Distr[it->first]->Fill(it->second);
                         std::vector<int>a=(it->first);
 			a.pop_back();
