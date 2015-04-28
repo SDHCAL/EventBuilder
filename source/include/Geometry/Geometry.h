@@ -46,6 +46,7 @@ class Geometry
   inline const std::vector<Plate> GetPlates(){return Plates;};
   inline const Plate GetPlate(const int& i){return Plates[i];};
   inline const std::map<int,Dif> GetDifs(){return Difs;};
+  inline const std::vector<int> GetDifsInPlane(unsigned int& i){return Plates[i].GetDifInPlate();};
   void PrintGeom(); 
  private:
   std::vector<Plate> Plates;
