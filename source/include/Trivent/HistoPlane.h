@@ -96,14 +96,14 @@ class HistoPlane
 	 }
   }
   int inline Get_hit_trigger(){return hit_trigger;};
-  void inline Fill_Calibration(int &Dif_Id ,int &Asic_Id,int &Channel_Id){ Calibration[Dif_Id][Asic_Id-1][Channel_Id]+=1;};
+  void inline Fill_Calibration(int &Dif_Id ,int &Asic_Id,int &Channel_Id){Calibration[Dif_Id][Asic_Id-1][Channel_Id]+=1;};
   int inline Get_Calibration(int &Dif_Id,int &Asic_Id,int &Channel_Id){return Calibration[Dif_Id][Asic_Id-1][Channel_Id] ;};
   void inline Get_Flux()
   {
     	double MEAN=0;
     	double RMS=0;
     	unsigned int  Number_Pads_Touched=0;
-    	for(std::map<int,std::array<std::array<double,64>,24>>::iterator it=Calibration.begin();it!=Calibration.end();++it)
+    	for(std::map<int,std::array<std::array<double,64>,48>>::iterator it=Calibration.begin();it!=Calibration.end();++it)
     	{
 		for(unsigned int i=0;i<(it->second).size();++i)
 		{
@@ -118,7 +118,7 @@ class HistoPlane
 		}
 	}
     	MEAN/=Number_Pads_Touched;
-    	for(std::map<int,std::array<std::array<double,64>,24>>::iterator it=Calibration.begin();it!=Calibration.end();++it)
+    	for(std::map<int,std::array<std::array<double,64>,48>>::iterator it=Calibration.begin();it!=Calibration.end();++it)
     	{
 		for(unsigned int i=0;i<(it->second).size();++i)
 		{
@@ -131,7 +131,7 @@ class HistoPlane
     	RMS/=Number_Pads_Touched;
     	RMS=sqrt(RMS);
     	std::cout<<MEAN<<" "<<RMS<<std::endl;
-    	for(std::map<int,std::array<std::array<double,64>,24>>::iterator it=Calibration.begin();it!=Calibration.end();++it)
+    	for(std::map<int,std::array<std::array<double,64>,48>>::iterator it=Calibration.begin();it!=Calibration.end();++it)
     	{
 		for(unsigned int i=0;i<(it->second).size();++i)
 		{
@@ -147,7 +147,7 @@ class HistoPlane
   }
   void inline Print_Calibration(std::ostream& file)
   {
-	for(std::map<int,std::array<std::array<double,64>,24>>::iterator it=Calibration.begin();it!=Calibration.end();++it)
+	for(std::map<int,std::array<std::array<double,64>,48>>::iterator it=Calibration.begin();it!=Calibration.end();++it)
 	{
 		for(unsigned int i=0;i<(it->second).size();++i)
 		{
@@ -186,7 +186,7 @@ class HistoPlane
   double _SizeY;
   std::map<std::vector<int>,double>Hit_In_Pad_Per_RamFull;
   std::vector<int>_Difs_Names;
-  std::map<int,std::array<std::array<double,64>, 24>>Calibration;
+  std::map<int,std::array<std::array<double,64>, 48>>Calibration;
   bool _Distr;
 };
 #endif

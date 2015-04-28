@@ -19,7 +19,7 @@ HistoPlane::HistoPlane(bool Distr,int NbrPlate,std::vector<int>Difs_Names,int Si
         
         for(int i=0;i<_Difs_Names.size();++i)
 	{
-		Calibration.insert(std::pair<int,std::array<std::array<double,64>, 24>>(_Difs_Names[i],std::array<std::array<double,64>, 24>{}));
+		Calibration.insert(std::pair<int,std::array<std::array<double,64>, 48>>(_Difs_Names[i],std::array<std::array<double,64>, 48>{}));
                 if(Distr==true)
 		{
 			addnbr="Distribution Nbr Hits in Dif : "+patch::to_string(_Difs_Names[i])+" Plane : "+patch::to_string(NbrPlatee+1);
