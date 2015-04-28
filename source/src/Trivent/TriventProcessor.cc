@@ -352,8 +352,7 @@ void TriventProcessor::init()
                 SinCos[it->first]=std::vector<double>{cos(geom.GetDifAlpha(it->first)*degtorad),sin(geom.GetDifAlpha(it->first)*degtorad),cos(geom.GetDifBeta(it->first)*degtorad),sin(geom.GetDifBeta(it->first)*degtorad),cos(geom.GetDifGamma(it->first)*degtorad),sin(geom.GetDifGamma(it->first)*degtorad)};
                 //PlansType.insert(std::pair<int,int>(geom.GetDifNbrPlate(it->first)-1,geom.GetDifType(it->first)));
                 NbrPlate=geom.GetDifNbrPlate(it->first)-1;
-                //if(HistoPlanes.find(NbrPlate)==HistoPlanes.end()) HistoPlanes.insert(std::pair<int,HistoPlane>(NbrPlate,HistoPlane(NbrPlate,geom.GetDifsInPlane(NbrPlate),geom.GetSizeX(NbrPlate),geom.GetSizeY(NbrPlate),th1,th2,th2_Asic)));
-                if(HistoPlanes.find(NbrPlate)==HistoPlanes.end()) HistoPlanes.emplace(std::pair<int,HistoPlane>(NbrPlate,HistoPlane(_WantDistribution,NbrPlate,geom.GetDifsInPlane(NbrPlate),geom.GetSizeX(NbrPlate),geom.GetSizeY(NbrPlate),th1,th2,th2_Asic)));
+                if(HistoPlanes.find(NbrPlate)==HistoPlanes.end()) HistoPlanes.insert(std::pair<int,HistoPlane>(NbrPlate,HistoPlane(_WantDistribution,NbrPlate,geom.GetDifsInPlane(NbrPlate),geom.GetSizeX(NbrPlate),geom.GetSizeY(NbrPlate),th1,th2,th2_Asic)));
             }
         }
         //FillDelimiter(_Delimiters,PlansType.size());
