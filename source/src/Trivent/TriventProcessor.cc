@@ -211,7 +211,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
             ///////////////
             if(_WantDistribution==true)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_Hit_In_Pad_Per_RamFull(dif_id,asic_id,chan_id);
 	    //////////
-            HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_Calibration(dif_id,asic_id,chan_id);
+            if(_WantCalibration==true)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_Calibration(dif_id,asic_id,chan_id);
             //std::cout<<green<<HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Get_Calibration(dif_id,asic_id,chan_id)<<normal<<std::endl;
         } else {
             HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events")->Fill(I,J);
@@ -286,6 +286,8 @@ TriventProcessor::TriventProcessor() : Processor("TriventProcessorType")
     registerProcessorParameter("TriggerTime" ,"All Events with Time greater than this number will be ignored (0) in case of Triggerless",_TriggerTime ,_TriggerTime);
     _WantDistribution = false;
     registerProcessorParameter("Distribution" ,"Create Distribution of hits for Plates, Difs, Asics, and Pads",_WantDistribution ,_WantDistribution);
+    _WantCalibration = false;
+    registerProcessorParameter("Calibration" ,"Create Calibration file for the Detector",_WantCalibration ,_WantCalibration);
     //_Delimiters="";
     //registerProcessorParameter("Delimiters" ,"Delimiters",_Delimiters,_Delimiters);
     
@@ -610,14 +612,17 @@ void TriventProcessor::end()
     for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Mean noise in plane "<<i+1<<" : "<<HistoPlanes[i]->Get_Means()<<" Hz.cm-2 "; std::cout<<std::endl;
     if(_LayerCut==-1) for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Efficiency "<<i<<" : "<<HistoPlanes[i]->Efficiency()<<"  "; std::cout<<std::endl;
     for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i]->Get_Flux();
-    std::ofstream file( "Calibration.py", std::ios_base::out ); 
-    file<<"import OracleAccess as oa"<<std::endl;
-    file<<"s=oa.OracleAccess(\"T9_AOUT2014_76\")"<<std::endl;
-    for(unsigned int i=0;i<HistoPlanes.size();++i)
+    if(_WantCalibration==true)
     {
-      HistoPlanes[i]->Print_Calibration(file);
-    } 
-    file.close();
+	std::ofstream file( "Calibration.py", std::ios_base::out ); 
+    	file<<"import OracleAccess as oa"<<std::endl;
+    	file<<"s=oa.OracleAccess(\"T9_AOUT2014_76\")"<<std::endl;
+    	for(unsigned int i=0;i<HistoPlanes.size();++i)
+    	{
+      	HistoPlanes[i]->Print_Calibration(file);
+    	} 
+    	file.close();
+    }
     if(Negative.size()!=0)
     {
 	std::cout<<red<<"WARNING !!! : Negative Value(s) of timeStamp found"<<normal<<std::endl;

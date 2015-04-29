@@ -48,6 +48,7 @@ protected:
     int _LayerCut;
     int _TriggerTime;
     bool _WantDistribution;
+    bool _WantCalibration;
     std::map<int,int>Times;
     //std::vector<std::map<int,int> >Times_Plates_perRun;
     std::map< int,std::vector<EVENT::RawCalorimeterHit*> > RawHits;
