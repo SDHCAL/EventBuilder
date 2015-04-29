@@ -13,10 +13,15 @@
 
 HistoPlane::HistoPlane(bool Distr,int NbrPlate,std::vector<int>Difs_Names,int SizeX, int SizeY, std::vector< std::string  >& vec_name_th1,std::vector< std::string >& vec_name_th2,std::vector< std::string >& vec_name_th2_Asic):_Distr(Distr),NbrPlatee(NbrPlate),Means(0),Nbrof0Hits(0),local_max(-1),local_min(99999999),total_time(0),_SizeX(SizeX),_SizeY(SizeY),_Difs_Names(Difs_Names)
 {  
-        std::string addnbr="Distribution Nbr Hits in Plane : "+patch::to_string(NbrPlatee+1);
+        int Addone=0;
+        std::string addnbr="";
+        if(Distr==true)
+	{
+        Addone=1;
+        addnbr="Distribution Nbr Hits in Plane : "+patch::to_string(NbrPlatee+1);
         std::string a = "Distribution Nbr Hits in Plane : "+patch::to_string(NbrPlatee+1);
         if (gROOT->FindObject(addnbr.c_str()) == NULL) Plate_Dist=new TH1F (a.c_str(),a.c_str(),20,0.,20.);
-        
+        }
         for(int i=0;i<_Difs_Names.size();++i)
 	{
 		Calibration.insert(std::pair<int,std::array<std::array<double,64>, 48>>(_Difs_Names[i],std::array<std::array<double,64>, 48>{}));
@@ -26,7 +31,7 @@ HistoPlane::HistoPlane(bool Distr,int NbrPlate,std::vector<int>Difs_Names,int Si
 			std::string a = "Distribution Nbr Hits in Dif : "+patch::to_string(_Difs_Names[i]);
 			if (gROOT->FindObject(addnbr.c_str()) != NULL)continue;
 		 	Difs_Distr[_Difs_Names[i]]=new TH1F (addnbr.c_str(),a.c_str(),10,0.,10.);
-			for(int j=1;j<=24;++j)
+			for(int j=1;j<=48;++j)
 			{
 				std::vector<int>vec{_Difs_Names[i],j};
                         	addnbr="Distribution Nbr Hits in Asic : "+patch::to_string(j)+"Dif : "+patch::to_string(_Difs_Names[i])+" Plane : "+patch::to_string(NbrPlatee+1);
@@ -62,11 +67,12 @@ HistoPlane::HistoPlane(bool Distr,int NbrPlate,std::vector<int>Difs_Names,int Si
                 if (gROOT->FindObject(addnbr.c_str()) != NULL) continue;
   		TH2Fs.insert(std::pair<std::string,TH2F*>((*it),new TH2F(addnbr.c_str(),(*it).c_str(),(int)SizeX/8,0,(int)SizeX/8,(int)SizeY/8,1,(int)SizeY/8+1)));
 	}
-        if (TH1Fs.size()!=0&&TH2Fs.size()!=0) std::cout<<red<<"Creating "<<TH1Fs.size()<<" TH1 and "<<TH2Fs.size()<<" TH2F for plate "<<patch::to_string(NbrPlate+1)<<normal<<std::endl;
+        if (TH1Fs.size()!=0&&TH2Fs.size()!=0) std::cout<<red<<"Creating "<<TH1Fs.size()+Addone+Difs_Distr.size()+Asics_Distr.size()+Pads_Distr.size()<<" TH1 and "<<TH2Fs.size()<<" TH2F for plate "<<patch::to_string(NbrPlate+1)<<normal<<std::endl;
 }
 
 HistoPlane::HistoPlane(const HistoPlane &source):_Distr(source._Distr),NbrPlatee(source.NbrPlatee),Means(source.Means),Nbrof0Hits(source.Nbrof0Hits),local_max(source.local_max),local_min(source.local_min),total_time(source.total_time),_SizeX(source._SizeX),_SizeY(source._SizeY),_Difs_Names(source._Difs_Names)
 {   
+        std::cout<<"Create copy"<<std::endl;
         Plate_Dist=new TH1F (*(source.Plate_Dist));
         
         for(std::map<int,TH1F*>::const_iterator it=(source.Difs_Distr).begin();it!=(source.Difs_Distr).end();++it)
@@ -101,15 +107,15 @@ HistoPlane::~HistoPlane()
         for(int i=0;i<_Difs_Names.size();++i)
 	{
 		delete Difs_Distr[_Difs_Names[i]];
-		for(int j=1;j<=24;++j)
+		for(int j=1;j<=48;++j)
 		{
 			std::vector<int>vec{_Difs_Names[i],j};
 			delete Asics_Distr[vec];
-			/*for(int k=0;k<=63;++k)
+			for(int k=0;k<=63;++k)
 		        {
   				std::vector<int>vec{_Difs_Names[i],j,k};
 				delete Pads_Distr[vec];
-			}*/
+			}
 		}
 	}
 	for(std::map<std::string,TH1F*>::iterator it=TH1Fs.begin();it!=TH1Fs.end();++it)

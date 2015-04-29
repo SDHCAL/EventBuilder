@@ -49,7 +49,7 @@ class HistoPlane
   {
         for(std::map<std::vector<int>,double>::iterator it=Hit_In_Pad_Per_RamFull.begin();it!=Hit_In_Pad_Per_RamFull.end();++it)
         {
-			std::cout<<(it->first)[0]<<"  "<<(it->first)[1]<<" "<<(it->first)[2]<<"  "<<it->second<<std::endl;
+			//std::cout<<(it->first)[0]<<"  "<<(it->first)[1]<<" "<<(it->first)[2]<<"  "<<it->second<<std::endl;
 			Pads_Distr[it->first]->Fill(it->second);
                         std::vector<int>a=(it->first);
 			a.pop_back();
@@ -69,7 +69,7 @@ class HistoPlane
     		file->cd(Diff.c_str());
                 std::vector<int>a={_Difs_Names[i]};
 	 	Difs_Distr[a[0]]->Write();
-		for(unsigned int j=1;j<=24;++j)
+		for(unsigned int j=1;j<=48;++j)
 		{
                         std::string Asicc=Diff+"/AsicinDif"+ patch::to_string(a[0]);
                         if(j==1)
