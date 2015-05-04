@@ -101,9 +101,6 @@ HistoPlane::HistoPlane(const HistoPlane &source):_Distr(source._Distr),NbrPlatee
 
 HistoPlane::~HistoPlane()
 {
-
-
-        std::cout<<"Using destructor"<<std::endl;
         for(int i=0;i<_Difs_Names.size();++i)
 	{
 		delete Difs_Distr[_Difs_Names[i]];
@@ -183,23 +180,27 @@ void HistoPlane::Save(TFile* file)
     Return_TH1F("Hits_Distr_Noise")->Fill(0.0,(double)Nbrof0Hits);
     WriteAll();
     std::string name="Noise_Flux_Hz";
-    TH2Fs["Flux_Noise"]->Scale(1/(total_time*2e-7));
+    //TH2Fs["Flux_Noise"]->Scale(1/(total_time*2e-7));
+    TH2Fs["Flux_Noise"]->Scale(1/(global_total_time*2e-7));
     TH2Fs["Flux_Noise"]->Write(name.c_str());
     name="Flux_Noise_Mean_Scaled";
     Means=TH2Fs["Flux_Noise"]->Integral()/(1.0*GetArea());
     TH2Fs["Flux_Noise"]->Scale(1/Means);
     TH2Fs["Flux_Noise"]->Write(name.c_str());
     name="Asic_Noise_Flux";
-    TH2Fs["Flux_Noise_Asic"]->Scale(1/(total_time*2e-7));
+    //TH2Fs["Flux_Noise_Asic"]->Scale(1/(total_time*2e-7));
+    TH2Fs["Flux_Noise_Asic"]->Scale(1/(global_total_time*2e-7));
     TH2Fs["Flux_Noise_Asic"]->Write(name.c_str());
     name="Asic_Noise_Flux_Mean_Scaled";
     TH2Fs["Flux_Noise_Asic"]->Scale(1/Means);
     TH2Fs["Flux_Noise_Asic"]->Write(name.c_str());
     name="Event_Flux_Hz";
-    TH2Fs["Flux_Events"]->Scale(1/(total_time*2e-7));
+    //TH2Fs["Flux_Events"]->Scale(1/(total_time*2e-7));
+    TH2Fs["Flux_Events"]->Scale(1/(global_total_time*2e-7));
     TH2Fs["Flux_Events"]->Write(name.c_str());
     name="Asic_Event_Flux";
-    TH2Fs["Flux_Events_Asic"]->Scale(1/(total_time*2e-7));
+    //TH2Fs["Flux_Events_Asic"]->Scale(1/(total_time*2e-7));
+    TH2Fs["Flux_Events_Asic"]->Scale(1/(global_total_time*2e-7));
     TH2Fs["Flux_Events_Asic"]->Write(name.c_str());
     if(_Distr==true)Write_TH1_Hit_In_Pad_Per_RamFull(file,plate);
     

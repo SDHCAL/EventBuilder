@@ -21,7 +21,6 @@ class HistoPlane
   void inline Clear_Time_Plates_perRun(){Times_Plates_perRun.clear();};
   void Fill_Time_Plates(int timeStamp){Time_Plates[timeStamp]++;};
   void inline Fill_Time_Plates_perRun(int  timeStamp){Times_Plates_perRun[timeStamp]++;};
-  int  inline Get_local_max(){return local_max;};
   void inline Init_local_min_max(){Set_local_max(0);Set_local_min(99999999);};
   void inline Init_Hit_In_Pad_Per_RamFull()
   {
@@ -29,9 +28,12 @@ class HistoPlane
   }
   HistoPlane(const HistoPlane &source);
   int inline Get_local_min(){return local_min;};
+  int  inline Get_local_max(){return local_max;};
   void inline Set_local_max( int lm){local_max=lm;};
   void inline Set_local_min( int lm){local_min=lm;};
   void inline Set_Total_Time(){if(local_max==0) return ;else if (local_max==local_min) total_time+=local_max;else total_time+=local_max-local_min;};
+  void inline Set_Global_Total_Time(unsigned long long int time){global_total_time+=time;};
+  unsigned long long int inline Get_Global_Total_Time(){return global_total_time;};
   void inline Set_Nbrof0Hits(){if(local_min==99999999)return;else Nbrof0Hits+=(local_max-local_min-Times_Plates_perRun.size());};
   unsigned long long int  inline Get_Total_Time(){return total_time;};
   double inline Get_Means(){return Means;};
@@ -98,7 +100,7 @@ class HistoPlane
   int inline Get_hit_trigger(){return hit_trigger;};
   void inline Fill_Calibration(int &Dif_Id ,int &Asic_Id,int &Channel_Id){Calibration[Dif_Id][Asic_Id-1][Channel_Id]+=1;};
   int inline Get_Calibration(int &Dif_Id,int &Asic_Id,int &Channel_Id){return Calibration[Dif_Id][Asic_Id-1][Channel_Id] ;};
-  void inline Get_Flux()
+  void inline Get_Calibration()
   {
     	double MEAN=0;
     	double RMS=0;
@@ -182,6 +184,7 @@ class HistoPlane
   int  long long local_max;
   int long long  local_min;
   unsigned long long int total_time;
+  static unsigned long long int global_total_time;
   double _SizeX;
   double _SizeY;
   std::map<std::vector<int>,double>Hit_In_Pad_Per_RamFull;

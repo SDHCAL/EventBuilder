@@ -47,9 +47,8 @@ unsigned int TouchedEvents=0;
 unsigned int _eventNr=0;
 #define size_pad 10.4125
 #define size_strip 2.5
-std::map<int,bool>Warningg;
-std::map<std::vector<unsigned int>,std::map< int, int>>Negative;
 
+unsigned long long int HistoPlane::global_total_time =0;
 //Double_t my_transfer_function(const Double_t *x, const Double_t * /*param*/)
 //{
 //   if (*x ==0)return 0.00;
@@ -321,7 +320,6 @@ void TriventProcessor::processRunHeader( LCRunHeader* run)
 
 void TriventProcessor::init()
 {
-    
     printParameters();
     if(_LayerCut==-1){std::cout<<red<<"LayerCut set to -1, assuming that you want to use trigger to see events"<<normal<<std::endl;}
     _EventWriter = LCFactory::getInstance()->createLCWriter() ;
@@ -461,12 +459,20 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	if(raw_hit->getTimeStamp()<HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Get_local_min()&&raw_hit->getTimeStamp()>=0)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Set_local_min(raw_hit->getTimeStamp());
 	HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_Time_Plates(raw_hit->getTimeStamp());
 	HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_Time_Plates_perRun(raw_hit->getTimeStamp());
-        
       }
     }
   if(Times.size()==0) std::cout<<red<<" 0 hits within the the TriggerTime given... You should verify your TriggerTime or your run is triggerless "<<normal<<std::endl;
-  for(unsigned int i=0;i<HistoPlanes.size();++i) { HistoPlanes[i]->Set_Total_Time(); HistoPlanes[i]->Set_Nbrof0Hits();}
-  
+  unsigned int  long long global_min=HistoPlanes[0]->Get_local_min();
+  unsigned int long long  global_max=HistoPlanes[0]->Get_local_max();
+  for(unsigned int i=0;i<HistoPlanes.size();++i) 
+  { 
+	HistoPlanes[i]->Set_Total_Time(); 
+	HistoPlanes[i]->Set_Nbrof0Hits();
+        if(HistoPlanes[i]->Get_local_max()>global_max) global_max=HistoPlanes[i]->Get_local_max();
+	if(HistoPlanes[i]->Get_local_min()<global_min) global_min=HistoPlanes[i]->Get_local_min();
+        
+  }
+  HistoPlanes[0]->Set_Global_Total_Time(global_max-global_min);
   if(_LayerCut!=-1)
     {
       FillTimes();
@@ -611,9 +617,10 @@ void TriventProcessor::end()
     for(std::map<int,bool>::iterator it=Warningg.begin(); it!=Warningg.end(); it++) std::cout<<red<<"REMINDER::Data from Dif "<<it->first<<" are skipped !"<<normal<<std::endl;
     for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Mean noise in plane "<<i+1<<" : "<<HistoPlanes[i]->Get_Means()<<" Hz.cm-2 "; std::cout<<std::endl;
     if(_LayerCut==-1) for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Efficiency "<<i<<" : "<<HistoPlanes[i]->Efficiency()<<"  "; std::cout<<std::endl;
-    for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i]->Get_Flux();
+    
     if(_WantCalibration==true)
     {
+        for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i]->Get_Calibration();
 	std::ofstream file( "Calibration.py", std::ios_base::out ); 
     	file<<"import OracleAccess as oa"<<std::endl;
     	file<<"s=oa.OracleAccess(\"T9_AOUT2014_76\")"<<std::endl;

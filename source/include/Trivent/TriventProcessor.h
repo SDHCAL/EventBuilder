@@ -56,6 +56,8 @@ protected:
     std::vector<RawCalorimeterHit *>EventsGrouped;
     std::map< int,std::vector<EVENT::RawCalorimeterHit*> > RawTimeDifs;
     float pos[3];
+    std::map<int,bool>Warningg;
+    std::map<std::vector<unsigned int>,std::map< int, int>>Negative;
     std::map<int,HistoPlane*>HistoPlanes;
 };
 
