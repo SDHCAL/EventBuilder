@@ -38,6 +38,7 @@
 #include "TColor.h"
 #include "TMath.h"
 #include "Patch.h"
+
 using namespace marlin;
 #define degtorad 0.0174532925
 unsigned int EventsNoise=0;
@@ -210,7 +211,8 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
             ///////////////
             if(_WantDistribution==true)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_Hit_In_Pad_Per_RamFull(dif_id,asic_id,chan_id);
 	    //////////
-            if(_WantCalibration==true)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_Calibration(dif_id,asic_id,chan_id);
+            //if(_WantCalibration==true)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_Calibration(dif_id,asic_id,chan_id);
+              if(_WantCalibration==true)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_NumberHitsDistribution(dif_id,asic_id,chan_id);
             //std::cout<<green<<HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Get_Calibration(dif_id,asic_id,chan_id)<<normal<<std::endl;
         } else {
             HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events")->Fill(I,J);
@@ -287,6 +289,8 @@ TriventProcessor::TriventProcessor() : Processor("TriventProcessorType")
     registerProcessorParameter("Distribution" ,"Create Distribution of hits for Plates, Difs, Asics, and Pads",_WantDistribution ,_WantDistribution);
     _WantCalibration = false;
     registerProcessorParameter("Calibration" ,"Create Calibration file for the Detector",_WantCalibration ,_WantCalibration);
+    _Database_name ="";
+    registerProcessorParameter("Database_name" ,"Name of the Database for Calibration",_Database_name ,_Database_name);
     //_Delimiters="";
     //registerProcessorParameter("Delimiters" ,"Delimiters",_Delimiters,_Delimiters);
     
@@ -321,6 +325,7 @@ void TriventProcessor::processRunHeader( LCRunHeader* run)
 void TriventProcessor::init()
 {
     printParameters();
+    if(_WantCalibration==true&&_Database_name ==""){std::cout<<red<<"Name's Database is unknown from the xml file"<<normal<<std::endl;std::exit(1);}
     if(_LayerCut==-1){std::cout<<red<<"LayerCut set to -1, assuming that you want to use trigger to see events"<<normal<<std::endl;}
     _EventWriter = LCFactory::getInstance()->createLCWriter() ;
     _EventWriter->setCompressionLevel( 2 ) ;
@@ -370,7 +375,7 @@ void TriventProcessor::init()
 
 void TriventProcessor::processEvent( LCEvent * evtP )
 {
-  if (NULL == evtP) return;
+  if (nullptr == evtP) return;
 
   _NbrRun=evtP->getRunNumber();
   _eventNr=evtP->getEventNumber();
@@ -378,7 +383,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 
   LCCollection* col2 = evtP ->getCollection("DHCALRawTimes");
   RawTimeDifs.clear();
-  if(col2!=NULL) 
+  if(col2!=nullptr) 
     {
       for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) 
 	{
@@ -391,7 +396,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 
   for(unsigned int i=0; i< _hcalCollections.size(); i++) {
     LCCollection* col = evtP ->getCollection(_hcalCollections[i].c_str());
-    if(col2 == NULL || col==NULL) 
+    if(col2 == nullptr || col==nullptr) 
       {
 	std::cout<< "TRIGGER SKIPED ..."<<std::endl;
 	_trig_count++;
@@ -416,7 +421,7 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
   for (int ihit=0; ihit < numElements; ++ihit) 
     {
       RawCalorimeterHit *raw_hit = dynamic_cast<RawCalorimeterHit*>( col->getElementAt(ihit)) ;
-      if (raw_hit != NULL) {
+      if (raw_hit != nullptr) {
 	unsigned int dif_id  = (raw_hit)->getCellID0() & 0xFF ;
 	if(geom.GetDifNbrPlate(dif_id)==-1) {
 	  if(Warningg[dif_id]!=true) {
@@ -620,15 +625,36 @@ void TriventProcessor::end()
     
     if(_WantCalibration==true)
     {
-        for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i]->Get_Calibration();
-	std::ofstream file( "Calibration.py", std::ios_base::out ); 
+        std::string calib="Calibration"+patch::to_string(_NbrRun)+".py";
+        std::ofstream file(calib,std::ios_base::out); 
+        std::cout << "first pass ? enter y"<< std::endl;
+    	std::string c;
+    	std::cin>>c;
+    	bool firstPass=(c=="y" || c=="Y" || c=="Yes");
+    	//Name of last DataBase
+    	std::cout<<"Number of last DataBase ?"<<std::endl;
+    	std::string reponse;
+    	std::cin>>reponse;
+        std::string OracleDB = "s=oa.OracleAccess(\""+_Database_name+"_"+reponse+"\")";
+        if (firstPass)
+      	for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i]->Get_Calibration(1,254,10,false);
+    	else
+      	{
+		read_calibration("Calib.txt");
+		for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i]->Get_Calibration(0,1,10,true);
+      	}
+        //for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i]->Get_Calibration();
+	//std::ofstream file( "Calibration.py", std::ios_base::out ); 
     	file<<"import OracleAccess as oa"<<std::endl;
-    	file<<"s=oa.OracleAccess(\"T9_AOUT2014_76\")"<<std::endl;
+    	//file<<"s=oa.OracleAccess(\"T9_AOUT2014_76\")"<<std::endl;
+        file<<OracleDB<<std::endl;
     	for(unsigned int i=0;i<HistoPlanes.size();++i)
     	{
       	HistoPlanes[i]->Print_Calibration(file);
     	} 
+        file<<"s.uploadChanges()"<<std::endl;
     	file.close();
+        save_calibration("Calib.txt");
     }
     if(Negative.size()!=0)
     {
@@ -647,4 +673,22 @@ void TriventProcessor::end()
 	delete(it->second);
     }
     
+}
+
+void TriventProcessor::save_calibration(std::string filename)
+{
+  std::ofstream f(filename);
+  for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i]->SaveCalibration(f);
+}
+
+
+void TriventProcessor::read_calibration(std::string filename)
+{
+  std::ifstream f(filename);
+  int difN,asicN,channelN; double v;
+  while (f.good())
+    {
+      f >> difN >> asicN >> channelN >> v;
+      if (f.good() and !f.eof()) {HistoPlanes[geom.GetDifNbrPlate(difN)-1]->Set_Calibration(difN,asicN,channelN,v);}
+    }
 }

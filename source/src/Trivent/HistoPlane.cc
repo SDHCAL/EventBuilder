@@ -12,7 +12,7 @@
 #include <array>
 
 HistoPlane::HistoPlane(bool Distr,int NbrPlate,std::vector<int>Difs_Names,int SizeX, int SizeY, std::vector< std::string  >& vec_name_th1,std::vector< std::string >& vec_name_th2,std::vector< std::string >& vec_name_th2_Asic):_Distr(Distr),NbrPlatee(NbrPlate),Means(0),Nbrof0Hits(0),local_max(-1),local_min(99999999),total_time(0),_SizeX(SizeX),_SizeY(SizeY),_Difs_Names(Difs_Names)
-{  
+{       
         int Addone=0;
         std::string addnbr="";
         if(Distr==true)
@@ -24,7 +24,7 @@ HistoPlane::HistoPlane(bool Distr,int NbrPlate,std::vector<int>Difs_Names,int Si
         }
         for(int i=0;i<_Difs_Names.size();++i)
 	{
-		Calibration.insert(std::pair<int,std::array<std::array<double,64>, 48>>(_Difs_Names[i],std::array<std::array<double,64>, 48>{}));
+		//Calibration.insert(std::pair<int,std::array<std::array<double,64>, 48>>(_Difs_Names[i],std::array<std::array<double,64>, 48>{}));
                 if(Distr==true)
 		{
 			addnbr="Distribution Nbr Hits in Dif : "+patch::to_string(_Difs_Names[i])+" Plane : "+patch::to_string(NbrPlatee+1);

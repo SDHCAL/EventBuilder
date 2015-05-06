@@ -10,7 +10,8 @@
 #include "Colors.h"
 #include <cmath>
 #include <array>
-
+#include<numeric>
+#include<algorithm>
 class HistoPlane
 {
  public:
@@ -98,9 +99,61 @@ class HistoPlane
 	 }
   }
   int inline Get_hit_trigger(){return hit_trigger;};
-  void inline Fill_Calibration(int &Dif_Id ,int &Asic_Id,int &Channel_Id){Calibration[Dif_Id][Asic_Id-1][Channel_Id]+=1;};
-  int inline Get_Calibration(int &Dif_Id,int &Asic_Id,int &Channel_Id){return Calibration[Dif_Id][Asic_Id-1][Channel_Id] ;};
-  void inline Get_Calibration()
+  //void inline Fill_Calibration(int &Dif_Id ,int &Asic_Id,int &Channel_Id){Calibration[Dif_Id][Asic_Id-1][Channel_Id]+=1;};
+  //int inline Get_Calibration(int &Dif_Id,int &Asic_Id,int &Channel_Id){return Calibration[Dif_Id][Asic_Id-1][Channel_Id] ;};
+  void inline Fill_NumberHitsDistribution(int &a ,int &b,int &c){std::vector<int>vec{a,b,c};NumberHitsDistribution[vec]+=1;};
+  double inline Get_Calibration(int &a,int &b,int & c){std::vector<int>vec{a,b,c};return Calibration[vec];};
+  void inline Set_Calibration(int &a,int &b,int & c,double &v){std::vector<int>vec{a,b,c};Calibration[vec]=v;};
+
+
+void inline Get_Calibration(double minvalue=1.0,double maxvalue=254.0,double RMScutfactor=10.0,bool update=false)
+  {
+    //double MEAN=0;
+    //double RMS=0;
+    //double MPV=-1;
+    double MEAN2=0;
+    double RMS2=0;
+    double MPV2=-1;
+    //TH1F *C =  new TH1F("C","C",1000000,0,1000000);
+    
+    unsigned int  Number_Pads_Touched=NumberHitsDistribution.size();
+    //std::cout << Number_Pads_Touched << std::endl;
+    //for(std::map<std::vector<int>,long int>::iterator it=NumberHitsDistribution.begin();it!=NumberHitsDistribution.end();++it)
+    //{   
+      //MEAN+=it->second;
+      //RMS+=it->second*it->second;
+      //C->Fill(it->second);
+      //if (it->second>MPV) MPV=it->second;
+    //}
+    for(std::map<std::vector<int>,long int>::iterator it=NumberHitsDistribution.begin();it!=NumberHitsDistribution.end();++it)
+    {   
+      MEAN2+=it->second;
+      if(it->second>MPV2)MPV2=it->second;
+    }
+    MEAN2/=Number_Pads_Touched;
+    for(std::map<std::vector<int>,long int>::iterator it=NumberHitsDistribution.begin();it!=NumberHitsDistribution.end();++it)
+    {   
+      RMS2+=(MEAN2-it->second)*(MEAN2-it->second);
+    }
+    RMS2/=Number_Pads_Touched;
+    RMS2=std::sqrt(RMS2);
+    //MEAN=C->GetMean();
+    //MPV=C->GetMaximumBin();
+    //RMS=C->GetRMS();
+    //MEAN/=Number_Pads_Touched;
+    //RMS=sqrt(RMS/Number_Pads_Touched-MEAN*MEAN);
+    std::cout<<MEAN2<<" "<<RMS2<<" "<<MPV2<<std::endl;
+    for(std::map<std::vector<int>,long int>::iterator it=NumberHitsDistribution.begin();it!=NumberHitsDistribution.end();++it)
+    {  
+      double facteur=0;
+      if(it->second==0  || it->second>=RMScutfactor*RMS2) facteur=0;
+      else facteur=maxvalue*(1+std::exp( -MPV2/RMS2))/(1+std::exp( (it->second-MPV2)/RMS2))+minvalue;
+      if (update) Calibration[it->first]*=facteur; else Calibration[it->first]=facteur;      
+    }
+  }
+
+
+/*void inline Get_Calibration()
   {
     	double MEAN=0;
     	double RMS=0;
@@ -146,8 +199,8 @@ class HistoPlane
     			}
   		}
 	}
-  }
-  void inline Print_Calibration(std::ostream& file)
+  }*/
+ /* void inline Print_Calibration(std::ostream& file)
   {
 	for(std::map<int,std::array<std::array<double,64>,48>>::iterator it=Calibration.begin();it!=Calibration.end();++it)
 	{
@@ -159,7 +212,9 @@ class HistoPlane
 			}
 		}
 	}
-  };
+  };*/
+  void inline Print_Calibration(std::ostream& file){for(std::map<std::vector<int>,double>::iterator it=Calibration.begin();it!=Calibration.end();++it){/*std::cout<<"s.ChangeGain("<<(it->first)[0]<<","<<(it->first)[1]<<","<<(it->first)[2]<<","<<(it->second)<<")"<<std::endl;*/file<<"s.SetGain("<<(it->first)[0]<<","<<(it->first)[1]<<","<<(it->first)[2]<<","<<(int)(it->second)<<")"<<std::endl;}};
+  void inline SaveCalibration(std::ostream& file){for(std::map<std::vector<int>,double>::iterator it=Calibration.begin();it!=Calibration.end();++it){file<<(it->first)[0]<<" "<<(it->first)[1]<<" "<<(it->first)[2]<<" "<<int(it->second)<<std::endl;}}
   TH1F* Return_TH1F(const char* name);
   TH2F* Return_TH2F(const char* name);
   double inline GetArea(){return _SizeX*_SizeY;};
@@ -189,7 +244,9 @@ class HistoPlane
   double _SizeY;
   std::map<std::vector<int>,double>Hit_In_Pad_Per_RamFull;
   std::vector<int>_Difs_Names;
-  std::map<int,std::array<std::array<double,64>, 48>>Calibration;
+  //std::map<int,std::array<std::array<double,64>, 48>>Calibration;
+  std::map<std::vector<int>,double>Calibration;
+  std::map<std::vector<int>,long int>NumberHitsDistribution;
   bool _Distr;
 };
 #endif

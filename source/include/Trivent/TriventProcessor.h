@@ -49,6 +49,7 @@ protected:
     int _TriggerTime;
     bool _WantDistribution;
     bool _WantCalibration;
+    std::string _Database_name;
     std::map<int,int>Times;
     //std::vector<std::map<int,int> >Times_Plates_perRun;
     std::map< int,std::vector<EVENT::RawCalorimeterHit*> > RawHits;
@@ -59,6 +60,8 @@ protected:
     std::map<int,bool>Warningg;
     std::map<std::vector<unsigned int>,std::map< int, int>>Negative;
     std::map<int,HistoPlane*>HistoPlanes;
+    void save_calibration(std::string filename);
+    void read_calibration(std::string filename);
 };
 
 
