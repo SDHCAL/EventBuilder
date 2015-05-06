@@ -8,7 +8,7 @@
 INCLUDE_DIRECTORIES( include )
 
 # require proper c++
-ADD_DEFINITIONS( "-pedantic -Wunused-value -O2" )
+ADD_DEFINITIONS( "-pedantic -Wunused-value -O3" )
 ADD_DEFINITIONS("-Wno-long-long -Wreturn-type")
 
 # -------------------------------------------------
