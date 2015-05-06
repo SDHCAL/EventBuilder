@@ -16,8 +16,12 @@
 #define degtorad 0.0174532925
 #include <cstdlib>
 #include <cmath>
+#include "TH1F.h"
 #include "TH2F.h"
+#include "TH3F.h"
 #include "TTree.h"
+#include "TGLTH3Composition.h"
+#include "TGraph2D.h"
 #ifndef COLORS_H
 #define normal " "
 #define red "  "
@@ -51,7 +55,16 @@ TBranch* Branch6 =  tt->Branch("OrdYZ",&(totreee.OrdYZ));
 
 using namespace std;
 std::vector<TH2F*>Distribution_hits;
+std::vector<TH2F*>Efficiency_pads;
+std::vector<TH2F*>Multiplicity_pads;
+std::vector<TH2F*>Efficiency_asics;
+std::vector<TH1F*>HowLongFromExpectedX;
+std::vector<TH1F*>HowLongFromExpectedY;
+//std::vector<TGraph2D*>Distribution_hits_tgraph;
+TGraph2D* Distribution_hits_tgraph= new TGraph2D(1);
+TGraph2D* Distribution_exp_tgraph= new TGraph2D(1);
 std::vector<TH2F*>Distribution_exp;
+//std::vector<TGraph2D*>Distribution_exp_tgraph;
 //std::vector<TH2F*>Correlations;
 unsigned NbrReadOut=0;
 void AnalysisProcessor::processRunHeader( LCRunHeader* run)
@@ -157,17 +170,25 @@ void FillDelimiter(std::string ToParse,int size)
     }
 
 }
-
-int plan::countHitAt(double& x, double& y, double dlim)
-{
+unsigned int Number_hits=-1;
+int plan::countHitAt(double& x, double& y, double dlim,int Iexpected,int Jexpected,int Kexpected,double Imax,double Imin,double Jmax,double Jmin)
+{     
     CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
     int n=0;
+    std::vector<int>IJKexpected={Iexpected,Jexpected,Kexpected};
     for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!= hits.end(); ++it) {
-        if(fabs(x-(*it)->getPosition()[0])<dlim&&fabs(y-(*it)->getPosition()[1])<dlim) {
+        if((*it)->getPosition()[0]>=Imin&&(*it)->getPosition()[0]<=Imax&&(*it)->getPosition()[1]>=Jmin&&(*it)->getPosition()[1]<=Jmax&&fabs(x-(*it)->getPosition()[0])<dlim&&fabs(y-(*it)->getPosition()[1])<dlim) {
             n++;
+            Number_hits++;
             Distribution_hits[cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
+            Distribution_hits_tgraph->SetPoint(Number_hits,(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
+            HowLongFromExpectedX[cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
+            HowLongFromExpectedY[cd(*it)["K"]-1]->Fill((*it)->getPosition()[1]-y);
         }
     }
+    Efficiency_per_pad[IJKexpected].push_back(n);
+    
+    
     return n;
 }
 
@@ -178,8 +199,14 @@ int plan::countHitAtStrip(double& x, double dlim)
     for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!= hits.end(); ++it) {
         if(fabs(x-(*it)->getPosition()[0])<dlim) {
             n++;
+            Number_hits++;
+            
             //std::cout<<fabs(x-(*it)->getPosition()[0])<<"  "<<dlim<<std::endl;
             Distribution_hits[cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
+            //Distribution_hits[cd(*it)["K"]-1]->Fill((*it)->getPosition()[0],(*it)->getPosition()[1]);
+            Distribution_hits_tgraph->SetPoint(Number_hits,(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
+            HowLongFromExpectedX[cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
+            HowLongFromExpectedY[cd(*it)["K"]-1]->Fill(0);
         }
     }
     return n;
@@ -285,12 +312,28 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan)
         nombreTests++;
         
         if (nullptr==thisPlan) return;
-        Distribution_exp[this->NbrPlate()]->Fill(Projectioni,Projectionj);
+        int I,J,K;
+        ca=this->get_ca();
+        sa=this->get_sa();
+        cb=this->get_cb();
+        sb=this->get_sb();
+        cg=this->get_cg();
+        sg=this->get_sg();
+        
+        Distribution_exp_tgraph->SetPoint(nombreTests,Projectioni,Projectionj,Zexp);
+        
+        
         counts[NOHITINPLAN]++;
         int nhit;
         if(this->GetType()==pad) {
-            nhit=thisPlan->countHitAt(Projectioni,Projectionj,/*6*10.4125*/_dlimforPad);
+            	I=cg*cb*1.0/size_pad*(Projectioni-this->get_X0())+sg*cb*1.0/size_pad*(Projectionj-this->get_Y0())+-sb*this->get_Z0();
+        	J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(Projectioni-this->get_X0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(Projectionj-this->get_Y0())+cb*sa*this->get_Z0();
+        	//K=(sg*sa+cg*sb*ca)*1.0/size_pad*(Projectioni-this->get_X0())+(-cg*sa+sg*sb*ca)*1.0/size_pad*(Projectionj-this->get_Y0())+cb*ca*this->get_Z0();
+        	K=this->NbrPlate()+1;
+                Distribution_exp[this->NbrPlate()]->Fill(ceil(I),ceil(J));
+                nhit=thisPlan->countHitAt(Projectioni,Projectionj,/*6*10.4125*/_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm());
         } else {
+          
             nhit=thisPlan->countHitAtStrip(Projectioni,_dlimforStrip);
         }
         if (nhit>0) nombreTestsOK++;
@@ -398,21 +441,36 @@ void AnalysisProcessor::init()
             else testedPlanList.push_back(testedPlan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second,0,0,0,0));
             //std::string b="Correlations"+ std::to_string( (long long int) it->first +1 );
             std::string a="Distribution hit selectionner par analysis"+ std::to_string( (long long int) it->first +1 );
+            std::string b="Hit expected"+ std::to_string( (long long int) it->first +1 );
+            std::string c="Efficiency of the voisinage of the pad"+ std::to_string( (long long int) it->first +1 );
+            std::string d="Efficiency of the Asic"+ std::to_string( (long long int) it->first +1 );
+            std::string e="Distance to the expected hit in X "+ std::to_string( (long long int) it->first +1 );
+            std::string f="Distance to the expected hit in Y "+ std::to_string( (long long int) it->first +1 );
+            std::string g="Multiplicity of the voisinage of the pad"+ std::to_string( (long long int) it->first +1 );
             if(it->second==positional) {
-                Distribution_hits.push_back(new TH2F(a.c_str(),a.c_str(),700,0,700,700,0,700));
+                Distribution_hits.push_back(new TH2F(a.c_str(),a.c_str(),100,0,100,100,0,100));
+                Distribution_exp.push_back(new TH2F(b.c_str(),b.c_str(),100,0,100,100,0,100));
+                Efficiency_pads.push_back(new TH2F(c.c_str(),c.c_str(),100,0,100,100,0,100));
+                Efficiency_asics.push_back(new TH2F(d.c_str(),d.c_str(),100,0,100,100,0,100));
+                
+                Multiplicity_pads.push_back(new TH2F(g.c_str(),g.c_str(),100,0,100,100,0,100));
+		HowLongFromExpectedX.push_back(new TH1F(e.c_str(),e.c_str(),2*(_dlimforStrip),-_dlimforStrip,_dlimforStrip));
+                HowLongFromExpectedY.push_back(new TH1F(f.c_str(),f.c_str(),2*(_dlimforStrip),-_dlimforStrip,_dlimforStrip));
+  
             } else {
-                Distribution_hits.push_back(new TH2F(a.c_str(),a.c_str(),700,0,700,700,0,700));
-            }
-             std::string b="Hit expected"+ std::to_string( (long long int) it->first +1 );
-            if(it->second==positional) {
-                Distribution_exp.push_back(new TH2F(b.c_str(),b.c_str(),700,0,700,700,0,700));
-            } else {
-                Distribution_exp.push_back(new TH2F(b.c_str(),b.c_str(),700,0,700,700,0,700));
+                Distribution_hits.push_back(new TH2F(a.c_str(),a.c_str(),100,0,100,100,0,100));
+                Distribution_exp.push_back(new TH2F(b.c_str(),b.c_str(),100,0,100,100,0,100));
+                Efficiency_pads.push_back(new TH2F(c.c_str(),c.c_str(),100,0,100,100,0,100));
+                Efficiency_asics.push_back(new TH2F(d.c_str(),d.c_str(),100,0,100,100,0,100));
+                
+                HowLongFromExpectedX.push_back(new TH1F(e.c_str(),e.c_str(),2*(_dlimforPad),-_dlimforPad,_dlimforPad));
+                HowLongFromExpectedY.push_back(new TH1F(f.c_str(),f.c_str(),2*(_dlimforPad),-_dlimforPad,_dlimforPad));
+                Multiplicity_pads.push_back(new TH2F(g.c_str(),g.c_str(),100,0,100,100,0,100));
             }
             //Correlations.push_back(new TH2F(b.c_str(),b.c_str(),200,0,200,200,0,200));
 
         }
-
+        
 
 
     } else {
@@ -424,10 +482,10 @@ void AnalysisProcessor::init()
 
 void AnalysisProcessor::processEvent( LCEvent * evtP )
 { 
+    _NbrRun=evtP->getRunNumber();
     _eventNr=evtP->getEventNumber();
     eventnbrr=_eventNr;
     if(_eventNr %1000 ==0)std::cout<<"Event Number : "<<_eventNr<<std::endl;
-    _NbrRun=evtP->getRunNumber();
     NbrRunn=_NbrRun;
     Plans.clear();
     if (evtP != nullptr) {
@@ -474,23 +532,66 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 
 void AnalysisProcessor::end()
 {
-    
+    for(std::map<std::vector<int>,std::vector<int>>::iterator it=Efficiency_per_pad.begin();it!=Efficiency_per_pad.end();++it)
+    {
+        unsigned int was_at_least_a_hit=0;
+        unsigned int number_of_hits=0;
+        for(unsigned int i =0;i!=(it->second).size();++i)
+	{
+                
+		if(it->second[i]>0)
+                {
+			 was_at_least_a_hit++;
+			 number_of_hits+=it->second[i];
+                         //std::cout<<red<<was_at_least_a_hit<<"  "<<number_of_hits<<normal<<std::endl;
+		}
+	}
+        //std::cout<<it->first[0]<<"  "<<it->first[1]<<"  "<<it->first[2]-1<<"  "<<was_at_least_a_hit*1.0/(it->second).size()<<"  "<<number_of_hits*1.0/was_at_least_a_hit<<std::endl;
+        Efficiency_pads[it->first[2]-1]->Fill(it->first[0],it->first[1],was_at_least_a_hit*1.0/(it->second).size());
+        if(was_at_least_a_hit!=0)Multiplicity_pads[it->first[2]-1]->Fill(it->first[0],it->first[1],number_of_hits*1.0/was_at_least_a_hit);
+    }
     std::cout<<"List of counters : "<<std::endl;
     for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->print();
     std::string b="Results_Analysis_"+std::to_string( (long long int) _NbrRun)+".root";
     TFile *hfile = new TFile(b.c_str(),"RECREATE");
     tt->Write();
-    for(unsigned int i=0; i<Distribution_hits.size(); ++i) {
+    Distribution_exp_tgraph->Write();
+    Distribution_hits_tgraph->Write();
+    for(unsigned int i =0 ;i!=HowLongFromExpectedX.size();++i)
+    {
+        std::string plate="Plate "+ patch::to_string(i+1);
+   	hfile->mkdir(plate.c_str(),plate.c_str());
+    	hfile->cd(plate.c_str());
+	HowLongFromExpectedX[i]->Write();
+    	HowLongFromExpectedY[i]->Write();
         Distribution_hits[i]->Write();
         Distribution_exp[i]->Write();
-        //Correlations[i]->Write();
+        Efficiency_pads[i]->Write();
+        Multiplicity_pads[i]->Write();
     }
+    
     for(unsigned int i=0; i<Distribution_hits.size(); ++i) {
         delete Distribution_hits[i];
         delete Distribution_exp[i];
+        delete HowLongFromExpectedX[i];
+        delete HowLongFromExpectedY[i];
+        delete Efficiency_pads[i];
+        delete Multiplicity_pads[i];
         //delete Correlations[i];
     }
+    delete Distribution_hits_tgraph;
+    delete Distribution_exp_tgraph;
     hfile->Close();
     delete hfile;
+    delete Branch1;
+    delete Branch2;
+    delete Branch3;
+    delete Branch4;
+    delete Branch5;
+    delete Branch6;
     PrintStat();
+    /*for(std::map<std::vector<int>,std::vector<int>>::iterator it=Efficiency_per_pad.begin();it!=Efficiency_per_pad.end();++it)
+	{
+		std::cout<<it->first[0]<<"  "<<it->first[1]<<"  "<<it->first[2]<<"  "<<it->second.size()<<std::endl;
+	}*/
 }

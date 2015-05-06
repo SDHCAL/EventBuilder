@@ -8,6 +8,7 @@
 #include <cmath>
 #include "UTIL/CellIDDecoder.h"
 #include <map>
+#include <array>
 #define degtorad 0.0174532925
 class plan;
 class testedPlan
@@ -118,6 +119,15 @@ public:
     {
         nombreTests=nombreTestsOK=sommeNombreHits=0;
     }
+    inline float get_ca(){return ca;};
+    inline float get_sa(){return sa;};
+    inline float get_cb(){return cb;};
+    inline float get_sb(){return sb;};
+    inline float get_cg(){return cg;};
+    inline float get_sg(){return sg;};
+    inline float get_X0(){return X0;};
+    inline float get_Y0(){return Y0;};
+    inline float get_Z0(){return Z0;};
     void testYou(std::map<int,plan>& mapDIFplan);
     void print();
 private:
@@ -231,7 +241,7 @@ public:
     {
         return _type;
     }
-    inline int countHitAt(double& x, double& y, double dlim);
+    inline int countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax);
     inline int countHitAtStrip(double& x, double dlim);
     void GivePoint();
 private:
@@ -240,10 +250,11 @@ private:
     double barycentre[3];
     double min[3];
     double max[3];
+    
 };
 
 
-
+std::map<std::vector<int>,std::vector<int>>Efficiency_per_pad;
 double _Chi2;
 unsigned int _eventNr;
 int _ShortEfficiency;
@@ -272,7 +283,7 @@ protected:
     std::string _FileNameGeometry;
     int _eventNr;
     int _NbrRun;
-
+    
     Geometry geom;
     std::string _ReaderType;
     std::map<int,plan>Plans;
