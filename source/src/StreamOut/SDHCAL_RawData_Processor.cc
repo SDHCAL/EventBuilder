@@ -3,6 +3,7 @@
 #include <string>
 #include <cstdlib>
 #include <cmath>
+#include <cstdint>
 #include <iomanip>
 #include <assert.h>
 #include "Colors.h"
@@ -147,7 +148,7 @@ void SDHCAL_RawData_Processor::init()
                 std::string name2="Times_given_by_TDC_Asics_2"+patch::to_string(it->first);
                 HistoTimeAsic1.insert ( std::pair<int,TH1F*>(it->first,new TH1F(name1.c_str(),name1.c_str(),501,-250,250)) );
                 HistoTimeAsic2.insert ( std::pair<int,TH1F*>(it->first,new TH1F(name2.c_str(),name2.c_str(),501,-250,250)) );
-                BCID_old.insert(std::pair<int,unsigned long long int>(it->first,0));
+                BCID_old.insert(std::pair<int,unsigned int>(it->first,0));
             }
         }
     } else {
@@ -166,7 +167,6 @@ void SDHCAL_RawData_Processor::processRunHeader( LCRunHeader* run)
 
 void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
 {
-
     IMPL::LCFlagImpl chFlag(0) ;
     EVENT::LCIO bitinfo;
     chFlag.setBit(bitinfo.RCHBIT_LONG );// raw calorimeter data -> format long //(sert a qq chose?)
@@ -223,9 +223,8 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
             _SizeAfterDIFPtr[bufferNavigator.getSizeAfterDIFPtr()]++;
 
             //Make something with the Tcherenkov signal
-            long long unsigned difAbsoluteBCID = (d->getAbsoluteBCID() - BCID_old[d->getID()]);
-            //std::cout<<blue<<d->getAbsoluteBCID()<<"  "<<BCID_old[d->getID()]<<"  "<<d->getAbsoluteBCID() - BCID_old[d->getID()]<<normal<<std::endl;
-            long long unsigned rolling=(difAbsoluteBCID/16777216)*16777216;
+            unsigned int difAbsoluteBCID = (d->getAbsoluteBCID() - BCID_old[d->getID()]);
+            unsigned int rolling=(difAbsoluteBCID/16777216)*16777216;
             BCID_old[d->getID()]=d->getAbsoluteBCID();
             //if(rolling>0) std::cout<<red<<rolling<<normal<<std::endl;
             if(geom.GetDifType(d->getID())==tcherenkov) 
@@ -349,10 +348,11 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
                         hit->setCellID0((unsigned long int)ID0);
                         hit->setCellID1(ID1);
                         hit->setAmplitude(ThStatus.to_ulong());
-                        unsigned long long int TTT = (unsigned long int)(d->getFrameTimeToTrigger(i));
+                        //unsigned int TTT = (unsigned int)(d->getFrameTimeToTrigger(i));
                         //hit->setTimeStamp(TTT);		      		//Time stamp of this event from Run Begining
-                        unsigned long int Tjj=  d->getBCID()-d->getFrameBCID(i)+rolling;
+                        unsigned int Tjj=  d->getBCID()-d->getFrameBCID(i)+rolling;
                         hit->setTimeStamp(Tjj);
+                       //if(hit->getTimeStamp()<0)std::cout<<red<<rolling<<"  "<<Tjj<<"  "<<hit->getTimeStamp()<<"  "<<TTT<<"  "<<d->getBCID()<<"  "<<d->getFrameBCID(i)<<"  "<<d->getBCID()-d->getFrameBCID(i)<<normal<<std::endl;
                         //std::cout<<yellow<<TTT<<"  "<<Tjj<<normal<<std::endl;
                         RawVec->addElement(hit);
                     }//for (uint32_t j=0;j<64;j++)
@@ -382,7 +382,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
             //streamlog_out(DEBUG) << "End of Data remaining stuff : ";
             if(streamlog::out.write< streamlog::DEBUG >() ) eod.printBuffer( 0 , streamlog::out() );
             int nonzeroCount=0;
-            for (unsigned char* it=eod.buffer(); it != eod.endOfBuffer(); it++) if (int(*it) !=0) nonzeroCount++;
+            for (uint8_t* it=eod.buffer(); it != eod.endOfBuffer(); it++) if (int(*it) !=0) nonzeroCount++;
             _NonZeroValusAtEndOfData[nonzeroCount]++;
         } //for (int iel=0; iel<nElement; iel++)
     } catch(DataNotAvailableException &e) {
