@@ -4,7 +4,8 @@
 #include <string>
 #include <bitset>
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
+#include <cstdint>
 #include "DIFUnpacker.h"
 using namespace std;
 
@@ -26,7 +27,7 @@ public:
      @param DIdi DIF id
      @param buf Pointer to the Raw data buffer
    */
-  DIFSlowControl(unsigned int version,unsigned short DIdi,unsigned char *buf);
+  DIFSlowControl(unsigned int version,unsigned short DIdi,uint8_t *buf);
 
   //! Default Cosntructor
   DIFSlowControl(){}
@@ -57,9 +58,9 @@ public:
   void Dump();
 private:
   //! Fill hardROC 1 map
-  void FillHR1(int header_shift,unsigned char *cbuf);
+  void FillHR1(int header_shift,uint8_t *cbuf);
   //! Fill hardRoc 2 map
-  void FillHR2(int header_shift,unsigned char *cbuf);
+  void FillHR2(int header_shift,uint8_t *cbuf);
   //! read Asic HR1 type
   void FillAsicHR1(bitset<72*8> &bs);
 
@@ -77,7 +78,7 @@ private:
 class DIFPtr
 {
 public:
- DIFPtr(unsigned char* p,uint32_t max_size) : theDIF_(p),theSize_(max_size)
+ DIFPtr(uint8_t* p,uint32_t max_size) : theDIF_(p),theSize_(max_size)
   {
     theFrames_.clear();theLines_.clear();
     try
@@ -89,10 +90,10 @@ public:
 	std::cout<<"DIF "<<getID()<<" T ? "<<hasTemperature()<<" " <<e<<std::endl;
       }
   }
-  inline unsigned char* getPtr(){return theDIF_;}
+  inline uint8_t* getPtr(){return theDIF_;}
   inline uint32_t getGetFramePtrReturn() {return theGetFramePtrReturn_;}
-  inline std::vector<unsigned char*>& getFramesVector(){return theFrames_;}
-  inline std::vector<unsigned char*>& getLinesVector(){return theLines_;}
+  inline std::vector<uint8_t*>& getFramesVector(){return theFrames_;}
+  inline std::vector<uint8_t*>& getLinesVector(){return theLines_;}
   inline  uint32_t getID(){return DIFUnpacker::getID(theDIF_);}
   inline  uint32_t getDTC(){return DIFUnpacker::getDTC(theDIF_);}
   inline  uint32_t getGTC(){return DIFUnpacker::getGTC(theDIF_);}
@@ -110,7 +111,7 @@ public:
   inline  bool hasTemperature(){return DIFUnpacker::hasTemperature(theDIF_);}
   inline  bool hasAnalogReadout(){return DIFUnpacker::hasAnalogReadout(theDIF_);}
   inline uint32_t getNumberOfFrames(){return theFrames_.size();}
-  inline unsigned char* getFramePtr(uint32_t i){return theFrames_[i];}
+  inline uint8_t* getFramePtr(uint32_t i){return theFrames_[i];}
   inline uint32_t getFrameAsicHeader(uint32_t i){return DIFUnpacker::getFrameAsicHeader(theFrames_[i]);}
   inline uint32_t getFrameBCID(uint32_t i){return DIFUnpacker::getFrameBCID(theFrames_[i]);}
   inline uint32_t getFrameTimeToTrigger(uint32_t i){return getBCID()-getFrameBCID(i);}
@@ -132,10 +133,10 @@ public:
   }
 
  private:
-  unsigned char* theDIF_;
+  uint8_t* theDIF_;
   uint32_t theSize_;
   uint32_t theGetFramePtrReturn_;
-  std::vector<unsigned char*> theFrames_;
-  std::vector<unsigned char*> theLines_;
+  std::vector<uint8_t*> theFrames_;
+  std::vector<uint8_t*> theLines_;
 };
 #endif

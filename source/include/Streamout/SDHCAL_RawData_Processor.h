@@ -10,25 +10,25 @@
 #include "DIFSlowControl.h"
 #include "IMPL/LCFlagImpl.h"
 #include <UTIL/LCTOOLS.h>
-
+#include <cstdint>
 
 
 
 using namespace lcio ;
 using namespace marlin ;
 
-class SDHCAL_buffer : public std::pair<unsigned char*, uint32_t>
+class SDHCAL_buffer : public std::pair<uint8_t*, uint32_t>
 {
 public:
-    SDHCAL_buffer(unsigned char* b, uint32_t i) : pair<unsigned char*, uint32_t>(b,i)
+    SDHCAL_buffer(uint8_t* b, uint32_t i) : pair<uint8_t*, uint32_t>(b,i)
     {
         ;
     }
-    unsigned char* buffer()
+    uint8_t* buffer()
     {
         return first;
     }
-    unsigned char* endOfBuffer()
+    uint8_t* endOfBuffer()
     {
         return first+second;
     }
@@ -60,9 +60,9 @@ public:
     {
         return _intVec.empty() ? NULL : &_intVec[0];
     }
-    unsigned char* getCharBuffer()
+    uint8_t* getCharBuffer()
     {
-        return (unsigned char*) getIntBuffer();
+        return (uint8_t*) getIntBuffer();
     }
     unsigned int nBytes()
     {
@@ -91,7 +91,7 @@ public:
     {
         return _DIFstartIndex;
     }
-    unsigned char* getDIFBufferStart()
+    uint8_t* getDIFBufferStart()
     {
         return &(_buffer.buffer()[_DIFstartIndex]);
     }

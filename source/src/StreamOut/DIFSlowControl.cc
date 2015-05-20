@@ -1,7 +1,5 @@
 #include "Streamout/DIFSlowControl.h"
-#include <iostream>
-#include <stdio.h>
-void DIFSlowControl::FillHR1(int header_shift,unsigned char *cbuf)
+void DIFSlowControl::FillHR1(int header_shift,uint8_t *cbuf)
 {  
   //  int scsize1=cbuf[header_shift-1]*72+(header_shift-1)+2;
   int nasic = cbuf[header_shift-1]; int idx=header_shift;
@@ -27,7 +25,7 @@ void DIFSlowControl::FillHR1(int header_shift,unsigned char *cbuf)
     }
 }
 
-void DIFSlowControl::FillHR2(int header_shift,unsigned char *cbuf)
+void DIFSlowControl::FillHR2(int header_shift,uint8_t *cbuf)
 {  
   // int scsize1=cbuf[header_shift-1]*109+(header_shift-1)+2;
   int nasic = cbuf[header_shift-1]; int idx=header_shift;
@@ -54,7 +52,7 @@ void DIFSlowControl::FillHR2(int header_shift,unsigned char *cbuf)
     }
 }
 
-DIFSlowControl::DIFSlowControl(unsigned int vers,unsigned short DIdi,unsigned char *cbuf)
+DIFSlowControl::DIFSlowControl(unsigned int vers,unsigned short DIdi,uint8_t *cbuf)
 {
   _DIFId=DIdi;
   _version=vers;

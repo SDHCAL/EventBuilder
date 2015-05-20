@@ -2,7 +2,7 @@
 #define DIFUnpacker_h
 #include <string>
 #include <vector>
-#include <stdint.h>
+#include <cstdint>
 
 #define DU_DATA_FORMAT_VERSION 13
 
@@ -34,29 +34,29 @@
 class DIFUnpacker {
 public:
   static unsigned long long GrayToBin(unsigned long long n);
-  static uint32_t getStartOfDIF(unsigned char* cbuf,uint32_t size_buf,uint32_t start=92);
-  static uint32_t getID(unsigned char* cb,uint32_t idx=0);
-  static uint32_t getDTC(unsigned char* cb,uint32_t idx=0);
-  static uint32_t getGTC(unsigned char* cb,uint32_t idx=0);
-  static unsigned long long getAbsoluteBCID(unsigned char* cb,uint32_t idx=0);
-  static uint32_t getBCID(unsigned char* cb,uint32_t idx=0);
-  static uint32_t getLines(unsigned char* cb,uint32_t idx=0);
-  static bool hasLine(uint32_t line,unsigned char* cb,uint32_t idx=0);
-  static uint32_t getTASU1(unsigned char* cb,uint32_t idx=0);
-  static uint32_t getTASU2(unsigned char* cb,uint32_t idx=0);
-  static uint32_t getTDIF(unsigned char* cb,uint32_t idx=0);
-  static bool hasTemperature(unsigned char* cb,uint32_t idx=0);
-  static bool hasAnalogReadout(unsigned char* cb,uint32_t idx=0);
-  static uint8_t getFrameData(unsigned char* framePtr,uint32_t ip);
-  static uint32_t getFrameAsicHeader(unsigned char* framePtr);
-  static uint32_t getFrameBCID(unsigned char* framePtr);
-  static bool getFramePAD(unsigned char* framePtr,uint32_t ip);
-  static bool getFrameLevel(unsigned char* framePtr,uint32_t ip,uint32_t level);
+  static uint32_t getStartOfDIF(uint8_t* cbuf,uint32_t size_buf,uint32_t start=92);
+  static uint32_t getID(uint8_t* cb,uint32_t idx=0);
+  static uint32_t getDTC(uint8_t* cb,uint32_t idx=0);
+  static uint32_t getGTC(uint8_t* cb,uint32_t idx=0);
+  static unsigned long long getAbsoluteBCID(uint8_t* cb,uint32_t idx=0);
+  static uint32_t getBCID(uint8_t* cb,uint32_t idx=0);
+  static uint32_t getLines(uint8_t* cb,uint32_t idx=0);
+  static bool hasLine(uint32_t line,uint8_t* cb,uint32_t idx=0);
+  static uint32_t getTASU1(uint8_t* cb,uint32_t idx=0);
+  static uint32_t getTASU2(uint8_t* cb,uint32_t idx=0);
+  static uint32_t getTDIF(uint8_t* cb,uint32_t idx=0);
+  static bool hasTemperature(uint8_t* cb,uint32_t idx=0);
+  static bool hasAnalogReadout(uint8_t* cb,uint32_t idx=0);
+  static uint8_t getFrameData(uint8_t* framePtr,uint32_t ip);
+  static uint32_t getFrameAsicHeader(uint8_t* framePtr);
+  static uint32_t getFrameBCID(uint8_t* framePtr);
+  static bool getFramePAD(uint8_t* framePtr,uint32_t ip);
+  static bool getFrameLevel(uint8_t* framePtr,uint32_t ip,uint32_t level);
   
-  static uint32_t getAnalogPtr(std::vector<unsigned char*> &vLines,unsigned char* cb,uint32_t idx=0) throw (std::string);
-  static uint32_t getFramePtr(std::vector<unsigned char*> &vFrame,std::vector<unsigned char*> &vLines,uint32_t max_size,unsigned char* cb,uint32_t idx=0) throw (std::string);
-  static void dumpFrameOld(unsigned char* buf);
-  static unsigned long swap_bytes(unsigned int n,unsigned char* buf); //Stolen from DCBufferReader
+  static uint32_t getAnalogPtr(std::vector<uint8_t*> &vLines,uint8_t* cb,uint32_t idx=0) throw (std::string);
+  static uint32_t getFramePtr(std::vector<uint8_t*> &vFrame,std::vector<uint8_t*> &vLines,uint32_t max_size,uint8_t* cb,uint32_t idx=0) throw (std::string);
+  static void dumpFrameOld(uint8_t* buf);
+  static unsigned long swap_bytes(unsigned int n,uint8_t* buf); //Stolen from DCBufferReader
   
 };
 #endif
