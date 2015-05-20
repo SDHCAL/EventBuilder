@@ -6,7 +6,6 @@
 #include "marlin/Processor.h"
 #include "UTIL/LCTOOLS.h"
 #include "UTIL/CellIDEncoder.h"
-#include "TGraph2D.h"
 #include <EVENT/LCGenericObject.h>
 #include "IMPL/LCCollectionVec.h"
 #include "IMPL/LCEventImpl.h"
@@ -18,6 +17,7 @@
 #include "Colors.h"
 #include "TBranch.h"
 #include "TObject.h"
+#include "TCanvas.h"
 #ifndef COLORS_H
 #define normal " "
 #define red "  "
@@ -28,7 +28,6 @@
 #include "Reader/ReaderFactory.h"
 #include "Reader/Reader.h"
 #include "Trivent/Mapping.h"
-#include "TGraph.h"
 #include "Trivent/HistoPlane.h"
 #include "TStyle.h"
 #include "TF1.h"
@@ -38,7 +37,18 @@
 #include "TColor.h"
 #include "TMath.h"
 #include "Patch.h"
+#include "TMarker.h"
+#include "TColor.h"
+#include "TNamed.h"
+#include "THnSparse.h"
 
+/*const UInt_t Number = 4;
+Double_t Red[Number]   = { 0.0, 1.0,0.0, 1.0 };
+Double_t Green[Number] = { 0.0, 0.0,1.0, 1.0 };
+Double_t Blue[Number]  = { 1.0, 0.0,0.0, 1.0 };
+Double_t Stops[Number] = { 0.0, 0.50,0.99, 1.0 };
+int nb=1000000;
+Int_t a=TColor::CreateGradientColorTable(Number,Stops,Red,Green,Blue,nb);*/
 using namespace marlin;
 #define degtorad 0.0174532925
 unsigned int EventsNoise=0;
@@ -50,12 +60,102 @@ unsigned int _eventNr=0;
 #define size_strip 2.5
 
 unsigned long long int HistoPlane::global_total_time =0;
-//Double_t my_transfer_function(const Double_t *x, const Double_t * /*param*/)
-//{
-//   if (*x ==0)return 0.00;
-//   else return 1.0;
-//}
+//std::map<int,TGraphTime*>time_graph;
+int bin[3]={110,110,700};
+int bin2[3]={100,100,1000};
+double xmin[3]={0,0,0};
+double xmax[3]={110,110,700};
+double xmin2[3]={0,0,0};
+double xmax2[3]={1000,1000,1000};
+Double_t transfer_function(const Double_t *x, const Double_t * /*param*/)
+{
+   if (*x <=0)return 0.00;
+   else if(*x<=0.1) return 0.1;
+   else if(*x<=0.2) return 0.2;
+   else if(*x<=0.3) return 0.3;
+   else if(*x<=0.4) return 0.4;
+   else if(*x<=0.5) return 0.5;
+   else if(*x<=0.6) return 0.6;
+   else if(*x<=0.7) return 0.7;
+   else if(*x<=0.8) return 0.8;
+   else if(*x<=0.9) return 0.9;
+   else return 1.0;
+}
 
+void Make_good_TH3(TH3* t)
+{
+ for(int i = 1; i <= t->GetNbinsX(); ++i)
+    {
+        	for(int j = 1; j <= t->GetNbinsY(); ++j)
+        	{
+            		for(int k = 1; k <= t->GetNbinsZ(); ++k)
+            		{
+                                
+                		if(t->GetBinContent(i, j, k)!=0) t->SetBinContent(i, j, k,TMath::Log(t->GetBinContent(i, j, k)));
+                                //std::cout<<hist->GetBinContent(i, j, k)<<std::endl;
+            		}
+        	}
+    }
+    long int val=0;
+    for(int i = 1; i <= t->GetNbinsX(); ++i)
+    {
+        	for(int j = 1; j <= t->GetNbinsY(); ++j)
+        	{
+            		for(int k = 1; k <= t->GetNbinsZ(); ++k)
+            		{
+                                
+                		val += t->GetBinContent(i, j, k);
+            		}
+        	}
+    }
+    for(int i = 1; i <= t->GetNbinsX(); ++i)
+    {
+        	for(int j = 1; j <= t->GetNbinsY(); ++j)
+        	{
+            		for(int k = 1; k <= t->GetNbinsZ(); ++k)
+            		{
+                                
+                		if(t->GetBinContent(i, j, k)!=0) t->SetBinContent(i, j, k,t->GetBinContent(i, j, k)*1.0/val);
+                                //std::cout<<hist->GetBinContent(i, j, k)<<std::endl;
+            		}
+        	}
+    }
+    double min=99999;
+    double max=-1;
+    for(int i = 1; i <= t->GetNbinsX(); ++i)
+    {
+        	for(int j = 1; j <= t->GetNbinsY(); ++j)
+        	{
+            		for(int k = 1; k <= t->GetNbinsZ(); ++k)
+            		{
+                                
+                		if(t->GetBinContent(i, j, k)!=0) 
+				{
+					if(t->GetBinContent(i, j, k)<min)min=t->GetBinContent(i, j, k);
+					if(t->GetBinContent(i, j, k)>max)max=t->GetBinContent(i, j, k);
+				}
+                                //std::cout<<hist->GetBinContent(i, j, k)<<std::endl;
+            		}
+        	}
+    }
+    for(int i = 1; i <= t->GetNbinsX(); ++i)
+    {
+        	for(int j = 1; j <= t->GetNbinsY(); ++j)
+        	{
+            		for(int k = 1; k <= t->GetNbinsZ(); ++k)
+            		{
+                                
+                		if(t->GetBinContent(i, j, k)!=0) t->SetBinContent(i, j, k,t->GetBinContent(i, j, k)*1.0/max);
+                                //std::cout<<hist->GetBinContent(i, j, k)<<std::endl;
+            		}
+        	}
+    }
+}
+
+THnSparseI hs("Noise", "Noise", 3, bin, xmin, xmax);
+THnSparseI hs2("Events", "Events", 3, bin, xmin, xmax);
+THnSparseD hss("Noise_2", "Noise_2", 3, bin2, xmin2, xmax2);
+THnSparseD hss2("Events_2", "Events_2", 3, bin2, xmin2, xmax2);
 //TH3F* hist=NULL;
 //TH3F* histt=NULL; 
 //TH3F* histtt=NULL;
@@ -141,7 +241,6 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
     for(unsigned int j=0; j<HistoPlanes.size(); ++j) Times_Plates.emplace_back(std::map<int,int>());
     for(std::vector<RawCalorimeterHit *>::iterator it=vec.begin(); it!=vec.end(); ++it) {
 
-       
         CalorimeterHitImpl* caloHit = new CalorimeterHitImpl();
         int dif_id  = (*it)->getCellID0() & 0xFF ;
         
@@ -205,6 +304,11 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
             HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Events")->Fill((*it)->getTimeStamp(),1);
         }
         if(IsNoise==1) {
+            //TMarker *m = new TMarker(I*10.4125,J*10.4125,21);
+            //m->SetMarkerColor(kRed);
+            //m->SetMarkerSize(1.4125);
+            //time_graph[geom.GetDifNbrPlate(dif_id)-1]->Add(m,_eventNr);
+            //time_graph[geom.GetDifNbrPlate(dif_id)-1]->Add(new TPaveLabel(.90,.92,.98,.97,Form("%d",_eventNr),"brNDC"),_eventNr);
             HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise")->Fill(I,J);
             if(geom.GetDifType(dif_id)==positional)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_Asic")->Fill(asic_id,asic_id);
             else HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_Asic")->Fill((AsicShiftI[asic_id]+geom.GetDifPositionX(dif_id))/8,(32-AsicShiftJ[asic_id]+geom.GetDifPositionY(dif_id))/8);
@@ -237,10 +341,21 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
         //else totree.pEvent=1;
         caloHit->setPosition(pos);
         cd.setCellID( caloHit ) ;
-        /*if(IsNoise==1) 
+        double fill[3]={double(I),double(J),double(10*K)};
+        double fill2[3]={pos[0],pos[1],pos[2]};
+        if(IsNoise==1) 
         {
-        	hist->Fill(I,J,10*K,1);
-        }*/
+                
+                hs.Fill(fill,1);
+                hss.Fill(fill2,1);
+        	//hist->Fill(I,J,10*K,1);
+        }
+        //else histt->Fill(I,J,10*K,1);
+        else 
+        {
+        	hs2.Fill(fill,1);
+		hss2.Fill(fill2,1);
+	}
         //int a,b,c,d;
         //if(Delimiter.find(dif_id)==Delimiter.end()){a=Delimiter[1][0];b=Delimiter[1][1];c=Delimiter[1][2];d=Delimiter[1][3];}
         //else {a=Delimiter[dif_id][0];b=Delimiter[dif_id][1];c=Delimiter[dif_id][2];d=Delimiter[dif_id][3];}
@@ -341,12 +456,17 @@ void TriventProcessor::init()
     if(myReader) {
         myReader->Read(_FileNameGeometry,geom);
         geom.PrintGeom();
-        //hist=new TH3F("g","g",50,0,50,50,0,50,10*geom.GetNumberPlates()+1,10,10*geom.GetNumberPlates()+1);
+        //hist=new TH3F("g","g",110,0,110,110,0,110,10*geom.GetNumberPlates()+1,10,10*geom.GetNumberPlates()+1);
+        //histt=new TH3F("gg","gg",110,0,110,110,0,110,10*geom.GetNumberPlates()+1,10,10*geom.GetNumberPlates()+1);
         //histt=new TH3F("fg","fg",100,0,100,100,0,100,10*geom.GetNumberPlates()+1,10,10*geom.GetNumberPlates()+1);
         //histtt=new TH3F("ffg","ffg",100,0,100,100,0,100,10*geom.GetNumberPlates()+1,10,10*geom.GetNumberPlates()+1);
         //histt->GetListOfFunctions()->Add(tf);
         //histtt->GetListOfFunctions()->Add(tf);
+        //TF1 * tf = new TF1("TransferFunction", transfer_function);
         //hist->GetListOfFunctions()->Add(tf);
+        //hs.GetListOfFunctions()->Add(tf);
+        //histt->GetListOfFunctions()->Add(tf);
+        //hs2.GetListOfFunctions()->Add(tf);
         std::map<int, Dif > Difs=geom.GetDifs();
         //std::map<int,int> PlansType;
         unsigned int NbrPlate =0;
@@ -361,6 +481,7 @@ void TriventProcessor::init()
                 {
 		  //HistoPlane a(_WantDistribution,NbrPlate,geom.GetDifsInPlane(NbrPlate),geom.GetSizeX(NbrPlate),geom.GetSizeY(NbrPlate),th1,th2,th2_Asic);
                   HistoPlanes.insert(std::make_pair(NbrPlate, new HistoPlane(_WantDistribution,NbrPlate,geom.GetDifsInPlane(NbrPlate),geom.GetSizeX(NbrPlate),geom.GetSizeY(NbrPlate),th1,th2,th2_Asic)));
+                  //time_graph.insert(std::make_pair(NbrPlate,new TGraphTime(10000,0,0,600,600)));
 		}
                
             }
@@ -547,9 +668,55 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 
 void TriventProcessor::end()
 {  
+    
     std::string name="Results_Trivent_"+ patch::to_string(_NbrRun)+".root";
     TFile *hfile = new TFile(name.c_str(),"RECREATE","Results");
+    /*for(std::map<int,TGraphTime*>::iterator it=time_graph.begin();it!=time_graph.end();++it)
+    {
+        std::string name = "a"+to_string(it->first);
+        it->second->SetSleepTime(200);
+        it->second->Write(name.c_str());
+    }*/
     //t->Write();
+   
+       TF1 * tf = new TF1("TransferFunction", transfer_function);
+    hs.Write();
+    hs2.Write();
+    int coord[3];
+    double total=0;
+    double max=0;
+    TH3D* h1= hs.Projection(2,1,0);
+    TH3D* h2= hss.Projection(2,1,0);
+    Make_good_TH3(h1);
+    Make_good_TH3(h2);
+    h1->GetListOfFunctions()->Add(tf);
+    h2->GetListOfFunctions()->Add(tf);
+    h1->Write();
+    h2->Write();
+    /*    for(unsigned int i=0;i!=hs2.GetNbins();++i)
+    {
+         double value=TMath::Log(hs2.GetBinContent(i,coord));
+	 hs2.SetBinContent(coord,value);
+    }
+    for(unsigned int i=0;i!=hss2.GetNbins();++i)
+    {
+         double value=TMath::Log(hss2.GetBinContent(i,coord));
+	 hss2.SetBinContent(coord,value);
+    }*/
+    TH3D* h12= hs2.Projection(2,1,0);
+    TH3D* h22= hss2.Projection(2,1,0);
+    Make_good_TH3(h12);
+    Make_good_TH3(h22);
+    h12->GetListOfFunctions()->Add(tf);
+   h22->GetListOfFunctions()->Add(tf);
+    h12->Write();
+   h22->Write();
+    delete tf;
+    delete h1;
+    delete h2;
+    delete h12;
+    delete h22;
+
     for(unsigned int i=0; i<HistoPlanes.size(); ++i) 
     {
     	HistoPlanes[i]->Save(hfile);
@@ -564,49 +731,9 @@ void TriventProcessor::end()
     //delete Branch8;
     //delete Branch9;
     //delete Branch10;
+
     //hist->Write();
-    /*for(int i = 1; i <= hist->GetNbinsX(); ++i)
-    {
-        	for(int j = 1; j <= hist->GetNbinsY(); ++j)
-        	{
-            		for(int k = 1; k <= hist->GetNbinsZ(); ++k)
-            		{
-                                
-                		val += hist->GetBinContent(i, j, k);
-            		}
-        	}
-    }  */
-    //TF1* tf =new TF1("TransferFunction", my_transfer_function);
-	//hist->GetListOfFunctions()->Add(tf);
-    /*for(int i = 1; i <= hist->GetNbinsX(); ++i)
-    {
-        	for(int j = 1; j <= hist->GetNbinsY(); ++j)
-        	{
-            		for(int k = 1; k <= hist->GetNbinsZ(); ++k)
-            		{
-                                
-                		hist->SetBinContent(i, j, k,hist->GetBinContent(i, j, k));
-                                std::cout<<hist->GetBinContent(i, j, k)<<std::endl;
-            		}
-        	}
-    } */ 
-
-
-    /*for(int i = 1; i <= hist->GetNbinsX(); ++i)
-    {
-        	for(int j = 1; j <= hist->GetNbinsY(); ++j)
-        	{
-            		for(int k = 1; k <= hist->GetNbinsZ(); ++k)
-            		{
-                                
-                		float val = hist->GetBinContent(i, j, k);
-                		 if(val>=40) hist->SetBinContent(i, j, k, 0);
-            		}
-        	}
-    } */
-    
     //histt->Write();
-    //hist->Write();
     //histtt->Write();
     //tf->Write();
     //delete Branch11;
@@ -619,6 +746,7 @@ void TriventProcessor::end()
     std::cout <<TouchedEvents<<" Events were overlaping "<<"("<<(TouchedEvents*1.0/(TouchedEvents+eventtotal))*100<<"%)"<<std::endl;
     std::cout <<"Total nbr Events : "<<eventtotal<<" Events with nbr of plates >="<<_LayerCut<<" : "<<EventsSelected<<" ("<<EventsSelected*1.0/eventtotal*100<<"%)"<< std::endl;
     for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Total Time "<<i+1<<" : "<<HistoPlanes[i]->Get_Total_Time()*200e-9<<"  "; std::cout<<std::endl;
+    std::cout<<green<<"Time global : "<<HistoPlanes[0]->Get_Global_Total_Time()*200e-9<<normal<<std::endl;
     for(std::map<int,bool>::iterator it=Warningg.begin(); it!=Warningg.end(); it++) std::cout<<red<<"REMINDER::Data from Dif "<<it->first<<" are skipped !"<<normal<<std::endl;
     for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Mean noise in plane "<<i+1<<" : "<<HistoPlanes[i]->Get_Means()<<" Hz.cm-2 "; std::cout<<std::endl;
     if(_LayerCut==-1) for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Efficiency "<<i<<" : "<<HistoPlanes[i]->Efficiency()<<"  "; std::cout<<std::endl;
