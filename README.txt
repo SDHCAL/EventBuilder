@@ -1,7 +1,7 @@
 ########################################
 # README file for EventBuilder package
 # @author Haddad Yacine, Arnaud Steen, Lagarde Francois, Grenier Gerald, Eté Rémi
-# @version 0.9.9 13/02/2015
+# @version 1.0.RC 20/05/2015
 # @copyright IPNL, CNRS
 ########################################
 
