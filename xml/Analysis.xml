@@ -1,6 +1,6 @@
 <marlin>
 	<execute>
-	<processor name="MyAnalysisProcessor"/>
+	<processor name="Analysis"/>
         </execute>
         <global>
         	<parameter name="LCIOInputFiles">
@@ -26,7 +26,7 @@
                 <parameter name="SupressCheck" value="false"/>
               	<parameter name="Verbosity" type="string">MESSAGE0 </parameter>
 	</global>
-	<processor name="MyAnalysisProcessor" type="AnalysisProcessorType">
+	<processor name="Analysis" type="AnalysisProcessorType">
         	<parameter name="FileNameGeometry" value="./DetectorGeometry/Dome.xml"/>
         	<parameter name="ReaderType" value="XMLReader"/>
         	<parameter name="Chi2" value="10"/>

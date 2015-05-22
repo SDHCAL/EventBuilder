@@ -1,6 +1,6 @@
 <marlin>
   <execute>
-    <processor name="MyTriventProcessor"/>
+    <processor name="Trivent"/>
   </execute>
 
 	<global>
@@ -23,7 +23,7 @@ FILE
 
   </global>
 
-  <processor name="MyTriventProcessor" type="TriventProcessorType">
+  <processor name="Trivent" type="TriventProcessorType">
     <parameter name="FileNameGeometry" value="./DetectorGeometry/Dome105.xml"/>
     <parameter name="ReaderType" value="XMLReader"/>
     <parameter name="LayerCut" value="3" />
