@@ -47,6 +47,10 @@ protected:
     int _noiseCut;
     int _LayerCut;
     int _TriggerTime;
+    int _GlobalEvents;
+    int _maxRecord;
+    int _rolling;
+    int _skip;
     bool _WantDistribution;
     bool _WantCalibration;
     std::string _Database_name;

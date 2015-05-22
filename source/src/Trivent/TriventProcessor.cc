@@ -3,6 +3,7 @@
 #include <string>
 #include <cstdlib>
 #include <cmath>
+#include <cstdint>
 #include "marlin/Processor.h"
 #include "UTIL/LCTOOLS.h"
 #include "UTIL/CellIDEncoder.h"
@@ -41,7 +42,14 @@
 #include "TColor.h"
 #include "TNamed.h"
 #include "THnSparse.h"
-
+#include "marlin/Global.h"
+#include "IO/LCReader.h"
+#include "IMPL/LCTOOLS.h"
+#include "EVENT/LCRunHeader.h" 
+#include <algorithm> 
+#include "EVENT/SimCalorimeterHit.h" 
+#include "EVENT/CalorimeterHit.h" 
+#include "EVENT/RawCalorimeterHit.h" 
 /*const UInt_t Number = 4;
 Double_t Red[Number]   = { 0.0, 1.0,0.0, 1.0 };
 Double_t Green[Number] = { 0.0, 0.0,1.0, 1.0 };
@@ -185,6 +193,8 @@ std::vector<std::string  > th1 {"Time_Distr","Hits_Distr","Time_Distr_Events","H
 std::vector<std::string> th2 {"Flux_Noise","Flux_Events"};
 std::vector<std::string>th2_Asic{"Flux_Noise_Asic","Flux_Events_Asic"};
 int _NbrRun=0;
+TH1D* timestamp=nullptr;
+TH1D* time2read=nullptr;
 void TriventProcessor::FillTimes()
 {
     bool eraseFirst=false;
@@ -439,6 +449,111 @@ void TriventProcessor::processRunHeader( LCRunHeader* run)
 
 void TriventProcessor::init()
 {
+    
+    _maxRecord= Global::parameters->getIntVal("MaxRecordNumber")-1;
+    _skip= Global::parameters->getIntVal("SkipNEvents");
+    std::vector<std::string>LCIOFiles;
+    Global::parameters->getStringVals("LCIOInputFiles" ,LCIOFiles );
+    std::map<unsigned long long int,int>Time_stamps;
+    for(unsigned int i =0;i!=LCIOFiles.size();++i) 
+    {
+      std::cout<<"I'm Readind The DATA in "<<LCIOFiles[i]<<std::endl;
+      
+    }
+    int32_t timetime=0;
+    LCReader* lcReader = LCFactory::getInstance()->createLCReader() ;
+    std::vector<std::string>colee{"DHCALRawHits"};
+    std::string namea="DHCALRawHits";
+    lcReader->setReadCollectionNames( colee ) ;
+    
+    for(unsigned int i=0;i!=LCIOFiles.size();++i)
+    {
+    	LCEvent* evt(0) ;
+      	lcReader->open( LCIOFiles[i] ) ;
+      	_GlobalEvents=lcReader->getNumberOfEvents()-1;
+      	std::cout<<lcReader->getNumberOfRuns()<<" "<<lcReader->getNumberOfEvents()<<std::endl;
+        evt=lcReader->readNextEvent();
+      	do
+        {
+        	
+            	LCCollection* col=evt->getCollection("DHCALRawHits");
+                if(col!=nullptr)
+            	//for(unsigned int hit=0;hit<col->getNumberOfElements();++hit)
+	    	//{
+		{
+            		RawCalorimeterHit * myhit = dynamic_cast<RawCalorimeterHit*>(col->getElementAt(/*hit*/0)) ;
+            		//std::cout<<blue<<myhit->getCellID0()<<"  "<<std::endl;
+            		unsigned int dif_id=myhit->getCellID0()&0xFF;
+                	if (dif_id==0) return;
+        		std::string name="DIF"+patch::to_string(dif_id)+"_Triggers";
+                	//std::cout<<name<<std::endl;
+        		lcio::IntVec vTrigger;
+        		col->getParameters().getIntVals(name,vTrigger);
+        		unsigned long long _bcid=0;
+        		if (vTrigger.size()>=5)
+        		{
+        			unsigned long long Shift=16777216ULL;
+  	        		_bcid=vTrigger[4]*Shift+vTrigger[3];
+        		}
+                        Time_stamps[_bcid]++;
+		}
+		//}
+                evt=lcReader->readNextEvent();
+	}while(evt!=nullptr);
+      	lcReader->close();
+      	delete lcReader ;
+    }
+    unsigned long long int min=Time_stamps[0];
+    unsigned long long int  max=Time_stamps[0];
+    double min_between=99999;
+    double max_between=0;
+    double Mean=0;
+    std::vector<double>Vec_timebetween;
+    Vec_timebetween.reserve(Time_stamps.size()-1);
+    std::map<unsigned long long int,int>::iterator ultimate=--Time_stamps.end();
+    for(std::map<unsigned long long int,int>::iterator it=Time_stamps.begin();it!=Time_stamps.end();++it)
+    {
+        
+        if(it!=ultimate)
+        {
+        	std::map<unsigned long long int,int>::iterator itt=it;
+		++itt;
+        	double timebetween=(itt->first-it->first)*200e-9;
+        	if(timebetween<min_between)min_between=timebetween;
+        	if(timebetween>max_between)max_between=timebetween;
+        	Mean+=timebetween;
+        	Vec_timebetween.push_back(timebetween);
+	}
+	if(it->first<min)min=it->first;
+        if(it->first>max)max=it->first;
+    }
+    
+    int diff=int((max-min)*200e-8)+1;
+    timestamp= new TH1D("timestamp","timestamp",diff,0,int(max*200e-9)+1);
+    int diffbetween=(int((max_between-min_between))+1)*100;
+    time2read = new TH1D("Distribution time between 2 read out","Distribution time between 2 read out",diffbetween,min_between,max_between);
+    for(std::map<unsigned long long int,int>::iterator it=Time_stamps.begin();it!=Time_stamps.end();++it)
+    {
+        double in= it->first*200e-9;
+        timestamp->Fill(in);
+        
+    }
+    for(unsigned int i =0;i<Vec_timebetween.size();++i)
+    {
+	time2read->Fill(Vec_timebetween[i]);
+        std::cout<<Vec_timebetween[i]<<"  "<<diffbetween<<"  "<<min_between<<"  "<<max_between<<std::endl;
+    }
+    std::cout<<min<<"   "<<max<<"  "<<(max-min)*200e-9<<std::endl;
+    if(_maxRecord<=0) _rolling=1000;
+    else if(_maxRecord<=10) _rolling=1;
+    else if(_maxRecord<=100) _rolling=10;
+    else if(_maxRecord<=1000) _rolling=100;
+    else  _rolling=1000;
+    
+    /*if ( (Global::parameters->getStringVals("LCIOInputFiles" ,LCIOFiles ) ).size() == 0 )
+    {
+      std::cout<<"I'm Reading "<<
+    }*/
     printParameters();
     if(_WantCalibration==true&&_Database_name ==""){std::cout<<red<<"Name's Database is unknown from the xml file"<<normal<<std::endl;std::exit(1);}
     if(_LayerCut==-1){std::cout<<red<<"LayerCut set to -1, assuming that you want to use trigger to see events"<<normal<<std::endl;}
@@ -499,9 +614,37 @@ void TriventProcessor::processEvent( LCEvent * evtP )
   if (nullptr == evtP) return;
 
   _NbrRun=evtP->getRunNumber();
-  _eventNr=evtP->getEventNumber();
-  if(_eventNr %1000 ==0)std::cout<<"Event Number : "<<_eventNr<<std::endl;
-
+  _eventNr=evtP->getEventNumber()+1;
+  int skip=0;
+  if(_skip!=0)skip=_skip+1;
+  int maxRecordplusskip=0;
+  if(_maxRecord+skip>=_GlobalEvents) 
+  {
+     
+     maxRecordplusskip=_GlobalEvents;
+  }else maxRecordplusskip=_maxRecord+skip;
+  if(_maxRecord>=_GlobalEvents)_maxRecord=_GlobalEvents ;
+  
+  if(_eventNr %_rolling ==0 || _eventNr==_GlobalEvents || _eventNr==maxRecordplusskip )
+  {
+        
+	if(_maxRecord==-1)
+	{
+		std::cout<<red<<"[";
+                int percent=int((_eventNr-skip)*100.0/(_GlobalEvents-skip));
+                if(percent<10)std::cout<<"  ";
+   		if(percent>=10&&percent!=100)std::cout<<" ";
+		std::cout<<percent<<"%]"<<normal<<" Event Number : "<<_eventNr<<"/"<<_GlobalEvents<<std::endl;
+	}
+        else 
+	{
+		std::cout<<red<<"[";
+		int percent=int((_eventNr-skip)*100.0/(_maxRecord));
+		if(percent<10)std::cout<<"  ";
+                if(percent>=10&&percent!=100)std::cout<<" ";
+		std::cout<<percent<<"%]"<<normal<<" Event Number : "<<_eventNr<<"/"<<maxRecordplusskip<<" Total : "<<_GlobalEvents<<std::endl;
+	}
+  }
   LCCollection* col2 = evtP ->getCollection("DHCALRawTimes");
   RawTimeDifs.clear();
   if(col2!=nullptr) 
@@ -523,6 +666,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	_trig_count++;
 	break;
       }
+ 
     processCollection(evtP,col);
   }
 } 
@@ -680,6 +824,10 @@ void TriventProcessor::end()
     //t->Write();
    
        TF1 * tf = new TF1("TransferFunction", transfer_function);
+    timestamp->Write();
+     delete timestamp;
+    time2read->Write();
+    delete time2read;
     hs.Write();
     hs2.Write();
     int coord[3];
@@ -787,7 +935,7 @@ void TriventProcessor::end()
     if(Negative.size()!=0)
     {
 	std::cout<<red<<"WARNING !!! : Negative Value(s) of timeStamp found. They are written in Negative_Values.txt"<<normal<<std::endl;
-        std::ofstream fileNeg( "Negative_Values.txt", std::ios_base::out ); 
+        std::ofstream fileNeg( "Negative_Values"+patch::to_string(_NbrRun)+".txt", std::ios_base::out ); 
 	for(std::map<std::vector<unsigned int>,std::map< int, int>>::iterator it=Negative.begin();it!=Negative.end();++it)
     	{
 		fileNeg<<"Dif_Id : "<<it->first[0]<<" Asic_Id : "<<it->first[1]<<" Channel_Id : "<<it->first[2];
