@@ -1,6 +1,6 @@
 <marlin>
 	<execute>
-		<processor name="MySDHCAL_RawData_Processor"/>
+		<processor name="Streamout"/>
                 <processor name="MyLCIOOutputProcessor"/>
         </execute>
 	<global>
@@ -17,7 +17,7 @@
                 <parameter name="SupressCheck" value="false"/>
                	<parameter name="Verbosity" type="string">SILENT</parameter>
 	</global>
-	<processor name="MySDHCAL_RawData_Processor" type="SDHCAL_RawData_Processor">
+	<processor name="Streamout" type="Streamout">
         	<!--SDHCAL_RawData_Processor prints info on the Raw data-->
         	<!--verbosity level of this processor ("DEBUG0-4,MESSAGE0-4,WARNING0-4,ERROR0-4,SILENT")-->
 		<!--XDAQ produced collection name-->

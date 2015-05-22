@@ -1,17 +1,17 @@
-#ifndef SDHCAL_RawData_Processor_h
-#define SDHCAL_RawData_Processor_h 1
+#ifndef Streamout_h
+#define Streamout_h 1
 
 #include "marlin/Processor.h"
 #include "lcio.h"
-#include <IMPL/LCGenericObjectImpl.h>
+#include "IMPL/LCGenericObjectImpl.h"
 #include <string>
 #include <map>
 #include "Geometry/Geometry.h"
 #include "DIFSlowControl.h"
 #include "IMPL/LCFlagImpl.h"
-#include <UTIL/LCTOOLS.h>
+#include "UTIL/LCTOOLS.h"
 #include <cstdint>
-
+#include "marlin/Global.h"
 
 
 using namespace lcio ;
@@ -138,18 +138,18 @@ private:
 };
 
 
-class SDHCAL_RawData_Processor : public Processor
+class Streamout : public Processor
 {
 
 public:
 
     virtual Processor*  newProcessor()
     {
-        return new SDHCAL_RawData_Processor ;
+        return new Streamout ;
     }
 
 
-    SDHCAL_RawData_Processor() ;
+    Streamout() ;
 
     /** Called at the begin of the job before anything is read.
      * Use to initialize the processor, e.g. book histograms.
@@ -194,7 +194,10 @@ private:
     /** Parameters
      */
     int _BitsToSkip;
-
+    int _GlobalEvents;
+    int _maxRecord;
+    int _rolling;
+    int _skip;
     //statistical counters
     unsigned int _nevt;
     std::map<int,int> _CollectionSizeCounter;

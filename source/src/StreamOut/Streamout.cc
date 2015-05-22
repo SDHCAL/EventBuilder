@@ -1,4 +1,4 @@
-#include "Streamout/SDHCAL_RawData_Processor.h"
+#include "Streamout/Streamout.h"
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -13,11 +13,19 @@
 #include <UTIL/LCTOOLS.h>
 #include "IMPL/LCCollectionVec.h"
 #include "IMPL/LCFlagImpl.h"
+#include "IMPL/LCParametersImpl.h"
 #include "IMPL/RawCalorimeterHitImpl.h"
 #include "IMPL/CalorimeterHitImpl.h"
 #include "TH1F.h"
 #include "TFile.h"
 #include <bitset>
+#include "UTIL/LCTOOLS.h"
+#include "UTIL/CellIDEncoder.h"
+#include <EVENT/LCGenericObject.h>
+#include "IMPL/LCCollectionVec.h"
+#include "IMPL/LCEventImpl.h"
+#include "IMPL/CalorimeterHitImpl.h"
+#include <IMPL/LCRunHeaderImpl.h>
 // ----- include for verbosity dependend logging ---------
 #include "marlin/VerbosityLevels.h"
 #include "Reader/ReaderFactory.h"
@@ -106,12 +114,12 @@ SDHCAL_buffer SDHCAL_RawBuffer_Navigator::getEndOfAllData()
     } else return SDHCAL_buffer( &(getDIFBufferStart()[getEndOfDIFData()]), getSizeAfterDIFPtr()-3 ); //remove the 2 bytes for CRC and the DIF trailer
 }
 
-SDHCAL_RawData_Processor aSDHCAL_RawData_Processor;
+Streamout aStreamout;
 
-SDHCAL_RawData_Processor::SDHCAL_RawData_Processor() : Processor("SDHCAL_RawData_Processor")
+Streamout::Streamout() : Processor("Streamout")
 {
     // modify processor description
-    _description = "SDHCAL_RawData_Processor converts SDHCAL Raw Data into collection of RawCalorimeterHit and RawCalorimeterTime and TcherenkovSignal" ;
+    _description = "Streamout converts SDHCAL Raw Data into collection of RawCalorimeterHit and RawCalorimeterTime and TcherenkovSignal" ;
     // register steering parameters: name, description, class-variable, default value
     bool debugDefault=false;
     _debugMode=false;
@@ -133,8 +141,40 @@ SDHCAL_RawData_Processor::SDHCAL_RawData_Processor() : Processor("SDHCAL_RawData
     registerProcessorParameter("TcherenkovSignalDuration","Duration of the Tcherenkov Signal",_TcherenkovSignalDuration,_TcherenkovSignalDuration);
 }
 
-void SDHCAL_RawData_Processor::init()
+void Streamout::init()
 {
+    LCEvent* evt(0) ;
+    _maxRecord= Global::parameters->getIntVal("MaxRecordNumber")-1;
+    _skip= Global::parameters->getIntVal("SkipNEvents");
+    std::vector<std::string>LCIOFiles;
+    Global::parameters->getStringVals("LCIOInputFiles" ,LCIOFiles );
+    std::vector<std::string>colec{_XDAQCollectionNames};
+    LCReader* lcReader = LCFactory::getInstance()->createLCReader();
+    lcReader->setReadCollectionNames( colec ) ;
+    _GlobalEvents=-1;
+    for(unsigned int i=0;i!=LCIOFiles.size();++i)
+    {
+      lcReader->open( LCIOFiles[i] ) ;
+      LCEvent* evt(0) ;
+      do
+      {
+       _GlobalEvents++ ;
+       //std::cout<<_GlobalEvents<<std::endl;
+       evt = lcReader->readNextEvent() ;
+      } while(evt!=nullptr);
+      lcReader->close();
+      delete evt;
+            
+    }
+    delete lcReader ;
+    //std::vector<std::string>colec{"RU_XDAQ"};
+    //lcReader->setReadCollectionNames( colec ) ;
+    //_GlobalEvents=lcReader->getNumberOfEvents();
+    if(_maxRecord<=0) _rolling=1000;
+    else if(_maxRecord<=10) _rolling=1;
+    else if(_maxRecord<=100) _rolling=10;
+    else if(_maxRecord<=1000) _rolling=100;
+    else  _rolling=1000;
     printParameters() ;
     ReaderFactory readerFactory;
     Reader* myReader = readerFactory.CreateReader(_ReaderType);
@@ -159,13 +199,13 @@ void SDHCAL_RawData_Processor::init()
     //Prepare a flag to tag data type in RawVec (dit les types de data qu'on va enregistrer?)
 }
 
-void SDHCAL_RawData_Processor::processRunHeader( LCRunHeader* run)
+void Streamout::processRunHeader( LCRunHeader* run)
 {
     LCTOOLS::dumpRunHeader(run);
 
 }
 
-void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
+void Streamout::processEvent( LCEvent * evt )
 {
     IMPL::LCFlagImpl chFlag(0) ;
     EVENT::LCIO bitinfo;
@@ -174,14 +214,43 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
     chFlag.setBit(bitinfo.RCHBIT_ID1 );// cell ID
     chFlag.setBit(bitinfo.RCHBIT_TIME );//timestamp
     chFlag.setBit(bitinfo.RCHBIT_ENERGY_ERROR);
+    //chFlag.setBit(bitinfo.LCINTVEC);
     lcio::IntVec trig(8);
     IMPL::LCCollectionVec *RawVec=new IMPL::LCCollectionVec(LCIO::RAWCALORIMETERHIT) ;
     IMPL::LCCollectionVec *RawVecTime=new IMPL::LCCollectionVec(LCIO::CALORIMETERHIT) ;
     IMPL::LCCollectionVec *RawVecTcherenkov=new IMPL::LCCollectionVec(LCIO::LCGENERICOBJECT) ;
     RawVec->setFlag(chFlag.getFlag());
     RawVecTime->setFlag(chFlag.getFlag());
-    _eventNr=evt->getEventNumber();
-    if(_eventNr %1000 ==0)std::cout<<"Event Number : "<<_eventNr<<std::endl;
+    _eventNr=evt->getEventNumber()+1;
+  int skip=0;
+  if(_skip!=0)skip=_skip+1;
+  int maxRecordplusskip=0;
+   if(_maxRecord+skip>=_GlobalEvents) 
+  {
+     
+     maxRecordplusskip=_GlobalEvents;
+     
+  }else maxRecordplusskip=_maxRecord+skip;
+  if(_maxRecord>=_GlobalEvents)_maxRecord=_GlobalEvents ;
+  if(_eventNr %_rolling ==0 || _eventNr==_GlobalEvents || _eventNr==maxRecordplusskip )
+  {
+    	if(_maxRecord==-1)
+	{
+		std::cout<<red<<"[";
+                int percent=int((_eventNr-skip)*100.0/(_GlobalEvents-skip));
+                if(percent<10)std::cout<<"  ";
+   		if(percent>=10&&percent!=100)std::cout<<" ";
+		std::cout<<percent<<"%]"<<normal<<" Event Number : "<<_eventNr<<"/"<<_GlobalEvents<<std::endl;
+	}
+        else 
+	{
+		std::cout<<red<<"[";
+		int percent=int((_eventNr-skip)*100.0/(_maxRecord));
+		if(percent<10)std::cout<<"  ";
+                if(percent>=10&&percent!=100)std::cout<<" ";
+		std::cout<<percent<<"%]"<<normal<<" Event Number : "<<_eventNr<<"/"<<maxRecordplusskip<<" Total : "<<_GlobalEvents<<std::endl;
+	}
+  }
     _NbrRun=evt->getRunNumber();
     _nevt++;
 
@@ -355,11 +424,11 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
                        //if(hit->getTimeStamp()<0)std::cout<<red<<rolling<<"  "<<Tjj<<"  "<<hit->getTimeStamp()<<"  "<<TTT<<"  "<<d->getBCID()<<"  "<<d->getFrameBCID(i)<<"  "<<d->getBCID()-d->getFrameBCID(i)<<normal<<std::endl;
                         //std::cout<<yellow<<TTT<<"  "<<Tjj<<normal<<std::endl;
                         RawVec->addElement(hit);
+                        
                     }//for (uint32_t j=0;j<64;j++)
                 }//for (uint32_t i=0;i<d->getNumberOfFrames();i++)
                 //register Triggers'time : lots of values here ?
             }
-
             trig[0] = d->getDTC();
             trig[1] = d->getGTC();
             trig[2] = d->getBCID();
@@ -368,10 +437,9 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
             trig[5] = d->getTASU1(); //what happen if no temperature ?
             trig[6] = d->getTASU2();
             trig[7] = d->getTDIF();
-            std::stringstream ss("");
-            ss<<"DIF"<<d->getID()<<"_Triggers";
-            RawVec->parameters().setValues(ss.str(),trig);
-            RawVecTime->parameters().setValues(ss.str(),trig);
+            std::string ss ="DIF"+patch::to_string(d->getID())+"_Triggers";
+            RawVec->parameters().setValues(ss,trig);
+            RawVecTime->parameters().setValues(ss,trig);
             if (bufferNavigator.hasSlowControlData()) _hasSlowControl++;
             if (bufferNavigator.badSCData())  _hasBadSlowControl++;
             SDHCAL_buffer eod=bufferNavigator.getEndOfAllData();
@@ -393,7 +461,7 @@ void SDHCAL_RawData_Processor::processEvent( LCEvent * evt )
     evt->addCollection(RawVecTcherenkov,_TcherenkovSignal);
 }
 
-void SDHCAL_RawData_Processor::printCounter(std::string description, std::map<int,int> &m)
+void Streamout::printCounter(std::string description, std::map<int,int> &m)
 {
     streamlog_out(MESSAGE) << " statistics for " << description << " : ";
     for (std::map<int,int>::iterator it=m.begin(); it != m.end(); it++) {
@@ -403,7 +471,7 @@ void SDHCAL_RawData_Processor::printCounter(std::string description, std::map<in
     streamlog_out(MESSAGE) << std::endl;
 }
 
-void SDHCAL_RawData_Processor::end()
+void Streamout::end()
 {
     if(HistoTimeAsic1.size()!=0) {
         std::string name="TimeGivenByTDC_"+ patch::to_string(_NbrRun)+".root";
