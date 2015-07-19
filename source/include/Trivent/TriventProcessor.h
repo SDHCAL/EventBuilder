@@ -11,8 +11,10 @@
 #include <EVENT/LCRunHeader.h>
 #include "UTIL/LCTOOLS.h"
 #include "Trivent/HistoPlane.h"
-//std::string _Delimiters;
-//std::map<int ,std::vector<double> >Delimiter;
+#include <set>
+#include <string>
+
+
 class TriventProcessor : public marlin::Processor
 {
 public:
@@ -27,8 +29,9 @@ public:
     void processEvent(EVENT::LCEvent *evtP);
     void processRunHeader( LCRunHeader* run);
     void end();
-    void FillTimes();
-    void FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollectionVec* col,CellIDEncoder<CalorimeterHitImpl>& cd,bool IsNoise);
+    inline void FillTimes();
+    void FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollectionVec* col,CellIDEncoder<CalorimeterHitImpl>& cd,int IsNoise);
+    void FillIJK(std::vector<RawCalorimeterHit *>vec);
 private:
     void processCollection(EVENT::LCEvent *evtP,LCCollection* col);    
 protected:
@@ -41,6 +44,7 @@ protected:
     std::vector<std::string> _hcalCollections;
     LCWriter* _EventWriter;
     LCWriter* _NoiseWriter;
+    unsigned int TouchedEvents;
     int _timeWin;
     int _eventNr;
     int _trig_count;
@@ -48,17 +52,27 @@ protected:
     int _LayerCut;
     int _TriggerTime;
     int _GlobalEvents;
-    int _maxRecord;
-    int _rolling;
+    std::string _Delimiters;
+    unsigned int _maxRecord;
+    unsigned int eventtotal;
+    unsigned int _rolling;
     int _skip;
+    double _efficiencyFrontScintillator;
+    int _IgnorebeginningSpill;
+    double _efficiencyBackScintillator;
     bool _WantDistribution;
     bool _WantCalibration;
+    bool _Spill_Study;
     std::string _Database_name;
     std::map<int,int>Times;
+    unsigned int _Front_scintillator;
+    unsigned int _Back_scintillator;
+    unsigned int _Both_scintillator;
     //std::vector<std::map<int,int> >Times_Plates_perRun;
     std::map< int,std::vector<EVENT::RawCalorimeterHit*> > RawHits;
     std::map< int,std::vector<EVENT::RawCalorimeterHit*> > BehondTrigger;
     std::vector<RawCalorimeterHit *>EventsGrouped;
+    std::vector<RawCalorimeterHit *>EventsGroupedScin;
     std::map< int,std::vector<EVENT::RawCalorimeterHit*> > RawTimeDifs;
     float pos[3];
     std::map<int,bool>Warningg;
@@ -66,8 +80,8 @@ protected:
     std::map<int,HistoPlane*>HistoPlanes;
     void save_calibration(std::string filename);
     void read_calibration(std::string filename);
+    std::map<int ,std::vector<double> >Delimiter;
 };
-
 
 
 #endif

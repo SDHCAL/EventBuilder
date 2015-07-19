@@ -130,6 +130,8 @@ Streamout::Streamout() : Processor("Streamout")
     registerOutputCollection( LCIO::RAWCALORIMETERHIT,"OutputCaloHitTimeCollectionName","Name of output collection containing Times",_RawHitCollectionNameTime,std::string("DHCALRawTimes"));
     _TcherenkovSignal="";
     registerOutputCollection( LCIO::LCGENERICOBJECT,"OutputTcherenkovCollectionName","Name of output collection containing Tcherenkov signal",_TcherenkovSignal,std::string("Tcherenkov"));
+    _ScintillatorSignal="";
+    registerOutputCollection( LCIO::LCGENERICOBJECT,"OutputScintillatorCollectionName","Name of output collection containing Scintillators signal",_ScintillatorSignal,std::string("Scintillator"));
     _nevt=_nWrongObj=_nProcessedObject=_hasSlowControl=_hasBadSlowControl=0;
     _ReaderType="";
     registerProcessorParameter("ReaderType","Type of the Reader needed to read InFileName",_ReaderType ,_ReaderType);
@@ -163,10 +165,10 @@ void Streamout::init()
        evt = lcReader->readNextEvent() ;
       } while(evt!=nullptr);
       lcReader->close();
-      delete evt;
+      //delete evt;
             
     }
-    delete lcReader ;
+    //delete lcReader ;
     //std::vector<std::string>colec{"RU_XDAQ"};
     //lcReader->setReadCollectionNames( colec ) ;
     //_GlobalEvents=lcReader->getNumberOfEvents();
@@ -219,6 +221,7 @@ void Streamout::processEvent( LCEvent * evt )
     IMPL::LCCollectionVec *RawVec=new IMPL::LCCollectionVec(LCIO::RAWCALORIMETERHIT) ;
     IMPL::LCCollectionVec *RawVecTime=new IMPL::LCCollectionVec(LCIO::CALORIMETERHIT) ;
     IMPL::LCCollectionVec *RawVecTcherenkov=new IMPL::LCCollectionVec(LCIO::LCGENERICOBJECT) ;
+    IMPL::LCCollectionVec *RawVecScintillator=new IMPL::LCCollectionVec(LCIO::LCGENERICOBJECT) ;
     RawVec->setFlag(chFlag.getFlag());
     RawVecTime->setFlag(chFlag.getFlag());
     _eventNr=evt->getEventNumber()+1;
@@ -331,6 +334,46 @@ void Streamout::processEvent( LCEvent * evt )
              
             }
 
+	    ///Scintillator ones
+	    if(geom.GetDifType(d->getID())==scintillator) 
+	    {
+                std::set<unsigned int>Scin;
+                
+                for(unsigned int i=0;i<d->getNumberOfFrames();++i)
+		{
+                   
+                   Scin.insert(d->getFrameTimeToTrigger(i));
+                        bool FrontScintillator=false;
+			bool BackScintillator=false;
+                	bool Both=false;
+                        IMPL::LCGenericObjectImpl* Scintillator= new IMPL::LCGenericObjectImpl(4,0,0) ;
+                        if (d->getFrameLevel(i,15,0)) {FrontScintillator=true;}
+                        if (d->getFrameLevel(i,15,1)) {BackScintillator=true;}
+                        if (FrontScintillator&&BackScintillator) {Both=true;}
+                        Scintillator->setIntVal(0,FrontScintillator);
+                        Scintillator->setIntVal(1,BackScintillator);
+                        Scintillator->setIntVal(2,Both);
+                        int fff=d->getBCID()-d->getFrameBCID(i)+rolling;
+                        Scintillator->setIntVal(3,fff);
+                        RawVecScintillator->addElement(Scintillator);
+                        //std::cout<<Scintillator->getIntVal(0)<<"  "<<Scintillator->getIntVal(1)<<"  "<<Scintillator->getIntVal(2)<<"  "<<Scintillator->getIntVal(3)<<"  "<<std::endl;
+                   
+                }
+                /*for(std::set<unsigned int>::iterator it=Tche.begin();it!=Tche.end();++it) 
+                {
+			std::cout<<yellow<<(*it)<<"  "<<normal<<"  ";
+                        //if(it==Tche.begin()||(*it)>*(--it)+6) Tche2.insert(*++it);
+		}*/
+
+            }
+
+
+
+
+
+
+
+             /////
             //if Difs are temporal ones -> createCalorimeterHit
             
             else if(geom.GetDifType(d->getID())==temporal) {
@@ -459,6 +502,7 @@ void Streamout::processEvent( LCEvent * evt )
     evt->addCollection(RawVec,_RawHitCollectionName);
     evt->addCollection(RawVecTime,_RawHitCollectionNameTime);
     evt->addCollection(RawVecTcherenkov,_TcherenkovSignal);
+    evt->addCollection(RawVecScintillator,_ScintillatorSignal);
 }
 
 void Streamout::printCounter(std::string description, std::map<int,int> &m)
@@ -473,14 +517,16 @@ void Streamout::printCounter(std::string description, std::map<int,int> &m)
 
 void Streamout::end()
 {
+    TFile *hfile=nullptr;
     if(HistoTimeAsic1.size()!=0) {
         std::string name="TimeGivenByTDC_"+ patch::to_string(_NbrRun)+".root";
-        TFile *hfile = new TFile(name.c_str(),"RECREATE","Results");
+         hfile = new TFile(name.c_str(),"RECREATE","Results");
         for(std::map<int, TH1F* >::iterator it=HistoTimeAsic1.begin(); it!=HistoTimeAsic1.end(); ++it) it->second->Write();
         for(std::map<int, TH1F* >::iterator it=HistoTimeAsic2.begin(); it!=HistoTimeAsic2.end(); ++it) it->second->Write();
         hfile->Close();
-        delete hfile;
+        
     }
+    delete hfile;
     streamlog_out(MESSAGE) << "FINAL STATISTICS : " << std::endl;
     streamlog_out(MESSAGE) << " runs for " << _nevt << " events." << std::endl;
     printCounter("Size of GenericObject collections",_CollectionSizeCounter);

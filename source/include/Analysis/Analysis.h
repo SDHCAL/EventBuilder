@@ -128,7 +128,7 @@ public:
     inline float get_X0(){return X0;};
     inline float get_Y0(){return Y0;};
     inline float get_Z0(){return Z0;};
-    void testYou(std::map<int,plan>& mapDIFplan);
+    void testYou(std::map<int,plan>& mapDIFplan,bool IsScinti);
     void print();
 private:
     int Nbr;
@@ -241,8 +241,8 @@ public:
     {
         return _type;
     }
-    inline int countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax);
-    inline int countHitAtStrip(double& x, double dlim);
+    inline int countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,bool IsScinti);
+    inline int countHitAtStrip(double& x, double dlim,bool IsScinti);
     void GivePoint();
 private:
     int _type;
@@ -255,12 +255,15 @@ private:
 
 
 std::map<std::vector<int>,std::vector<int>>Efficiency_per_pad;
+std::map<std::vector<int>,std::vector<int>>Efficiency_per_padScinti;
 double _Chi2;
 unsigned int _eventNr;
+unsigned int _eventNrSC;
 int _ShortEfficiency;
 int _NbrHitPerPlaneMax ;
 int _NbrPlaneUseForTracking ;
 double _dlimforPad;
+bool IsScinti;
 double _dlimforStrip;
 std::map<int ,std::vector<double> >Delimiter;
 std::string _Delimiters;
@@ -270,13 +273,13 @@ class AnalysisProcessor : public marlin::Processor
 public:
     AnalysisProcessor();
     ~AnalysisProcessor();
-    void PrintStat();
-    void PrintStatShort();
+    void PrintStat(bool IsScinti);
+    void PrintStatShort(bool IsScinti);
     marlin::Processor *newProcessor(){return new AnalysisProcessor();}
     void init();
     void processEvent(EVENT::LCEvent *evtP);
-    void processRunHeader( LCRunHeader* run);
     void end();
+    
 protected:
     std::vector<std::string> _hcalCollections;
     LCWriter* _EventWriter;
@@ -287,6 +290,8 @@ protected:
     Geometry geom;
     std::string _ReaderType;
     std::map<int,plan>Plans;
+    std::map<int,plan>PlansScintillator;
     std::vector<testedPlan> testedPlanList;
+    std::vector<testedPlan> testedPlanListScinti;
 };
 #endif

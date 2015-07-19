@@ -3,7 +3,7 @@
 #include "marlin/VerbosityLevels.h"
 #include "Reader/XMLReader.h"
 #include "Colors.h"
-
+#include"Types.h"
 void XMLReader::Write(TiXmlElement* elem,const char* who,unsigned int &wherePlate,unsigned int &whereDif,double& var,std::string &FileName)
 {
 	if(elem->Attribute(who)!=NULL) var=atof(elem->Attribute(who));
@@ -72,10 +72,12 @@ void XMLReader::Read(std::string &FileName, Geometry& geom)
 	      }
 	  }if(Diff->Attribute("DifType")!=NULL)
 	     {
-	       if(strcmp(Diff->Attribute("DifType"), "temporal") == 0) DifType=2;
-	       else if (strcmp(Diff->Attribute("DifType"), "positional") == 0) DifType=1;
-	       else if (strcmp(Diff->Attribute("DifType"), "tcherenkov") == 0) DifType=3;
-	       else if (strcmp(Diff->Attribute("DifType"), "tricot") == 0) DifType=4;
+	       if(strcmp(Diff->Attribute("DifType"), "temporal") == 0) DifType=temporal;
+	       else if (strcmp(Diff->Attribute("DifType"), "positional") == 0) DifType=positional;
+	       else if (strcmp(Diff->Attribute("DifType"), "tcherenkov") == 0) DifType=tcherenkov;
+	       else if (strcmp(Diff->Attribute("DifType"), "tricot") == 0) DifType=tricot;
+               else if (strcmp(Diff->Attribute("DifType"), "scintillator") == 0) DifType=scintillator;
+               else if (strcmp(Diff->Attribute("DifType"), "pad") == 0) DifType=pad;
 	       else
 		 {
 		   DifType=-1;std::cout<<"Error defining the use of the Dif (temporal,posicional,tcherenkov,tricot)"<<std::endl;

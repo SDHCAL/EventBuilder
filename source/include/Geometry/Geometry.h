@@ -6,7 +6,8 @@
 #include"Plate.h"
 #include"Dif.h"
 #include"Patch.h"
-enum Types {pad,positional,temporal,tcherenkov,tricot};
+#include"Types.h"
+//enum Types {pad,positional,temporal,tcherenkov,tricot,scintillator};
 
 
 class Geometry
@@ -39,7 +40,7 @@ class Geometry
   inline const double GetPlatePositionZ(const unsigned int& i){ return Plates[i].GetPositionZ();};
   inline const int GetDifNbrPlate( const int& i){ if(Difs.find(i)==Difs.end())return -1; else return ((Difs.find(i))->second).GetNbrPlate();};
   inline const int GetDifType( const int& i){ return ((Difs.find(i))->second).GetDifType();};
-  inline const std::string GetDifTypeName( const int& i){std::vector<std::string>Types_names{"Pad","Positional","Temporal","Tcherenkov","Tricot"};if(Difs.find(i)==Difs.end())return "Unknown Difs";else return Types_names[((Difs.find(i))->second).GetDifType()];};
+  inline const std::string GetDifTypeName( const int& i){std::vector<std::string>Types_names{"Pad","Positional","Temporal","Tcherenkov","Tricot","Scintillator"};if(Difs.find(i)==Difs.end())return "Unknown Difs";else return Types_names[((Difs.find(i))->second).GetDifType()];};
   inline const int GetDifUpDown( int& i){ return ((Difs.find(i))->second).GetDifUpDown();};
   inline const unsigned int GetNumberDifs(){return Difs.size();};
   inline const unsigned int GetNumberPlates(){return Plates.size();};

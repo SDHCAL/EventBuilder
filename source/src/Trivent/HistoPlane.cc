@@ -10,6 +10,9 @@
 #include "Patch.h"
 #include "TROOT.h"
 #include <array>
+#include "TCanvas.h"
+#include "TPDF.h"
+TCanvas* canvas = new  TCanvas("canvas");
 
 HistoPlane::HistoPlane(bool Distr,int NbrPlate,std::vector<int>Difs_Names,int SizeX, int SizeY, std::vector< std::string  >& vec_name_th1,std::vector< std::string >& vec_name_th2,std::vector< std::string >& vec_name_th2_Asic):_Distr(Distr),NbrPlatee(NbrPlate),Means(0),Nbrof0Hits(0),local_max(-1),local_min(99999999),total_time(0),_SizeX(SizeX),_SizeY(SizeY),_Difs_Names(Difs_Names)
 {       
@@ -67,7 +70,7 @@ HistoPlane::HistoPlane(bool Distr,int NbrPlate,std::vector<int>Difs_Names,int Si
                 if (gROOT->FindObject(addnbr.c_str()) != NULL) continue;
   		TH2Fs.insert(std::pair<std::string,TH2F*>((*it),new TH2F(addnbr.c_str(),(*it).c_str(),(int)SizeX/8,0,(int)SizeX/8,(int)SizeY/8,1,(int)SizeY/8+1)));
 	}
-        if (TH1Fs.size()!=0&&TH2Fs.size()!=0) std::cout<<red<<"Creating "<<TH1Fs.size()+Addone+Difs_Distr.size()+Asics_Distr.size()+Pads_Distr.size()<<" TH1 and "<<TH2Fs.size()<<" TH2F for plate "<<patch::to_string(NbrPlate+1)<<normal<<std::endl;
+       // if (TH1Fs.size()!=0&&TH2Fs.size()!=0) std::cout<<red<<"Creating "<<TH1Fs.size()+Addone+Difs_Distr.size()+Asics_Distr.size()+Pads_Distr.size()<<" TH1 and "<<TH2Fs.size()<<" TH2F for plate "<<patch::to_string(NbrPlate+1)<<normal<<std::endl;
 }
 
 HistoPlane::HistoPlane(const HistoPlane &source):_Distr(source._Distr),NbrPlatee(source.NbrPlatee),Means(source.Means),Nbrof0Hits(source.Nbrof0Hits),local_max(source.local_max),local_min(source.local_min),total_time(source.total_time),_SizeX(source._SizeX),_SizeY(source._SizeY),_Difs_Names(source._Difs_Names)
@@ -145,25 +148,28 @@ void HistoPlane::ScaleHisto(const char* name,float i)
         if (TH2Fs.find(name)!=TH2Fs.end())(TH2Fs.find(name))->second->Scale(i);
 }
 
-void HistoPlane::WriteAll()
+void HistoPlane::WriteAll(int NbrPlatee,std::string namepdf)
 {
    
-  
+  std::string name="Title:Plate "+ patch::to_string(NbrPlatee+1);
   for(std::map<std::string,TH1F*>::iterator it=TH1Fs.begin();it!=TH1Fs.end();++it)
   {
-  		
+  		std::string nameth1= name+"TH1";
   		(it->second)->Write();
+                (it->second)->Draw();
+                canvas->Print(namepdf.c_str(),nameth1.c_str());
   		
   }
   for(std::map<std::string, TH2F*>::iterator it=TH2Fs.begin();it!=TH2Fs.end();++it)
   {
-  		
+  		std::string nameth2= name+"TH2";
   		(it->second)->Write();
-  		
+  		(it->second)->Draw("COLZ");
+                canvas->Print(namepdf.c_str(),nameth2.c_str());
   }
 }
 
-void HistoPlane::Save(TFile* file)
+void HistoPlane::Save(TFile* file,std::string namepdf)
 {
     std::string plate="Plate "+ patch::to_string(NbrPlatee+1);
     file->mkdir(plate.c_str(),plate.c_str());
@@ -178,9 +184,8 @@ void HistoPlane::Save(TFile* file)
     TH1Fs["Time_Distr"]->GetXaxis()->SetRange(0.0,Time_Plates.size()+10);
     TH1Fs["Hits_Distr"]->GetXaxis()->SetRange(0,2000);
     Return_TH1F("Hits_Distr_Noise")->Fill(0.0,(double)Nbrof0Hits);
-    WriteAll();
+    WriteAll(NbrPlatee,namepdf);
     std::string name="Noise_Flux_Hz";
-    //TH2Fs["Flux_Noise"]->Scale(1/(total_time*2e-7));
     TH2Fs["Flux_Noise"]->Scale(1/(global_total_time*2e-7));
     TH2Fs["Flux_Noise"]->Write(name.c_str());
     name="Flux_Noise_Mean_Scaled";
@@ -188,18 +193,15 @@ void HistoPlane::Save(TFile* file)
     TH2Fs["Flux_Noise"]->Scale(1/Means);
     TH2Fs["Flux_Noise"]->Write(name.c_str());
     name="Asic_Noise_Flux";
-    //TH2Fs["Flux_Noise_Asic"]->Scale(1/(total_time*2e-7));
     TH2Fs["Flux_Noise_Asic"]->Scale(1/(global_total_time*2e-7));
     TH2Fs["Flux_Noise_Asic"]->Write(name.c_str());
     name="Asic_Noise_Flux_Mean_Scaled";
     TH2Fs["Flux_Noise_Asic"]->Scale(1/Means);
     TH2Fs["Flux_Noise_Asic"]->Write(name.c_str());
     name="Event_Flux_Hz";
-    //TH2Fs["Flux_Events"]->Scale(1/(total_time*2e-7));
     TH2Fs["Flux_Events"]->Scale(1/(global_total_time*2e-7));
     TH2Fs["Flux_Events"]->Write(name.c_str());
     name="Asic_Event_Flux";
-    //TH2Fs["Flux_Events_Asic"]->Scale(1/(total_time*2e-7));
     TH2Fs["Flux_Events_Asic"]->Scale(1/(global_total_time*2e-7));
     TH2Fs["Flux_Events_Asic"]->Write(name.c_str());
     if(_Distr==true)Write_TH1_Hit_In_Pad_Per_RamFull(file,plate);

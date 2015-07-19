@@ -40,7 +40,7 @@ class HistoPlane
   double inline Get_Means(){return Means;};
   int long long inline Get_Nbrof0Hits(){return Nbrof0Hits;};
   int inline Get_NbrPlate(){return NbrPlatee;};
-  void  Save(TFile* file);
+  void  Save(TFile* file,std::string);
   void inline Set_hit_other(){hit_other+=1;};
   int inline Get_hit_other(){return hit_other;};
   void inline Set_hit_trigger(){hit_trigger+=1;};
@@ -219,7 +219,7 @@ void inline Get_Calibration(double minvalue=1.0,double maxvalue=254.0,double RMS
   TH2F* Return_TH2F(const char* name);
   double inline GetArea(){return _SizeX*_SizeY;};
   void  ScaleHisto(const char* name,float i);
-  void  WriteAll();
+  void  WriteAll(int NbrPlatee, std::string);
   double inline Efficiency(){std::cout<<hit_other<<"  "<<hit_trigger<<std::endl;return 1.0*hit_trigger/(hit_other+hit_trigger);};
   
  private:
