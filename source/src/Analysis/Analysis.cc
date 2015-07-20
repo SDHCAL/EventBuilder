@@ -638,14 +638,16 @@ void AnalysisProcessor::end()
     std::string b="Results_Analysis_"+std::to_string( (long long int) _NbrRun)+".root";
     TFile *hfile = new TFile(b.c_str(),"RECREATE");
     tt->Write();
+    std::string plate="";
     for(unsigned int naa=0;naa<names.size();++naa)
     {
       Distribution_exp_tgraph[names[naa]]->Write();
       Distribution_hits_tgraph[names[naa]]->Write();
-      for(unsigned int i =0 ;i!=HowLongFromExpectedX.size();++i)
+      
+      for(unsigned int i =0 ;i!=HowLongFromExpectedX["NORMAL"].size();++i)
       {
-        std::string plate="Plate "+ patch::to_string(i+1);
-   	    if(naa==0)hfile->mkdir(plate.c_str(),plate.c_str());
+        plate="Plate "+ patch::to_string(i+1);
+        if(naa==0)hfile->mkdir(plate.c_str(),plate.c_str());
     	  hfile->cd(plate.c_str());
 	      HowLongFromExpectedX[names[naa]][i]->Write();
     	  HowLongFromExpectedY[names[naa]][i]->Write();
