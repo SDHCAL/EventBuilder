@@ -204,6 +204,7 @@ void HistoPlane::Save(TFile* file,std::string namepdf)
     name="Asic_Event_Flux";
     TH2Fs["Flux_Events_Asic"]->Scale(1/(global_total_time*2e-7));
     TH2Fs["Flux_Events_Asic"]->Write(name.c_str());
+    
     if(_Distr==true)Write_TH1_Hit_In_Pad_Per_RamFull(file,plate);
     
 }

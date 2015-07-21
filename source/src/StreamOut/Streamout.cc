@@ -356,7 +356,7 @@ void Streamout::processEvent( LCEvent * evt )
                         int fff=d->getBCID()-d->getFrameBCID(i)+rolling;
                         Scintillator->setIntVal(3,fff);
                         RawVecScintillator->addElement(Scintillator);
-                        //std::cout<<Scintillator->getIntVal(0)<<"  "<<Scintillator->getIntVal(1)<<"  "<<Scintillator->getIntVal(2)<<"  "<<Scintillator->getIntVal(3)<<"  "<<std::endl;
+                        std::cout<<Scintillator->getIntVal(0)<<"  "<<Scintillator->getIntVal(1)<<"  "<<Scintillator->getIntVal(2)<<"  "<<Scintillator->getIntVal(3)<<"  "<<std::endl;
                    
                 }
                 /*for(std::set<unsigned int>::iterator it=Tche.begin();it!=Tche.end();++it) 
@@ -460,6 +460,7 @@ void Streamout::processEvent( LCEvent * evt )
                         hit->setCellID0((unsigned long int)ID0);
                         hit->setCellID1(ID1);
                         hit->setAmplitude(ThStatus.to_ulong());
+                        std::cout<<yellow<<hit->getAmplitude()<<normal<<std::endl;
                         //unsigned int TTT = (unsigned int)(d->getFrameTimeToTrigger(i));
                         //hit->setTimeStamp(TTT);		      		//Time stamp of this event from Run Begining
                         unsigned int Tjj=  d->getBCID()-d->getFrameBCID(i)+rolling;
