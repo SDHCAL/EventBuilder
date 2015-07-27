@@ -1,5 +1,5 @@
 #include "Trivent/TriventProcessor.h"
-#include"Utilities.h"
+#include "Utilities.h"
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -345,7 +345,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
     //std::cout<<Delimiter[dif_id][0]<<"  "<<std::endl;//<<Delimiter[dif_id][1]<<"  "<<Delimiter[dif_id][2]<<"  "<<Delimiter[dif_id][3]<<std::endl;
     //if(a<=I&&b>=I&&c<=J&&d>=J)
     //{
-    if(IsNoise==1||IsNoise==0)col->addElement(caloHit);
+    col->addElement(caloHit);
     //}
     //std::cout<<magenta<<totree.pI<<"  "<<totree.pJ<<"  "<<red<<(*it)->getTimeStamp()<<"  "<<totree.pTime<<normal<<std::endl;
     //t->Fill();
@@ -448,11 +448,8 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec)
       EffiwithDiscri[i]+=1;
     }
       std::cout<<green<<i<<"  "<<EffiwithDiscri[i]<<"  ";
-
   }
   std::cout<<normal<<std::endl;
-  
-  
 }
 
 TriventProcessor aTriventProcessor;
@@ -594,7 +591,7 @@ void TriventProcessor::init()
     do
     {
       counter++;
-		  std::cout<<counter<<std::endl;
+		  if(counter%1000==0)std::cout<<counter<<std::endl;
       LCCollection* col=evt->getCollection("DHCALRawHits");
       if(col!=nullptr)
       //for(unsigned int hit=0;hit<col->getNumberOfElements();++hit)
@@ -1162,7 +1159,6 @@ void TriventProcessor::end()
   
   for(unsigned int i=0;i<typeee.size();++i)
   {
-  
 	  typeee[i]->Write();
     delete typeee[i];
   }

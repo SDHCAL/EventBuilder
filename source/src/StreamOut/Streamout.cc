@@ -1,4 +1,7 @@
 #include "Streamout/Streamout.h"
+#include "Streamout/BufferNavigator.h"
+#include "Streamout/LMGenericObject.h"
+#include "Utilities.h"
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -44,89 +47,20 @@ float CalibT0_0 = 7.14;
 float CalibDeltaT_0 =0.053;
 float CalibT0_1 = 7.142;
 float CalibDeltaT_1 =0.0996;
-void SDHCAL_buffer::printBuffer(unsigned int start, unsigned int stop,std::ostream& flux)
-{
-    flux << std::hex;
-    for (unsigned int k=start; k<stop; k++) flux << (unsigned int)(first[k]) << " - ";
-    flux << std::dec <<  std::endl;
-}
-
-SDHCAL_RawBuffer_Navigator::SDHCAL_RawBuffer_Navigator(SDHCAL_buffer b, unsigned int BitsToSkip) :_buffer(b),_SCbuffer(0,0)
-{
-    _DIFstartIndex=DIFUnpacker::getStartOfDIF(_buffer.buffer(),_buffer.getsize(),BitsToSkip); //92 was here
-    _theDIFPtr=NULL;
-    _badSCdata=false;
-}
-
-DIFPtr* SDHCAL_RawBuffer_Navigator::getDIFPtr()
-{
-    if (NULL==_theDIFPtr) _theDIFPtr=new DIFPtr(getDIFBufferStart(),getDIFBufferSize());
-    return _theDIFPtr;
-}
-
-
-
-
-uint32_t SDHCAL_RawBuffer_Navigator::getDIF_CRC()
-{
-    uint32_t i=getEndOfDIFData();
-    uint32_t ret=0;
-    ret |= ( (_buffer.buffer()[i-2])<<8 );
-    ret |= _buffer.buffer()[i-1];
-    return ret;
-}
-
-void SDHCAL_RawBuffer_Navigator::setSCBuffer()
-{
-    if (! hasSlowControlData() ) return;
-    if (_SCbuffer.getsize()!=0 ) return; //deja fait
-    if (_badSCdata) return;
-    _SCbuffer.first=&(getDIFBufferStart()[getEndOfDIFData()]);
-    //compute Slow Control size
-    uint32_t maxsize=_buffer.getsize()-_DIFstartIndex-getEndOfDIFData()+1; // should I +1 here ?
-    uint32_t k=1; //SC Header
-    uint32_t dif_ID=_SCbuffer.first[1];
-    uint32_t chipSize=_SCbuffer.first[3];
-    while ((dif_ID != 0xa1 && _SCbuffer.first[k] != 0xa1 && k <maxsize) ||(dif_ID == 0xa1 && _SCbuffer.first[k+2]==chipSize && k<maxsize)) {
-        k+=2; //DIF ID + ASIC Header
-        uint32_t scsize=_SCbuffer.first[k];
-        if (scsize != 74 && scsize != 109) {
-            //std::cout << "PROBLEM WITH SC SIZE " << scsize << std::endl;
-            k=0;
-            _badSCdata=true;
-            break;
-        }
-        k++; //skip size bit
-        k+=scsize; // skip the data
-    }
-    if (_SCbuffer.first[k] == 0xa1 && !_badSCdata ) _SCbuffer.second=k+1; //add the trailer
-    else {
-        _badSCdata=true;
-        //std::cout << "PROBLEM SC TRAILER NOT FOUND " << std::endl;
-    }
-}
-
-SDHCAL_buffer SDHCAL_RawBuffer_Navigator::getEndOfAllData()
-{
-    setSCBuffer();
-    if (hasSlowControlData() && !_badSCdata) {
-        return SDHCAL_buffer( &(_SCbuffer.buffer()[_SCbuffer.getsize()]), getSizeAfterDIFPtr()-3-_SCbuffer.getsize() );
-    } else return SDHCAL_buffer( &(getDIFBufferStart()[getEndOfDIFData()]), getSizeAfterDIFPtr()-3 ); //remove the 2 bytes for CRC and the DIF trailer
-}
 
 Streamout aStreamout;
 
 Streamout::Streamout() : Processor("Streamout")
 {
-    // modify processor description
-    _description = "Streamout converts SDHCAL Raw Data into collection of RawCalorimeterHit and RawCalorimeterTime and TcherenkovSignal" ;
-    // register steering parameters: name, description, class-variable, default value
-    bool debugDefault=false;
-    _debugMode=false;
-    registerProcessorParameter("DebugMode","Turn ON/OFF debug mode : Warning Debug mode uses assert and may crash the application",_debugMode,debugDefault);
+  // modify processor description
+  _description = "Streamout converts SDHCAL Raw Data into collection of RawCalorimeterHit and RawCalorimeterTime and TcherenkovSignal" ;
+  // register steering parameters: name, description, class-variable, default value
+  bool debugDefault=false;
+  _debugMode=false;
+  registerProcessorParameter("DebugMode","Turn ON/OFF debug mode : Warning Debug mode uses assert and may crash the application",_debugMode,debugDefault);
 
-    registerInputCollection( LCIO::LCGENERICOBJECT,"XDAQCollectionName","XDAQ produced collection name",_XDAQCollectionNames,std::string("RU_XDAQ"));
-    registerOutputCollection( LCIO::RAWCALORIMETERHIT,"OutputRawCaloHitCollectionName","Name of output collection containing raw calorimeter hits",_RawHitCollectionName,std::string("DHCALRawHits"));
+  registerInputCollection( LCIO::LCGENERICOBJECT,"XDAQCollectionName","XDAQ produced collection name",_XDAQCollectionNames,std::string("RU_XDAQ"));
+  registerOutputCollection( LCIO::RAWCALORIMETERHIT,"OutputRawCaloHitCollectionName","Name of output collection containing raw calorimeter hits",_RawHitCollectionName,std::string("DHCALRawHits"));
     registerOutputCollection( LCIO::RAWCALORIMETERHIT,"OutputCaloHitTimeCollectionName","Name of output collection containing Times",_RawHitCollectionNameTime,std::string("DHCALRawTimes"));
     _TcherenkovSignal="";
     registerOutputCollection( LCIO::LCGENERICOBJECT,"OutputTcherenkovCollectionName","Name of output collection containing Tcherenkov signal",_TcherenkovSignal,std::string("Tcherenkov"));
@@ -168,32 +102,31 @@ void Streamout::init()
       //delete evt;
             
     }
-    //delete lcReader ;
-    //std::vector<std::string>colec{"RU_XDAQ"};
-    //lcReader->setReadCollectionNames( colec ) ;
-    //_GlobalEvents=lcReader->getNumberOfEvents();
-    if(_maxRecord<=0) _rolling=1000;
-    else if(_maxRecord<=10) _rolling=1;
-    else if(_maxRecord<=100) _rolling=10;
-    else if(_maxRecord<=1000) _rolling=100;
-    else  _rolling=1000;
+    delete evt;
+    delete lcReader ;
+    _rolling=Every(_maxRecord);
     printParameters() ;
     ReaderFactory readerFactory;
     Reader* myReader = readerFactory.CreateReader(_ReaderType);
-    if(myReader) {
+    if(myReader) 
+    {
         myReader->Read(_FileNameGeometry,geom);
         geom.PrintGeom();
         std::map<int, Dif > Difs=geom.GetDifs();
-        for(std::map<int, Dif >::iterator it=Difs.begin(); it!=Difs.end(); ++it) {
-            if(geom.GetDifType(it->first)==temporal) {
-                std::string name1="Times_given_by_TDC_Asics_1"+patch::to_string(it->first);
-                std::string name2="Times_given_by_TDC_Asics_2"+patch::to_string(it->first);
-                HistoTimeAsic1.insert ( std::pair<int,TH1F*>(it->first,new TH1F(name1.c_str(),name1.c_str(),501,-250,250)) );
-                HistoTimeAsic2.insert ( std::pair<int,TH1F*>(it->first,new TH1F(name2.c_str(),name2.c_str(),501,-250,250)) );
-                BCID_old.insert(std::pair<int,unsigned int>(it->first,0));
-            }
+        for(std::map<int, Dif >::iterator it=Difs.begin(); it!=Difs.end(); ++it) 
+        {
+          if(geom.GetDifType(it->first)==temporal) 
+          {
+            std::string name1="Times_given_by_TDC_Asics_1"+patch::to_string(it->first);
+            std::string name2="Times_given_by_TDC_Asics_2"+patch::to_string(it->first);
+            HistoTimeAsic1.insert ( std::pair<int,TH1F*>(it->first,new TH1F(name1.c_str(),name1.c_str(),501,-250,250)) );
+            HistoTimeAsic2.insert ( std::pair<int,TH1F*>(it->first,new TH1F(name2.c_str(),name2.c_str(),501,-250,250)) );
+            BCID_old.insert(std::pair<int,unsigned int>(it->first,0));
+          }
         }
-    } else {
+    } 
+    else 
+    {
         std::cout << "Reader type n'existe pas !!" << std::endl;
         exit(1);
     }
@@ -228,12 +161,11 @@ void Streamout::processEvent( LCEvent * evt )
   int skip=0;
   if(_skip!=0)skip=_skip+1;
   int maxRecordplusskip=0;
-   if(_maxRecord+skip>=_GlobalEvents) 
+  if(_maxRecord+skip>=_GlobalEvents) 
   {
-     
-     maxRecordplusskip=_GlobalEvents;
-     
-  }else maxRecordplusskip=_maxRecord+skip;
+     maxRecordplusskip=_GlobalEvents;  
+  }
+  else maxRecordplusskip=_maxRecord+skip;
   if(_maxRecord>=_GlobalEvents)_maxRecord=_GlobalEvents ;
   if(_eventNr %_rolling ==0 || _eventNr==_GlobalEvents || _eventNr==maxRecordplusskip )
   {
@@ -265,7 +197,8 @@ void Streamout::processEvent( LCEvent * evt )
 
         int nElement=col->getNumberOfElements();
         _CollectionSizeCounter[nElement]++;
-        for (int iel=0; iel<nElement; iel++) {
+        for (int iel=0; iel<nElement; iel++) 
+        {
             //LCGenericObject* obj=dynamic_cast<LCGenericObject*>(col->getElementAt(iel));
             //LMGeneric *lmobj=(LMGeneric *) obj;
             LMGeneric* lmobj=(LMGeneric *)(col->getElementAt(iel));
@@ -460,7 +393,7 @@ void Streamout::processEvent( LCEvent * evt )
                         hit->setCellID0((unsigned long int)ID0);
                         hit->setCellID1(ID1);
                         hit->setAmplitude(ThStatus.to_ulong());
-                        std::cout<<yellow<<hit->getAmplitude()<<normal<<std::endl;
+                        //std::cout<<yellow<<hit->getAmplitude()<<normal<<std::endl;
                         //unsigned int TTT = (unsigned int)(d->getFrameTimeToTrigger(i));
                         //hit->setTimeStamp(TTT);		      		//Time stamp of this event from Run Begining
                         unsigned int Tjj=  d->getBCID()-d->getFrameBCID(i)+rolling;

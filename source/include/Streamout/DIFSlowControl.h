@@ -20,7 +20,7 @@ using namespace std;
 */
 class DIFSlowControl
 {
-public:
+  public:
   //! Constructor
   /**
      @param version Data format version
@@ -28,7 +28,6 @@ public:
      @param buf Pointer to the Raw data buffer
    */
   DIFSlowControl(unsigned int version,unsigned short DIdi,uint8_t *buf);
-
   //! Default Cosntructor
   DIFSlowControl(){}
   //! get DIF id
@@ -56,23 +55,21 @@ public:
 
   //! print out full map
   void Dump();
-private:
+  private:
   //! Fill hardROC 1 map
   void FillHR1(int header_shift,uint8_t *cbuf);
   //! Fill hardRoc 2 map
   void FillHR2(int header_shift,uint8_t *cbuf);
   //! read Asic HR1 type
   void FillAsicHR1(bitset<72*8> &bs);
-
   //! read Asic HR2 Type
   void FillAsicHR2(bitset<109*8> &bs);
-
 
   unsigned short _DIFId; //! DIF Id
   unsigned int _version; //! version
   unsigned int _asicType;// asicType_
   unsigned int _nAsic; //! Number of Asic
-  map< int,map < string,int > >        _mapSC; //! Storage map (asic,name,value)
+  map< int,map < string,int > > _mapSC; //! Storage map (asic,name,value)
 };
 
 class DIFPtr
@@ -118,17 +115,9 @@ public:
   inline bool getFrameLevel(uint32_t i,uint32_t ipad,uint32_t ilevel){return DIFUnpacker::getFrameLevel(theFrames_[i],ipad,ilevel);}
   void dumpDIFInfo()
   {
-    printf("DIF %d DTC %d GTC %d ABCID %lld BCID %d Lines %d Temperature %d \n",
-		 getID(),
-		 getDTC(),
-		 getGTC(),
-		 getAbsoluteBCID(),
-		 getBCID(),
-		 getLines(),
-		 hasTemperature());
-
+    printf("DIF %d DTC %d GTC %d ABCID %lld BCID %d Lines %d Temperature %d \n",getID(),getDTC(),getGTC(),getAbsoluteBCID(),getBCID(),getLines(),hasTemperature());
     if (hasTemperature())
-      printf("T: ASU1 %d %f ASU2 %d %f DIF %d  %f \n",getTASU1(),getTemperatureASU1(),getTASU2(),getTemperatureASU2(),getTDIF(),getTemperatureDIF());
+    printf("T: ASU1 %d %f ASU2 %d %f DIF %d  %f \n",getTASU1(),getTemperatureASU1(),getTASU2(),getTemperatureASU2(),getTDIF(),getTemperatureDIF());
     printf("Found %d Lines and %d Frames \n",int(theLines_.size()),int(theFrames_.size()));
   }
 

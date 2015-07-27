@@ -57,6 +57,5 @@ public:
   static uint32_t getFramePtr(std::vector<uint8_t*> &vFrame,std::vector<uint8_t*> &vLines,uint32_t max_size,uint8_t* cb,uint32_t idx=0) throw (std::string);
   static void dumpFrameOld(uint8_t* buf);
   static unsigned long swap_bytes(unsigned int n,uint8_t* buf); //Stolen from DCBufferReader
-  
 };
 #endif

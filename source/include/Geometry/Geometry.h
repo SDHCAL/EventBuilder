@@ -6,8 +6,8 @@
 #include"Plate.h"
 #include"Dif.h"
 #include"Patch.h"
-//#include"Types.h"
-enum Types {pad,positional,temporal,tcherenkov,tricot,scintillator};
+#include"Types.h"
+//enum Types {pad,positional,temporal,tcherenkov,tricot,scintillator};
 
 
 class Geometry
