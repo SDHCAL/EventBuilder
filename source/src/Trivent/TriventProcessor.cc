@@ -55,7 +55,7 @@
 #include "EVENT/SimCalorimeterHit.h" 
 #include "EVENT/CalorimeterHit.h" 
 #include "EVENT/RawCalorimeterHit.h" 
-#include "THClass.h"
+//#include "THClass.h"
 bool pdf=false;
 std::vector<int>EffiwithDiscri;
 
