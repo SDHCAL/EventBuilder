@@ -24,6 +24,7 @@
 #include "TGraph2D.h"
 #include "Utilities.h"
 #include <map>
+#include <IMPL/RawCalorimeterHitImpl.h>
 #ifndef COLORS_H
 #define normal " "
 #define red "  "
@@ -69,10 +70,12 @@ std::vector<std::string> names={"NORMAL"};
 //TGraph2D* Distribution_exp_tgraph= new TGraph2D(1);
 //std::vector<TH2F*>Distribution_exp;
 ///////////////////////////////////////////////
+enum Tresholds {Threshold1,Threshold2,Threshold3,Threshold12,Threshold23,Thresholdall};
+std::array<std::string,6>Thresholds_name{"Threshold1","Threshold2","Threshold3","Threshold12","Threshold23","Thresholdall"};
 std::map<std::string,std::vector<TH2F*>>Distribution_hits;
-std::map<std::string,std::vector<TH2F*>>Efficiency_pads;
-std::map<std::string,std::vector<TH2F*>>Multiplicity_pads;
-std::map<std::string,std::vector<TH2F*>>Efficiency_asics;
+std::array<std::map<std::string,std::vector<TH2F*>>,6>Efficiency_pads;
+std::array<std::map<std::string,std::vector<TH2F*>>,6>Multiplicity_pads;
+std::array<std::map<std::string,std::vector<TH2F*>>,6>Efficiency_asics;
 std::map<std::string,std::vector<TH1F*>>HowLongFromExpectedX;
 std::map<std::string,std::vector<TH1F*>>HowLongFromExpectedY;
 //std::vector<TGraph2D*>Distribution_hits_tgraph;
@@ -122,16 +125,26 @@ void AnalysisProcessor::PrintStatShort(bool IsScinti)
 }
 
 unsigned int Number_hits=-1;
-int plan::countHitAt(double& x, double& y, double dlim,int Iexpected,int Jexpected,int Kexpected,double Imax,double Imin,double Jmax,double Jmin,bool IsScinti)
+std::array<double,6> plan::countHitAt(double& x, double& y, double dlim,int Iexpected,int Jexpected,int Kexpected,double Imax,double Imin,double Jmax,double Jmin,bool IsScinti)
 {     
     CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
-    int n=0;
+    std::array<double,6>Threshold_Counters;
+    for(int i =0;i<Threshold_Counters.size();++i)Threshold_Counters[i]=0;
     std::vector<int>IJKexpected={Iexpected,Jexpected,Kexpected};
-    for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!= hits.end(); ++it) {
-        //if((*it)->getPosition()[0]>=Imin&&(*it)->getPosition()[0]<=Imax&&(*it)->getPosition()[1]>=Jmin&&(*it)->getPosition()[1]<=Jmax&&fabs(x-(*it)->getPosition()[0])<dlim&&fabs(y-(*it)->getPosition()[1])<dlim) {
-     if(fabs(x-(*it)->getPosition()[0])<dlim&&fabs(y-(*it)->getPosition()[1])<dlim) {
-            n++;
-            Number_hits++;
+    for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!= hits.end(); ++it) 
+    {
+      
+      if(fabs(x-(*it)->getPosition()[0])<dlim&&fabs(y-(*it)->getPosition()[1])<dlim) 
+      { 
+           int Threshold_Hit=(*it)->getEnergy();
+           if(Threshold_Hit==3){Threshold_Counters[Threshold3]++;Threshold_Counters[Threshold23]++;Threshold_Counters[Thresholdall]++;}
+           else if(Threshold_Hit==2){Threshold_Counters[Threshold2]++;Threshold_Counters[Threshold12]++;Threshold_Counters[Threshold23]++;Threshold_Counters[Thresholdall]++;}
+           else if(Threshold_Hit==1){Threshold_Counters[Threshold1]++;Threshold_Counters[Threshold12]++;Threshold_Counters[Thresholdall]++;}
+           
+           // std::cout<<"ttttt"<<hit_Threshold<<std::endl;
+            
+            
+            //std::cout<<red<<Threshold_Counters[Threshold1]<<"  "<<Threshold_Counters[Threshold2]<<"  "<<Threshold_Counters[Threshold3]<<"  "<<normal<<Threshold_Counters[Thresholdall]<<std::endl;
             if(IsScinti==true)
             {
               Distribution_hits["SCINTILLATOR"][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
@@ -148,11 +161,15 @@ int plan::countHitAt(double& x, double& y, double dlim,int Iexpected,int Jexpect
             }
         }
     }
-    if(IsScinti==true) Efficiency_per_padScinti[IJKexpected].push_back(n);
-    else Efficiency_per_pad[IJKexpected].push_back(n);
+    for(int i=0;i<Threshold_Counters.size();++i)
+    {
+      if(IsScinti==true) Efficiency_per_padScinti[i][IJKexpected].push_back(Threshold_Counters[i]);
+      else Efficiency_per_pad[i][IJKexpected].push_back(Threshold_Counters[i]);
+    }
+   
     
-    
-    return n;
+    //return n_all_Threshold;
+    return Threshold_Counters;
 }
 
 int plan::countHitAtStrip(double& x, double dlim, bool IsScinti)
@@ -301,7 +318,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan,bool IsScinti)
         if(IsScinti==true) Distribution_exp_tgraph["SCINTILLATOR"]->SetPoint(nombreTests,Projectioni,Projectionj,Zexp);
         else Distribution_exp_tgraph["NORMAL"]->SetPoint(nombreTests,Projectioni,Projectionj,Zexp);
         
-        
+        std::array<double,6>Thresholds;
         counts[NOHITINPLAN]++;
         int nhit;
         if(this->GetType()==pad) 
@@ -312,19 +329,24 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan,bool IsScinti)
         	K=this->NbrPlate()+1;
           if(IsScinti==true)Distribution_exp["SCINTILLATOR"][this->NbrPlate()]->Fill(ceil(I),ceil(J));
           else Distribution_exp["NORMAL"][this->NbrPlate()]->Fill(ceil(I),ceil(J));
-          nhit=thisPlan->countHitAt(Projectioni,Projectionj,/*6*10.4125*/_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),IsScinti);
+          Thresholds=thisPlan->countHitAt(Projectioni,Projectionj,/*6*10.4125*/_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),IsScinti);
         } 
         else 
         {  
             nhit=thisPlan->countHitAtStrip(Projectioni,_dlimforStrip,IsScinti);
+            Thresholds[5]=nhit;
         }
-        if (nhit>0) 
-	{
-		nombreTestsOK++;	
-		nombreTestsOKShort++;
-	}
-        sommeNombreHits+=nhit;
-        sommeNombreHitsShort+=nhit;
+        for(int i=0;i<Thresholds.size();++i)
+        {
+          if (Thresholds[i]>0) 
+	        {
+		        nombreTestsOK[i]++;	
+		        nombreTestsOKShort[i]++;
+        
+            sommeNombreHits[i]+=Thresholds[i];
+            sommeNombreHitsShort[i]+=Thresholds[i];
+          }
+        }
         totalTrace++;
 	Verif<<NbrRunn<<"  "<<eventnbrr<<"  "<<totalTrace<<"  "<<kxz<<"  "<<kyz<<"  "<<pxz0<<"  "<<pyz0<<"  "<<pxz1<<"  "<<pyz1<<"  "<<plansUsedForTrackMaking.size()<<"  ";
         totreee.ChiXZ=kxz;
@@ -347,8 +369,8 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan,bool IsScinti)
 void testedPlan::print()
 {
     std::cout<<blue<<"Plane Number (in geometry file): "<<Nbr+1<<" Z = "<<Z0<<" : "<<normal<<std::endl;
-    std::cout<<blue<<"Number of Test : "<<counts[0]<<"; with >="<<_NbrPlaneUseForTracking<<" planes for tracking : "<<counts[1]<<"; with ChiXZ <"<<_Chi2<<" : "<<counts[2]<<"; with ChiYZ <"<<_Chi2<<" : "<<counts[3]<<" ; with track in the Delimiters "<<nombreTests<<"; with hits in it : "<<counts[4]<<" ; with hits in dlim : "<<nombreTestsOK<<normal<<std::endl;
-    std::cout<<blue<<"Sum of hits in dlim : "<<sommeNombreHits<<normal<<std::endl;
+    std::cout<<blue<<"Number of Test : "<<counts[0]<<"; with >="<<_NbrPlaneUseForTracking<<" planes for tracking : "<<counts[1]<<"; with ChiXZ <"<<_Chi2<<" : "<<counts[2]<<"; with ChiYZ <"<<_Chi2<<" : "<<counts[3]<<" ; with track in the Delimiters "<<nombreTests<<"; with hits in it : "<<counts[4]<<" ; with hits in dlim : "<<nombreTestsOK[5]<<normal<<std::endl;
+    std::cout<<blue<<"Sum of hits in dlim : "<<sommeNombreHits[5]<<normal<<std::endl;
     std::cout<<std::endl;
 }
 
@@ -459,16 +481,21 @@ void AnalysisProcessor::init()
         std::string e="Distance to the expected hit in X "+ std::to_string( (long long int) it->first +1 );
         std::string f="Distance to the expected hit in Y "+ std::to_string( (long long int) it->first +1 );
         std::string g="Multiplicity of the voisinage of the pad "+ std::to_string( (long long int) it->first +1 );
+        int Taille_X=geom.GetSizeX(it->first)+1;
+        int Taille_Y=geom.GetSizeY(it->first)+1;
         for(unsigned int i=0;i<names.size();++i)
         {
+          
           if(it->second==positional) 
           {
             Distribution_hits[names[i]].push_back(new TH2F((a+names[i]).c_str(),(a+names[i]).c_str(),100,0,100,100,0,100));
             Distribution_exp[names[i]].push_back(new TH2F((b+names[i]).c_str(),(b+names[i]).c_str(),100,0,100,100,0,100));
-            Efficiency_pads[names[i]].push_back(new TH2F((c+names[i]).c_str(),(c+names[i]).c_str(),100,0,100,100,0,100));
-            Efficiency_asics[names[i]].push_back(new TH2F((d+names[i]).c_str(),(d+names[i]).c_str(),100,0,100,100,0,100));
-                
-            Multiplicity_pads[names[i]].push_back(new TH2F((g+names[i]).c_str(),(g+names[i]).c_str(),100,0,100,100,0,100));
+            for(int j=0;j<Efficiency_pads.size();++j)
+            {
+              Efficiency_pads[j][names[i]].push_back(new TH2F((c+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(c+names[i]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
+              Efficiency_asics[j][names[i]].push_back(new TH2F((d+names[i]+Thresholds_name[j]).c_str(),(d+names[i]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
+              Multiplicity_pads[j][names[i]].push_back(new TH2F((g+names[i]+Thresholds_name[j]).c_str(),(g+names[i]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
+            }
 		        HowLongFromExpectedX[names[i]].push_back(new TH1F((e+names[i]).c_str(),(e+names[i]).c_str(),2*(_dlimforStrip),-_dlimforStrip,_dlimforStrip));
             HowLongFromExpectedY[names[i]].push_back(new TH1F((f+names[i]).c_str(),(f+names[i]).c_str(),2*(_dlimforStrip),-_dlimforStrip,_dlimforStrip));
           } 
@@ -476,11 +503,15 @@ void AnalysisProcessor::init()
           {
             Distribution_hits[names[i]].push_back(new TH2F((a+names[i]).c_str(),(a+names[i]).c_str(),100,0,100,100,0,100));
             Distribution_exp[names[i]].push_back(new TH2F((b+names[i]).c_str(),(b+names[i]).c_str(),100,0,100,100,0,100));
-            Efficiency_pads[names[i]].push_back(new TH2F((c+names[i]).c_str(),(c+names[i]).c_str(),100,0,100,100,0,100));
-            Efficiency_asics[names[i]].push_back(new TH2F((d+names[i]).c_str(),(d+names[i]).c_str(),100,0,100,100,0,100));
+            for(int j=0;j<Efficiency_pads.size();++j)
+            {
+            Efficiency_pads[j][names[i]].push_back(new TH2F((c+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(c+names[i]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
+            Efficiency_asics[j][names[i]].push_back(new TH2F((d+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(d+names[i]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
+            Multiplicity_pads[j][names[i]].push_back(new TH2F((g+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(g+names[i]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
+            }
             HowLongFromExpectedX[names[i]].push_back(new TH1F((e+names[i]).c_str(),(e+names[i]).c_str(),2*(_dlimforPad),-_dlimforPad,_dlimforPad));
             HowLongFromExpectedY[names[i]].push_back(new TH1F((f+names[i]).c_str(),(f+names[i]).c_str(),2*(_dlimforPad),-_dlimforPad,_dlimforPad));
-            Multiplicity_pads[names[i]].push_back(new TH2F((g+names[i]).c_str(),(g+names[i]).c_str(),100,0,100,100,0,100));
+            
           }
             //Correlations.push_back(new TH2F(b.c_str(),b.c_str(),200,0,200,200,0,200));
         }
@@ -591,44 +622,49 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 
 void AnalysisProcessor::end()
 {
-    for(std::map<std::vector<int>,std::vector<int>>::iterator it=Efficiency_per_pad.begin();it!=Efficiency_per_pad.end();++it)
+    
+    for(int i =0;i<Efficiency_per_pad.size();++i)
+    {
+    for(std::map<std::vector<int>,std::vector<int>>::iterator it=Efficiency_per_pad[i].begin();it!=Efficiency_per_pad[i].end();++it)
     {
         unsigned int was_at_least_a_hit=0;
         unsigned int number_of_hits=0;
-        for(unsigned int i =0;i!=(it->second).size();++i)
+        for(unsigned int j =0;j!=(it->second).size();++j)
 	      {
                 
-		      if(it->second[i]>0)
+		      if(it->second[j]>0)
           {
 			      was_at_least_a_hit++;
-			      number_of_hits+=it->second[i];
+			      number_of_hits+=it->second[j];
                          //std::cout<<red<<was_at_least_a_hit<<"  "<<number_of_hits<<normal<<std::endl;
 		      }
 	      }
         //std::cout<<it->first[0]<<"  "<<it->first[1]<<"  "<<it->first[2]-1<<"  "<<was_at_least_a_hit*1.0/(it->second).size()<<"  "<<number_of_hits*1.0/was_at_least_a_hit<<std::endl;
-        Efficiency_pads["NORMAL"][it->first[2]-1]->Fill(it->first[0],it->first[1],was_at_least_a_hit*1.0/(it->second).size());
-        if(was_at_least_a_hit!=0)Multiplicity_pads["NORMAL"][it->first[2]-1]->Fill(it->first[0],it->first[1],number_of_hits*1.0/was_at_least_a_hit);
+        Efficiency_pads[i]["NORMAL"][it->first[2]-1]->Fill(it->first[0],it->first[1],was_at_least_a_hit*1.0/(it->second).size());
+        if(was_at_least_a_hit!=0)Multiplicity_pads[i]["NORMAL"][it->first[2]-1]->Fill(it->first[0],it->first[1],number_of_hits*1.0/was_at_least_a_hit);
     }
-    
-    for(std::map<std::vector<int>,std::vector<int>>::iterator it=Efficiency_per_padScinti.begin();it!=Efficiency_per_padScinti.end();++it)
+    }
+    for(int i =0;i<Efficiency_per_padScinti.size();++i)
+    {
+    for(std::map<std::vector<int>,std::vector<int>>::iterator it=Efficiency_per_padScinti[i].begin();it!=Efficiency_per_padScinti[i].end();++it)
     {
         unsigned int was_at_least_a_hit=0;
         unsigned int number_of_hits=0;
-        for(unsigned int i =0;i!=(it->second).size();++i)
+        for(unsigned int j =0;j!=(it->second).size();++j)
 	      {
                 
-		      if(it->second[i]>0)
+		      if(it->second[j]>0)
           {
 			      was_at_least_a_hit++;
-			      number_of_hits+=it->second[i];
+			      number_of_hits+=it->second[j];
                          //std::cout<<red<<was_at_least_a_hit<<"  "<<number_of_hits<<normal<<std::endl;
 		      }
 	      }
         //std::cout<<it->first[0]<<"  "<<it->first[1]<<"  "<<it->first[2]-1<<"  "<<was_at_least_a_hit*1.0/(it->second).size()<<"  "<<number_of_hits*1.0/was_at_least_a_hit<<std::endl;
-        Efficiency_pads["SCINTILLATOR"][it->first[2]-1]->Fill(it->first[0],it->first[1],was_at_least_a_hit*1.0/(it->second).size());
-        if(was_at_least_a_hit!=0)Multiplicity_pads["SCINTILLATOR"][it->first[2]-1]->Fill(it->first[0],it->first[1],number_of_hits*1.0/was_at_least_a_hit);
+        Efficiency_pads[i]["SCINTILLATOR"][it->first[2]-1]->Fill(it->first[0],it->first[1],was_at_least_a_hit*1.0/(it->second).size());
+        if(was_at_least_a_hit!=0)Multiplicity_pads[i]["SCINTILLATOR"][it->first[2]-1]->Fill(it->first[0],it->first[1],number_of_hits*1.0/was_at_least_a_hit);
     }
-    
+    }
     
     
     std::cout<<"List of counters : "<<std::endl;
@@ -654,8 +690,11 @@ void AnalysisProcessor::end()
         Distribution_hits[names[naa]][i]->Write();
         if(_ShortEfficiency!=0)Short_Efficiency[names[naa]][i]->Write();
         Distribution_exp[names[naa]][i]->Write();
-        Efficiency_pads[names[naa]][i]->Write();
-        Multiplicity_pads[names[naa]][i]->Write();
+        for(int j=0;j<Efficiency_pads.size();++j)
+          {
+        Efficiency_pads[j][names[naa]][i]->Write();
+        Multiplicity_pads[j][names[naa]][i]->Write();
+        }
       }
     
         for(unsigned int i=0; i<Distribution_hits.size(); ++i) 
@@ -664,8 +703,11 @@ void AnalysisProcessor::end()
           delete Distribution_exp[names[naa]][i];
           delete HowLongFromExpectedX[names[naa]][i];
           delete HowLongFromExpectedY[names[naa]][i];
-          delete Efficiency_pads[names[naa]][i];
-          delete Multiplicity_pads[names[naa]][i];
+          for(int j=0;j<Efficiency_pads.size();++j)
+          {
+            delete Efficiency_pads[j][names[naa]][i];
+            delete Multiplicity_pads[j][names[naa]][i];
+          }
           if(_ShortEfficiency!=0) delete Short_Efficiency[names[naa]][i];
           //delete Correlations[i];
         }

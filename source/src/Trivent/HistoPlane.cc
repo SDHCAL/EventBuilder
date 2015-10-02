@@ -13,7 +13,7 @@
 #include "TCanvas.h"
 #include "TPDF.h"
 TCanvas* canvas = new  TCanvas("canvas");
-
+extern bool pdf;
 HistoPlane::HistoPlane(bool Distr,int NbrPlate,std::vector<int>Difs_Names,int SizeX, int SizeY, std::vector< std::string  >& vec_name_th1,std::vector< std::string >& vec_name_th2,std::vector< std::string >& vec_name_th2_Asic):_Distr(Distr),NbrPlatee(NbrPlate),Means(0),Nbrof0Hits(0),local_max(-1),local_min(99999999),total_time(0),_SizeX(SizeX),_SizeY(SizeY),_Difs_Names(Difs_Names)
 {       
         int Addone=0;
@@ -133,7 +133,7 @@ HistoPlane::~HistoPlane()
 TH1F* HistoPlane::Return_TH1F(const char* name)
 {
 	if (TH1Fs.find(name)!=TH1Fs.end())return TH1Fs.find(name)->second;
-        else {std::cout<<"Impossible to find "<<name<<normal<<std::endl;return NULL;}
+  else {std::cout<<"Impossible to find "<<name<<normal<<std::endl;return NULL;}
 }
 TH2F* HistoPlane::Return_TH2F(const char* name)
 {
@@ -156,16 +156,16 @@ void HistoPlane::WriteAll(int NbrPlatee,std::string namepdf)
   {
   		std::string nameth1= name+"TH1";
   		(it->second)->Write();
-                (it->second)->Draw();
-                canvas->Print(namepdf.c_str(),nameth1.c_str());
+                if(pdf)(it->second)->Draw();
+                if(pdf)canvas->Print(namepdf.c_str(),nameth1.c_str());
   		
   }
   for(std::map<std::string, TH2F*>::iterator it=TH2Fs.begin();it!=TH2Fs.end();++it)
   {
   		std::string nameth2= name+"TH2";
   		(it->second)->Write();
-  		(it->second)->Draw("COLZ");
-                canvas->Print(namepdf.c_str(),nameth2.c_str());
+  		if(pdf)(it->second)->Draw("COLZ");
+                if(pdf)canvas->Print(namepdf.c_str(),nameth2.c_str());
   }
 }
 

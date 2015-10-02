@@ -15,6 +15,7 @@
 #include <iomanip>
 #include <iostream>
 #include <climits>
+#include <ctime>
 #include "TFile.h"
 #include "TTree.h"
 #include "IMPL/CalorimeterHitImpl.h"
@@ -57,7 +58,11 @@
 #include "EVENT/RawCalorimeterHit.h" 
 //#include "THClass.h"
 bool pdf=false;
+bool HasScintiSignal=false;
 std::vector<int>EffiwithDiscri;
+
+
+enum Threshold{Threshold2=1,Threshold1,Threshold3};
 
 using namespace marlin;
 std::vector<int>ScintillatorCoincidence;
@@ -618,8 +623,8 @@ void TriventProcessor::init()
         myhit=dynamic_cast<RawCalorimeterHit*>(col->getElementAt(i));
         unsigned int dif_id=myhit->getCellID0()&0xFF;
         
-        //std::cout<<yellow<<dif_id<<"  "<<geom.GetDifNbrPlate(int(dif_id))<<normal<<std::endl;
-        HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("timestamp")->Fill(_bcid*200e-9,1);
+        //std::cout<<yellow<<dif_id<<"  "<<geom.GetDifNbrPlate(int(dif_id))<<"  "<<geom.GetDifType(int(dif_id))<<normal<<std::endl;
+        if(geom.GetDifType(int(dif_id))<=1)if(geom.GetDifNbrPlate(int(dif_id))!=-1) HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("timestamp")->Fill(_bcid*200e-9,1);
         }
         Time_stampss[_bcid]=col->getNumberOfElements();
         //std::cout<<red<<col->getNumberOfElements()<<normal<<std::endl;
@@ -639,7 +644,8 @@ void TriventProcessor::init()
 				}
 		  }
 		  //}
-      evt=lcReader->readNextEvent();
+		  if(counter<=_maxRecord) evt=lcReader->readNextEvent();
+      else evt =nullptr;
 	  }
 	  while(evt!=nullptr);
     lcReader->close();
@@ -802,6 +808,8 @@ void TriventProcessor::processEvent( LCEvent * evtP )
   if (evtP== nullptr ) return;
   _NbrRun=evtP->getRunNumber();
   _eventNr=evtP->getEventNumber()+1;
+  time_t date(evtP->getTimeStamp());
+  //std::cout<<asctime(localtime(&date))<<std::endl;
   int skip=0;
   if(_skip!=0)skip=_skip+1;
   int maxRecordplusskip=0;
@@ -843,6 +851,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	  }
 	  if(names[i]=="Scintillator")
   	{
+  	  HasScintiSignal=true;
   	  ScintillatorCoincidence.clear();
   		col3 = evtP ->getCollection("Scintillator");
       for (int ihit=0; ihit < col3->getNumberOfElements(); ++ihit) 
@@ -895,7 +904,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
         to_skip=true;
       }
     }
-    if(to_skip==false) processCollection(evtP,col);
+    if(geom.GetDifType(int(dif_id))<=1)if(to_skip==false)  processCollection(evtP,col);
   }
 } 
 unsigned long int debut_RamFull;
@@ -1175,12 +1184,12 @@ void TriventProcessor::end()
     h1->GetListOfFunctions()->Add(tf);
     h2->GetListOfFunctions()->Add(tf);
     h1->Write();
-    h1->Draw("glcolz");
+    if(pdf)h1->Draw("glcolz");
     std::string namepdf="plots"+patch::to_string(_NbrRun)+".pdf";
-    canvas->Print((namepdf+"(").c_str());
+    if(pdf)canvas->Print((namepdf+"(").c_str());
     h2->Write();
-    h2->Draw("glcolz");
-    canvas->Print(namepdf.c_str());
+    if(pdf)h2->Draw("glcolz");
+    if(pdf)canvas->Print(namepdf.c_str());
     TH3D* h12= hs2.Projection(2,1,0);
     TH3D* h22= hss2.Projection(2,1,0);
     Make_good_TH3(h12);
@@ -1188,37 +1197,37 @@ void TriventProcessor::end()
     h12->GetListOfFunctions()->Add(tf);
     h22->GetListOfFunctions()->Add(tf);
     h12->Write();
-    h12->Draw("glcolz");
-    canvas->Print(namepdf.c_str());
+    if(pdf)h12->Draw("glcolz");
+    if(pdf)canvas->Print(namepdf.c_str());
     if(_Spill_Study)
   {
   timestamp->Write();
-  timestamp->Draw();
-  canvas->Print(namepdf.c_str());
+  if(pdf){timestamp->Draw();
+  canvas->Print(namepdf.c_str());}
   delete timestamp;
   timestamps->Write();
-  timestamps->Draw();
-  canvas->Print(namepdf.c_str());
+  if(pdf){timestamps->Draw();
+  canvas->Print(namepdf.c_str());}
   delete timestamps;
   time2read->Write();
-  time2read->Draw();
-  canvas->Print(namepdf.c_str());
+  if(pdf){time2read->Draw();
+  canvas->Print(namepdf.c_str());}
   delete time2read;
   time2readtime->Write();
-  time2readtime->Draw();
-  canvas->Print(namepdf.c_str());
+  if(pdf){time2readtime->Draw();
+  canvas->Print(namepdf.c_str());}
   delete time2readtime;
   TimeSpill->Write();
-  TimeSpill->Draw();
-  canvas->Print(namepdf.c_str());
+  if(pdf){TimeSpill->Draw();
+  canvas->Print(namepdf.c_str());}
   delete TimeSpill;
   TimeRamFull->Write();
-  TimeRamFull->Draw();
-  canvas->Print(namepdf.c_str());
+  if(pdf){TimeRamFull->Draw();
+  canvas->Print(namepdf.c_str());}
   delete TimeRamFull;
   UsefullTime->Write();
-  UsefullTime->Draw();
-  canvas->Print(namepdf.c_str());
+  if(pdf){UsefullTime->Draw();
+  canvas->Print(namepdf.c_str());}
   delete UsefullTime;
   }
     for(unsigned int i=0; i<HistoPlanes.size(); ++i) 
@@ -1261,15 +1270,18 @@ void TriventProcessor::end()
     for(std::map<int,bool>::iterator it=Warningg.begin(); it!=Warningg.end(); it++) std::cout<<red<<"REMINDER::Data from Dif "<<it->first<<" are skipped !"<<normal<<std::endl;
     for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Mean noise in plane "<<i+1<<" : "<<HistoPlanes[i]->Get_Means()<<" Hz.cm-2 "; std::cout<<std::endl;
     if(_LayerCut==-1) for(unsigned int i=0;i<HistoPlanes.size();++i)std::cout <<"Efficiency "<<i<<" : "<<HistoPlanes[i]->Efficiency()<<"  "; std::cout<<std::endl;
-    std::cout<<green<<"Counter Front scintillator : "<<_Front_scintillator<<" Counter Back scintillator : "<< _Back_scintillator<<" Counter Both scintillator : "<<_Both_scintillator<<"  "<<normal<<std::endl;
-    std::cout<<green<<"Counter Front scintillator : "<<_Front_scintillator*1.0/_efficiencyFrontScintillator<<" Counter Back scintillator : "<< _Back_scintillator*1.0/_efficiencyBackScintillator<<" Counter Both scintillator : "<<_Both_scintillator*1.0/(_efficiencyFrontScintillator*_efficiencyBackScintillator)<<"  "<<normal<<std::endl;
-     std::cout<<green<<"Efficiency Calculated with Scintillators : "<<std::endl;
+    
+    if(hitinit.size()!=0)
+    {
+      std::cout<<green<<"Counter Front scintillator : "<<_Front_scintillator<<" Counter Back scintillator : "<< _Back_scintillator<<" Counter Both scintillator : "<<_Both_scintillator<<"  "<<normal<<std::endl;
+      std::cout<<green<<"Counter Front scintillator : "<<_Front_scintillator*1.0/_efficiencyFrontScintillator<<" Counter Back scintillator : "<< _Back_scintillator*1.0/_efficiencyBackScintillator<<" Counter Both scintillator : "<<_Both_scintillator*1.0/(_efficiencyFrontScintillator*_efficiencyBackScintillator)<<"  "<<normal<<std::endl;
+      std::cout<<green<<"Efficiency Calculated with Scintillators : "<<std::endl;
      
-     for(unsigned int i=0;i!=hitinit.size();++i)
-     {
-      std::cout<<"Plate : "<<i+1<<"  "<<EffiwithDiscri[i]*100.0/counttt<<"  "<<normal;
-     }
-    std::cout<<std::endl;
+      for(unsigned int i=0;i!=hitinit.size();++i)
+      {
+        std::cout<<"Plate : "<<i+1<<"  "<<EffiwithDiscri[i]*100.0/counttt<<"  "<<normal;
+      }
+      std::cout<<std::endl;
    
    
     ofstream fichier;
@@ -1282,6 +1294,7 @@ fichier.open("ResultsScinti.txt", ios::out | ios::app);  //déclaration du flux 
      }
         fichier<<std::endl;
         fichier.close();  // on referme le fichier
+    }
     }
    
    

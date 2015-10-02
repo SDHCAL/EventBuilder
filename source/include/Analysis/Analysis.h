@@ -9,14 +9,23 @@
 #include "UTIL/CellIDDecoder.h"
 #include <map>
 #include <array>
+#include <vector>
 #define degtorad 0.0174532925
 class plan;
 class testedPlan
 {
 public:
-    testedPlan(int numeroPlan,float x ,float y,float z,float xy, float xz, float yz, int type,double _Ip,double _Im, double _Jp, double _Jm) : Nbr(numeroPlan),X0(x),Y0(y),Z0(z),XY(xy),XZ(xz),YZ(yz),Type(type),Ip(_Ip),Im(_Im),Jp(_Jp),Jm(_Jm), nombreTests(0), nombreTestsOK(0), sommeNombreHits(0)
+    testedPlan(int numeroPlan,float x ,float y,float z,float xy, float xz, float yz, int type,double _Ip,double _Im, double _Jp, double _Jm) : Nbr(numeroPlan),X0(x),Y0(y),Z0(z),XY(xy),XZ(xz),YZ(yz),Type(type),Ip(_Ip),Im(_Im),Jp(_Jp),Jm(_Jm), nombreTests(0)
     {
-        for (int i=0; i<NCOUNTERS; i++) counts[i]=0;
+        for (int i=0;i<=5;++i) 
+        {
+          nombreTestsOKShort[i]=0;
+          nombreTestsOK[i]=0;
+          sommeNombreHits[i]=0;
+          sommeNombreHitsShort[i]=0;
+          
+        }
+        for (unsigned int i=0; i<NCOUNTERS; ++i) counts[i]=0;
         ca=cos(xy*degtorad);
         sa=sin(xy*degtorad);
         cb=cos(xz*degtorad);
@@ -39,13 +48,21 @@ public:
         yj=cg*ca+sg*sb*sa;
         zj=cb*sa;
     }
-    inline double multiplicityShort() {return sommeNombreHitsShort/nombreTestsOKShort;}
-    inline double GetNumberOKShort(){return nombreTestsOKShort;}
-    inline void ClearShort(){nombreTestsShort=0;nombreTestsOKShort=0;sommeNombreHitsShort=0;}
-    inline double efficiencyShort() {return nombreTestsOKShort/nombreTestsShort;}
+    inline double multiplicityShort() {return sommeNombreHitsShort[5]/nombreTestsOKShort[5];}
+    inline double GetNumberOKShort(){return nombreTestsOKShort[5];}
+    inline void ClearShort()
+    {
+     for(int i=0;i<6;++i)
+     {
+      nombreTestsShort=0;
+      nombreTestsOKShort[i]=0;
+      sommeNombreHitsShort[i]=0;
+     }
+    }
+    inline double efficiencyShort() {return nombreTestsOKShort[5]/nombreTestsShort;}
     inline double efficiency()
     {
-        return nombreTestsOK/nombreTests;
+        return nombreTestsOK[5]/nombreTests;
     }
     inline int NbrPlate()
     {
@@ -97,7 +114,7 @@ public:
     }
     inline double GetNumberOK()
     {
-        return nombreTestsOK;
+        return nombreTestsOK[5];
     }
     inline float GetZexp(const double & pxz0,const double & pyz0,const double & pxz1,const double& pyz1)
     {
@@ -113,11 +130,16 @@ public:
     }
     inline double multiplicity()
     {
-        return sommeNombreHits/nombreTestsOK;
+        return sommeNombreHits[5]/nombreTestsOK[5];
     }
     inline void clear()
     {
-        nombreTests=nombreTestsOK=sommeNombreHits=0;
+        for(unsigned int i=0;i<6;++i)
+        {
+          nombreTests=0;
+          nombreTestsOK[i]=0;
+          sommeNombreHits[i]=0;
+        }
     }
     inline float get_ca(){return ca;};
     inline float get_sa(){return sa;};
@@ -139,11 +161,22 @@ private:
     double Jp;
     double Jm;
     double nombreTests;
-    double nombreTestsOK;
-    double sommeNombreHits;
+    std::array<double,6>nombreTestsOK;
+    std::array<double,6>sommeNombreHits;
+    //double nombreTestsOK;
+    //double sommeNombreHits;
+    //double sommeNombreHits_all_Threshold;
+    
+    //double sommeNombreHits_Threshold1;
+    //double sommeNombreHits_Threshold2;
+    //double sommeNombreHits_Threshold3;
+    //double sommeNombreHits_Threshold12;
+    //double sommeNombreHits_Threshold23;
     double nombreTestsShort;
-    double nombreTestsOKShort;
-    double sommeNombreHitsShort;
+    std::array<double,6>nombreTestsOKShort;
+    std::array<double,6>sommeNombreHitsShort;
+    //double nombreTestsOKShort;
+    //double sommeNombreHitsShort;
     enum {TESTYOUCALLED,NOTOOMUCHHITSINPLAN,XZTRACKFITPASSED,YZTRACKFITPASSED,NOHITINPLAN, NCOUNTERS};
     double counts[NCOUNTERS];
 };
@@ -241,7 +274,7 @@ public:
     {
         return _type;
     }
-    inline int countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,bool IsScinti);
+    inline std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,bool IsScinti);
     inline int countHitAtStrip(double& x, double dlim,bool IsScinti);
     void GivePoint();
 private:
@@ -254,8 +287,8 @@ private:
 };
 
 
-std::map<std::vector<int>,std::vector<int>>Efficiency_per_pad;
-std::map<std::vector<int>,std::vector<int>>Efficiency_per_padScinti;
+std::array<std::map<std::vector<int>,std::vector<int>>,6>Efficiency_per_pad;
+std::array<std::map<std::vector<int>,std::vector<int>>,6>Efficiency_per_padScinti;
 double _Chi2;
 unsigned int _eventNr;
 unsigned int _eventNrSC;
