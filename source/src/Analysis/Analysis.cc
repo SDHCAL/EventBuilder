@@ -36,6 +36,9 @@
 #include <fstream>
 #define size_pad 10.4125
 #define size_strip 2.5
+
+
+
 int totalTrace=0;
 int eventnbrr=0;
 std::ofstream Verif( "Verif.txt", std::ios_base::out ); 
@@ -388,14 +391,14 @@ void AnalysisProcessor::PrintStat(bool IsScinti)
         {
           for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
           {
-            fichier<<testedPlanList[i].efficiency()<<" "<<sqrt(testedPlanList[i].GetNumberOK()*testedPlanList[i].efficiency()*(1-testedPlanList[i].efficiency()))*1.0/testedPlanList[i].GetNumberOK()<<" "<<testedPlanList[i].multiplicity()<<" 0 "<<"  ";
+            fichier<<testedPlanList[i].efficiency()<<";"<<sqrt(testedPlanList[i].GetNumberOK()*testedPlanList[i].efficiency()*(1-testedPlanList[i].efficiency()))*1.0/testedPlanList[i].GetNumberOK()<<";"<<testedPlanList[i].multiplicity()<<";0;";
           }
         }
         else
         {
           for(unsigned int i=0; i!=testedPlanListScinti.size(); ++i) 
           {
-            fichier<<testedPlanListScinti[i].efficiency()<<" "<<sqrt(testedPlanListScinti[i].GetNumberOK()*testedPlanListScinti[i].efficiency()*(1-testedPlanListScinti[i].efficiency()))*1.0/testedPlanListScinti[i].GetNumberOK()<<" "<<testedPlanListScinti[i].multiplicity()<<" 0 "<<"  ";
+            fichier<<testedPlanListScinti[i].efficiency()<<";"<<sqrt(testedPlanListScinti[i].GetNumberOK()*testedPlanListScinti[i].efficiency()*(1-testedPlanListScinti[i].efficiency()))*1.0/testedPlanListScinti[i].GetNumberOK()<<";"<<testedPlanListScinti[i].multiplicity()<<";0;";
           }
         }
         fichier<<std::endl;
@@ -622,7 +625,6 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 
 void AnalysisProcessor::end()
 {
-    
     for(int i =0;i<Efficiency_per_pad.size();++i)
     {
     for(std::map<std::vector<int>,std::vector<int>>::iterator it=Efficiency_per_pad[i].begin();it!=Efficiency_per_pad[i].end();++it)

@@ -24,9 +24,9 @@ endif()
 include_directories(include)
 
 # project version
-SET( ${PROJECT_NAME}_VERSION_MAJOR 1 )
+SET( ${PROJECT_NAME}_VERSION_MAJOR 2 )
 SET( ${PROJECT_NAME}_VERSION_MINOR 0 )
-SET( ${PROJECT_NAME}_VERSION_PATCH RC )
+SET( ${PROJECT_NAME}_VERSION_PATCH b )
 
 
 
@@ -47,10 +47,9 @@ INCLUDE_DIRECTORIES( ${ROOT_INCLUDE_DIRS} )
 LINK_LIBRARIES( ${ROOT_LIBRARIES} )
 ADD_DEFINITIONS( ${ROOT_DEFINITIONS} )
 
-
 ### DOCUMENTATION ###########################################################
 
-OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" ON )
+OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" OFF)
 
 IF( INSTALL_DOC AND EXISTS "${PROJECT_SOURCE_DIR}/doc/CMakeLists.txt" )
     ADD_SUBDIRECTORY( ./doc )
@@ -58,7 +57,7 @@ ENDIF()
 
 ### SUB DIRECTORIES #########################################################
 ADD_SUBDIRECTORY( source )
-
+add_executable(Plot ./source/src/Plot/Plot.cpp )
 
 # display some variables and write them to cache
 DISPLAY_STD_VARIABLES()

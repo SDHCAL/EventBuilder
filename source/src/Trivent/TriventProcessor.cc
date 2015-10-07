@@ -651,6 +651,16 @@ void TriventProcessor::init()
     lcReader->close();
     delete lcReader ;
   }
+  
+  
+  //////////////////////////////////////////////
+  unsigned int total_Ram_Full;
+  unsigned int total_hits;
+  for(std::map<unsigned long long int,int>::iterator it=Time_stampss.begin();it!=Time_stampss.end();++it) total_hits+=it->second;
+  for(std::map<unsigned long long int,int>::iterator it=Time_stamps.begin();it!=Time_stamps.end();++it) total_Ram_Full+=it->second;
+  double moyenne=total_hits/(total_Ram_Full*1.0);
+  std::cout<<total_Ram_Full<<"  "<<total_hits<<"  "<<moyenne<<std::endl;
+  //////////////////////////////////////////////
   unsigned long long int min=9999999999;
   unsigned long long int  max=1;
   double min_between=99999;
@@ -722,8 +732,11 @@ void TriventProcessor::init()
     if(it->first>max)max=it->first;
     //std::cout<<it->first<<std::endl;
   }
+  bool isTriggered=false;
   for(std::map<double,std::vector<double>>::iterator j=Vec_timebetweentime.begin();j!=Vec_timebetweentime.end();++j)
   {
+    if(isTriggered==true)
+    {
 	  if(j->first<=0.5) 
     {
 		  //Between_spill[j->first]=j->second;
@@ -738,6 +751,20 @@ void TriventProcessor::init()
 	  {
 		  //Others[j->first]=j->second;
 		  Types["Other"].insert(Types["Other"].end(),j->second.begin(),j->second.end());
+	  }
+	  }
+	  else
+	  {
+	   if(j->first<=1.2*moyenne) 
+    {
+		  //Between_spill[j->first]=j->second;
+		  Types["RamFull"].insert(Types["RamFull"].end(),j->second.begin(),j->second.end());
+	  }
+    else if (j->first>1.2*moyenne) 
+	  {
+		  //Spills[j->first]=j->second;
+		  Types["Spill"].insert(Types["Spill"].end(),j->second.begin(),j->second.end());
+	  }
 	  }
   }
   //Vec_timebetweentime.clear();
@@ -816,7 +843,8 @@ void TriventProcessor::processEvent( LCEvent * evtP )
   if(_maxRecord+skip>=_GlobalEvents) 
   {
     maxRecordplusskip=_GlobalEvents;
-  }else maxRecordplusskip=_maxRecord+skip;
+  }
+  else maxRecordplusskip=_maxRecord+skip;
   if(_maxRecord>=_GlobalEvents)_maxRecord=_GlobalEvents ;
   if(_eventNr %_rolling==0 || _eventNr==_GlobalEvents || _eventNr==maxRecordplusskip || _eventNr==1)
   {
@@ -904,7 +932,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
         to_skip=true;
       }
     }
-    if(geom.GetDifType(int(dif_id))<=1)if(to_skip==false)  processCollection(evtP,col);
+    if(to_skip==false)  processCollection(evtP,col);
   }
 } 
 unsigned long int debut_RamFull;
@@ -931,13 +959,14 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
   }
   BehondTrigger.clear();
   int numElements = col->getNumberOfElements();
-  for(unsigned int i=0; i<HistoPlanes.size(); ++i)HistoPlanes[i]->Clear_Time_Plates_perRun();
+
   for (int ihit=0; ihit < numElements; ++ihit) 
   {
     RawCalorimeterHit *raw_hit = dynamic_cast<RawCalorimeterHit*>( col->getElementAt(ihit)) ;
     if (raw_hit != nullptr) 
     {
 	    unsigned int dif_id  = (raw_hit)->getCellID0() & 0xFF ;
+	    if(geom.GetDifType(dif_id)==scintillator)continue;
 	    if(geom.GetDifNbrPlate(dif_id)==-1) 
 	    {
 	      if(Warningg[dif_id]!=true) 
@@ -1008,9 +1037,12 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	      //if(a<=I&&b>=I&&c<=J&&d>=J)
 	      //{
 	      ///////////////////////////////////////
+	      //if(geom.GetDifType(dif_id)!=scintillator)
+	      //{
+	      
 	      HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Set_hit_trigger();
 	      Times[raw_hit->getTimeStamp()]++;
-	      RawHits[raw_hit->getTimeStamp()].push_back(raw_hit);
+	      RawHits[raw_hit->getTimeStamp()].push_back(raw_hit);//}
 	      ////////////////////////////////////////
 	      //}
 	      /////////////////////////////////////////
@@ -1018,14 +1050,20 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	    }
 	    else
 	    {
+	      //if(geom.GetDifType(dif_id)!=scintillator)
+	      //{
 	      HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Set_hit_other();
 	      BehondTrigger[raw_hit->getTimeStamp()].push_back(raw_hit);
+	      //}
 	      //std::cout<<blue<<raw_hit->getTimeStamp()<<"  "<<BehondTrigger.size()<<normal<<std::endl;
 	    }
+	    //if(geom.GetDifType(dif_id)!=scintillator)
+	      //{
 	    if(raw_hit->getTimeStamp()>HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Get_local_max())HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Set_local_max(raw_hit->getTimeStamp());
 	    if(raw_hit->getTimeStamp()<HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Get_local_min()&&raw_hit->getTimeStamp()>=0)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Set_local_min(raw_hit->getTimeStamp());
 	    HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_Time_Plates(raw_hit->getTimeStamp());
 	    HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_Time_Plates_perRun(raw_hit->getTimeStamp());
+	    //}
     }
   }
   if(Times.size()==0) std::cout<<red<<" 0 hits within the the TriggerTime given... You should verify your TriggerTime or your run is triggerless "<<normal<<std::endl;
@@ -1121,7 +1159,7 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	        col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_LONG));
 	        col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_TIME));
 	        
-	        FillIJK(EventsGrouped, col_event,cd,0);
+	       FillIJK(EventsGrouped, col_event,cd,0);
 	        
 	        evt->addCollection(col_event, "SDHCAL_HIT");
 	        evt->setEventNumber(EventsSelected);

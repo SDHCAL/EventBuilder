@@ -95,4 +95,3 @@ INSTALL(
 	TARGETS Trivent
 	LIBRARY DESTINATION lib
 )  
-

@@ -270,6 +270,7 @@ void Streamout::processEvent( LCEvent * evt )
 	    ///Scintillator ones
 	    if(geom.GetDifType(d->getID())==scintillator) 
 	    {
+	              std::cout<<"ttt"<<std::endl;
                 std::set<unsigned int>Scin;
                 
                 for(unsigned int i=0;i<d->getNumberOfFrames();++i)
@@ -286,7 +287,7 @@ void Streamout::processEvent( LCEvent * evt )
                         Scintillator->setIntVal(0,FrontScintillator);
                         Scintillator->setIntVal(1,BackScintillator);
                         Scintillator->setIntVal(2,Both);
-                        int fff=d->getBCID()-d->getFrameBCID(i)+rolling;
+                        unsigned int fff=d->getBCID()-d->getFrameBCID(i)+rolling;
                         Scintillator->setIntVal(3,fff);
                         RawVecScintillator->addElement(Scintillator);
                         std::cout<<Scintillator->getIntVal(0)<<"  "<<Scintillator->getIntVal(1)<<"  "<<Scintillator->getIntVal(2)<<"  "<<Scintillator->getIntVal(3)<<"  "<<std::endl;
@@ -299,27 +300,23 @@ void Streamout::processEvent( LCEvent * evt )
 		}*/
 
             }
-
-
-
-
-
-
-
+            
              /////
             //if Difs are temporal ones -> createCalorimeterHit
             
-            else if(geom.GetDifType(d->getID())==temporal) {
-
-                for (uint32_t i=0; i<d->getNumberOfFrames(); i++) {
-                    unsigned long int ID0;
-                    unsigned long int ID1;
-                    unsigned long int TTT;
-                    float Time0_6=0;
-                    double t=d->getFrameTimeToTrigger(i)*2E-7;
-                    int32_t iasic=(d->getFrameData(i,uint32_t(0)));
-                    //std::cout<<red<<iasic<<normal<<std::endl;
-                    if (t>3.8) {
+            else if(geom.GetDifType(d->getID())==temporal)
+            {
+              for (uint32_t i=0; i<d->getNumberOfFrames(); i++) 
+              {
+                unsigned long int ID0;
+                unsigned long int ID1;
+                unsigned long int TTT;
+                float Time0_6=0;
+                double t=d->getFrameTimeToTrigger(i)*2E-7;
+                int32_t iasic=(d->getFrameData(i,uint32_t(0)));
+                //std::cout<<red<<iasic<<normal<<std::endl;
+                if (t>3.8) 
+                {
                         printf("Wrong Time %f %x \n",t,d->getFrameTimeToTrigger(i));
                         continue;
                     }
@@ -396,7 +393,8 @@ void Streamout::processEvent( LCEvent * evt )
                         //std::cout<<yellow<<hit->getAmplitude()<<normal<<std::endl;
                         //unsigned int TTT = (unsigned int)(d->getFrameTimeToTrigger(i));
                         //hit->setTimeStamp(TTT);		      		//Time stamp of this event from Run Begining
-                        unsigned int Tjj=  d->getBCID()-d->getFrameBCID(i)+rolling;
+                        int Tjj=  d->getBCID()-d->getFrameBCID(i)+rolling;
+                        std::cout<<Tjj<<std::endl;
                         hit->setTimeStamp(Tjj);
                        //if(hit->getTimeStamp()<0)std::cout<<red<<rolling<<"  "<<Tjj<<"  "<<hit->getTimeStamp()<<"  "<<TTT<<"  "<<d->getBCID()<<"  "<<d->getFrameBCID(i)<<"  "<<d->getBCID()-d->getFrameBCID(i)<<normal<<std::endl;
                         //std::cout<<yellow<<TTT<<"  "<<Tjj<<normal<<std::endl;
@@ -411,6 +409,7 @@ void Streamout::processEvent( LCEvent * evt )
             trig[2] = d->getBCID();
             trig[3] = d->getAbsoluteBCID()&0xFFFFFF;
             trig[4] = (d->getAbsoluteBCID()/(0xFFFFFF+1))&0xFFFFFF;
+            std::cout<<red<<d->getAbsoluteBCID()<<normal<<std::endl;
             trig[5] = d->getTASU1(); //what happen if no temperature ?
             trig[6] = d->getTASU2();
             trig[7] = d->getTDIF();
@@ -452,13 +451,13 @@ void Streamout::printCounter(std::string description, std::map<int,int> &m)
 void Streamout::end()
 {
     TFile *hfile=nullptr;
-    if(HistoTimeAsic1.size()!=0) {
+    if(HistoTimeAsic1.size()!=0) 
+    {
         std::string name="TimeGivenByTDC_"+ patch::to_string(_NbrRun)+".root";
-         hfile = new TFile(name.c_str(),"RECREATE","Results");
+        hfile = new TFile(name.c_str(),"RECREATE","Results");
         for(std::map<int, TH1F* >::iterator it=HistoTimeAsic1.begin(); it!=HistoTimeAsic1.end(); ++it) it->second->Write();
         for(std::map<int, TH1F* >::iterator it=HistoTimeAsic2.begin(); it!=HistoTimeAsic2.end(); ++it) it->second->Write();
-        hfile->Close();
-        
+        hfile->Close();    
     }
     delete hfile;
     streamlog_out(MESSAGE) << "FINAL STATISTICS : " << std::endl;
