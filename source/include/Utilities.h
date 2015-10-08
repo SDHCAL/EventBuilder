@@ -175,26 +175,4 @@ void Make_good_TH3(TH3* t)
     }
 }
 
-std::string Shift(double val)
-{
-        std::string ret="";
-	if(val<10) return ret="  ";
-	if(val>=10&&val<100) return ret=" ";
-        else return ret;
-}
-std::string Shift(int val)
-{
-        std::string ret="";
-	if(val<10) return ret="  ";
-	if(val>=10&&val<100) return ret=" ";
-        else return ret;
-}
-unsigned int Every(unsigned int & _maxRecord)
-{
-  if(_maxRecord<=0) return 1000;
-  else if(_maxRecord<=10) return 1;
-  else if(_maxRecord<=100) return 10;
-  else if(_maxRecord<=1000) return 100;
-  else  return 1000;
-}
 #endif

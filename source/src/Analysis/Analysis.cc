@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include "Progress.h"
 #include "marlin/Processor.h"
 #include "UTIL/LCTOOLS.h"
 #include "UTIL/CellIDDecoder.h"
@@ -18,6 +19,7 @@
 #include <cmath>
 #include "TH1F.h"
 #include "TH2F.h"
+#include "marlin/Global.h"
 #include "TH3F.h"
 #include "TTree.h"
 #include "TGLTH3Composition.h"
@@ -542,10 +544,15 @@ void AnalysisProcessor::init()
 
 void AnalysisProcessor::processEvent( LCEvent * evtP )
 { 
+
+    _maxRecord= Global::parameters->getIntVal("MaxRecordNumber")-1;
+    _skip= Global::parameters->getIntVal("SkipNEvents");
     _NbrRun=evtP->getRunNumber();
     NbrRunn=_NbrRun;
     Plans.clear();
     PlansScintillator.clear();
+ 
+ //   Progress(_skip,_GlobalEvents,_maxRecord,_eventNr);
     if (evtP != nullptr) {
         
         std::vector<std::string>names=*evtP->getCollectionNames();

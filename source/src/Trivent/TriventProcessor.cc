@@ -1,4 +1,5 @@
 #include "Trivent/TriventProcessor.h"
+#include "Progress.h"
 #include "Utilities.h"
 #include <iostream>
 #include <string>
@@ -592,11 +593,13 @@ void TriventProcessor::init()
     _GlobalEvents=lcReader->getNumberOfEvents()-1;
     std::cout<<lcReader->getNumberOfRuns()<<" "<<lcReader->getNumberOfEvents()<<std::endl;
     evt=lcReader->readNextEvent();
-    int counter=0;
+    unsigned int counter=0;
+    std::cout<<"Spill Study progression"<<std::endl;
     do
     {
       counter++;
-		  if(counter%1000==0)std::cout<<counter<<std::endl;
+      Progress(_skip,_GlobalEvents,_maxRecord,counter);
+		  //if(counter%1000==0)std::cout<<counter<<std::endl;
       LCCollection* col=evt->getCollection("DHCALRawHits");
       if(col!=nullptr)
       //for(unsigned int hit=0;hit<col->getNumberOfElements();++hit)
@@ -732,41 +735,6 @@ void TriventProcessor::init()
     if(it->first>max)max=it->first;
     //std::cout<<it->first<<std::endl;
   }
-  bool isTriggered=false;
-  for(std::map<double,std::vector<double>>::iterator j=Vec_timebetweentime.begin();j!=Vec_timebetweentime.end();++j)
-  {
-    if(isTriggered==true)
-    {
-	  if(j->first<=0.5) 
-    {
-		  //Between_spill[j->first]=j->second;
-		  Types["RamFull"].insert(Types["RamFull"].end(),j->second.begin(),j->second.end());
-	  }
-    else if (j->first>=1) 
-	  {
-		  //Spills[j->first]=j->second;
-		  Types["Spill"].insert(Types["Spill"].end(),j->second.begin(),j->second.end());
-	  }
-    else 
-	  {
-		  //Others[j->first]=j->second;
-		  Types["Other"].insert(Types["Other"].end(),j->second.begin(),j->second.end());
-	  }
-	  }
-	  else
-	  {
-	   if(j->first<=1.2*moyenne) 
-    {
-		  //Between_spill[j->first]=j->second;
-		  Types["RamFull"].insert(Types["RamFull"].end(),j->second.begin(),j->second.end());
-	  }
-    else if (j->first>1.2*moyenne) 
-	  {
-		  //Spills[j->first]=j->second;
-		  Types["Spill"].insert(Types["Spill"].end(),j->second.begin(),j->second.end());
-	  }
-	  }
-  }
   //Vec_timebetweentime.clear();
   int diffbetweentime=(int((max_betweentime-min_betweentime))+1)*10;
   time2readtime = new TH1D("Difference in time bettwen two time","Difference in time bettwen two time",10000000,-10,10);
@@ -814,7 +782,7 @@ void TriventProcessor::init()
   //std::cout<<min<<"   "<<max<<"  "<<(max-min)*200e-9<<std::endl;
   
   }
-  _rolling=Every(_maxRecord);
+  //_rolling=Every(_maxRecord);
   printParameters();
   if(_WantCalibration==true&&_Database_name ==""){std::cout<<red<<"Name's Database is unknown from the xml file"<<normal<<std::endl;std::exit(1);}
   if(_LayerCut==-1){std::cout<<red<<"LayerCut set to -1, assuming that you want to use trigger to see events"<<normal<<std::endl;}
@@ -836,31 +804,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
   _NbrRun=evtP->getRunNumber();
   _eventNr=evtP->getEventNumber()+1;
   time_t date(evtP->getTimeStamp());
-  //std::cout<<asctime(localtime(&date))<<std::endl;
-  int skip=0;
-  if(_skip!=0)skip=_skip+1;
-  int maxRecordplusskip=0;
-  if(_maxRecord+skip>=_GlobalEvents) 
-  {
-    maxRecordplusskip=_GlobalEvents;
-  }
-  else maxRecordplusskip=_maxRecord+skip;
-  if(_maxRecord>=_GlobalEvents)_maxRecord=_GlobalEvents ;
-  if(_eventNr %_rolling==0 || _eventNr==_GlobalEvents || _eventNr==maxRecordplusskip || _eventNr==1)
-  {
-    if(_maxRecord==-1)
-	  {
-		  std::cout<<red<<"[";
-      int percent=int((_eventNr-skip)*100.0/(_GlobalEvents-skip));
-		  std::cout<<Shift(percent)<<percent<<"%]"<<normal<<" Event Number : "<<_eventNr<<"/"<<_GlobalEvents<<std::endl;
-	  }
-    else 
-	  {
-		  std::cout<<red<<"[";
-		  int percent=int((_eventNr-skip)*100.0/(_maxRecord));
-		  std::cout<<Shift(percent)<<percent<<"%]"<<normal<<" Event Number : "<<_eventNr<<"/"<<maxRecordplusskip<<" Total : "<<_GlobalEvents<<std::endl;
-	  }
-  }
+  Progress(_skip,_GlobalEvents,_maxRecord,_eventNr);
   LCCollection* col2=nullptr;
   LCCollection* col3=nullptr;
   std::vector<std::string>names=*evtP->getCollectionNames();

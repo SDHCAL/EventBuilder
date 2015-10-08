@@ -1,7 +1,7 @@
 #include "Streamout/Streamout.h"
 #include "Streamout/BufferNavigator.h"
 #include "Streamout/LMGenericObject.h"
-#include "Utilities.h"
+#include "Progress.h"
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -38,7 +38,7 @@
 #include <set>
 std::map<int,unsigned long long> BCID_old;
 
-int _NbrRun=0;
+//int _NbrRun=0;
 std::map<int,TH1F*>HistoTimeAsic1;
 std::map<int,TH1F*>HistoTimeAsic2;
 using namespace lcio ;
@@ -104,7 +104,6 @@ void Streamout::init()
     }
     delete evt;
     delete lcReader ;
-    _rolling=Every(_maxRecord);
     printParameters() ;
     ReaderFactory readerFactory;
     Reader* myReader = readerFactory.CreateReader(_ReaderType);
@@ -137,7 +136,6 @@ void Streamout::init()
 void Streamout::processRunHeader( LCRunHeader* run)
 {
     LCTOOLS::dumpRunHeader(run);
-
 }
 
 void Streamout::processEvent( LCEvent * evt )
@@ -149,7 +147,6 @@ void Streamout::processEvent( LCEvent * evt )
     chFlag.setBit(bitinfo.RCHBIT_ID1 );// cell ID
     chFlag.setBit(bitinfo.RCHBIT_TIME );//timestamp
     chFlag.setBit(bitinfo.RCHBIT_ENERGY_ERROR);
-    //chFlag.setBit(bitinfo.LCINTVEC);
     lcio::IntVec trig(8);
     IMPL::LCCollectionVec *RawVec=new IMPL::LCCollectionVec(LCIO::RAWCALORIMETERHIT) ;
     IMPL::LCCollectionVec *RawVecTime=new IMPL::LCCollectionVec(LCIO::CALORIMETERHIT) ;
@@ -158,34 +155,7 @@ void Streamout::processEvent( LCEvent * evt )
     RawVec->setFlag(chFlag.getFlag());
     RawVecTime->setFlag(chFlag.getFlag());
     _eventNr=evt->getEventNumber()+1;
-  int skip=0;
-  if(_skip!=0)skip=_skip+1;
-  int maxRecordplusskip=0;
-  if(_maxRecord+skip>=_GlobalEvents) 
-  {
-     maxRecordplusskip=_GlobalEvents;  
-  }
-  else maxRecordplusskip=_maxRecord+skip;
-  if(_maxRecord>=_GlobalEvents)_maxRecord=_GlobalEvents ;
-  if(_eventNr %_rolling ==0 || _eventNr==_GlobalEvents || _eventNr==maxRecordplusskip )
-  {
-    	if(_maxRecord==-1)
-	{
-		std::cout<<red<<"[";
-                int percent=int((_eventNr-skip)*100.0/(_GlobalEvents-skip));
-                if(percent<10)std::cout<<"  ";
-   		if(percent>=10&&percent!=100)std::cout<<" ";
-		std::cout<<percent<<"%]"<<normal<<" Event Number : "<<_eventNr<<"/"<<_GlobalEvents<<std::endl;
-	}
-        else 
-	{
-		std::cout<<red<<"[";
-		int percent=int((_eventNr-skip)*100.0/(_maxRecord));
-		if(percent<10)std::cout<<"  ";
-                if(percent>=10&&percent!=100)std::cout<<" ";
-		std::cout<<percent<<"%]"<<normal<<" Event Number : "<<_eventNr<<"/"<<maxRecordplusskip<<" Total : "<<_GlobalEvents<<std::endl;
-	}
-  }
+    Progress(_skip,_GlobalEvents,_maxRecord,_eventNr);
     _NbrRun=evt->getRunNumber();
     _nevt++;
 
@@ -270,7 +240,7 @@ void Streamout::processEvent( LCEvent * evt )
 	    ///Scintillator ones
 	    if(geom.GetDifType(d->getID())==scintillator) 
 	    {
-	              std::cout<<"ttt"<<std::endl;
+	              //std::cout<<"ttt"<<std::endl;
                 std::set<unsigned int>Scin;
                 
                 for(unsigned int i=0;i<d->getNumberOfFrames();++i)
@@ -394,7 +364,7 @@ void Streamout::processEvent( LCEvent * evt )
                         //unsigned int TTT = (unsigned int)(d->getFrameTimeToTrigger(i));
                         //hit->setTimeStamp(TTT);		      		//Time stamp of this event from Run Begining
                         int Tjj=  d->getBCID()-d->getFrameBCID(i)+rolling;
-                        std::cout<<Tjj<<std::endl;
+                        //std::cout<<Tjj<<std::endl;
                         hit->setTimeStamp(Tjj);
                        //if(hit->getTimeStamp()<0)std::cout<<red<<rolling<<"  "<<Tjj<<"  "<<hit->getTimeStamp()<<"  "<<TTT<<"  "<<d->getBCID()<<"  "<<d->getFrameBCID(i)<<"  "<<d->getBCID()-d->getFrameBCID(i)<<normal<<std::endl;
                         //std::cout<<yellow<<TTT<<"  "<<Tjj<<normal<<std::endl;
@@ -409,7 +379,7 @@ void Streamout::processEvent( LCEvent * evt )
             trig[2] = d->getBCID();
             trig[3] = d->getAbsoluteBCID()&0xFFFFFF;
             trig[4] = (d->getAbsoluteBCID()/(0xFFFFFF+1))&0xFFFFFF;
-            std::cout<<red<<d->getAbsoluteBCID()<<normal<<std::endl;
+            //std::cout<<red<<d->getAbsoluteBCID()<<normal<<std::endl;
             trig[5] = d->getTASU1(); //what happen if no temperature ?
             trig[6] = d->getTASU2();
             trig[7] = d->getTDIF();

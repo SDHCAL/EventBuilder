@@ -1,6 +1,5 @@
 #ifndef Streamout_h
 #define Streamout_h 1
-
 #include "marlin/Processor.h"
 #include "lcio.h"
 #include <string>
@@ -21,37 +20,35 @@ using namespace marlin ;
 
 class Streamout : public Processor
 {
-
-public:
-
+  public:
+  
     virtual Processor*  newProcessor()
     {
-        return new Streamout ;
+      return new Streamout ;
     }
-
-
+  
     Streamout() ;
 
     /** Called at the begin of the job before anything is read.
-     * Use to initialize the processor, e.g. book histograms.
-     */
+    * Use to initialize the processor, e.g. book histograms.
+    */
     virtual void init() ;
 
     /** Called for every run.
-     */
+    */
     virtual void processRunHeader( LCRunHeader* run ) ;
 
     /** Called for every event - the working horse.
-     */
+    */
     virtual void processEvent( LCEvent * evt ) ;
 
 
     /** Called after data processing for clean up.
-     */
+    */
     virtual void end() ;
 
 
-private:
+  private:
     Geometry geom;
     IMPL::LCFlagImpl chFlag;
     std::string _FileNameGeometry;
@@ -60,7 +57,7 @@ private:
     */
     bool _debugMode;
     unsigned int _eventNr;
-    
+    unsigned int _NbrRun=0;
     /** Input collection name.
      */
     std::string  _XDAQCollectionNames ;
@@ -76,10 +73,10 @@ private:
     /** Parameters
      */
     int _BitsToSkip;
-    int _GlobalEvents;
+    unsigned int _GlobalEvents;
     unsigned int _maxRecord;
-    int _rolling;
-    int _skip;
+    //int _rolling;
+    unsigned int _skip;
     //statistical counters
     unsigned int _nevt;
     std::map<int,int> _CollectionSizeCounter;

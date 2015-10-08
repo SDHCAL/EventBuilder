@@ -317,7 +317,10 @@ protected:
     std::vector<std::string> _hcalCollections;
     LCWriter* _EventWriter;
     std::string _FileNameGeometry;
-    int _eventNr;
+    unsigned int _eventNr;
+    unsigned int _skip;
+    unsigned int _maxRecord;
+    unsigned int _GlobalEvents;
     int _NbrRun;
     
     Geometry geom;
