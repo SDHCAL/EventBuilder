@@ -9,8 +9,11 @@
 #include "UTIL/CellIDDecoder.h"
 #include <map>
 #include <array>
+#include <TF1.h>
 #include <vector>
 #define degtorad 0.0174532925
+
+
 class plan;
 class testedPlan
 {
@@ -48,8 +51,16 @@ public:
         yj=cg*ca+sg*sb*sa;
         zj=cb*sa;
     }
-    inline double multiplicityShort() {return sommeNombreHitsShort[5]/nombreTestsOKShort[5];}
-    inline double GetNumberOKShort(){return nombreTestsOKShort[5];}
+    inline double multiplicityShort(int i) 
+    {
+      if(i<=nombreTestsOKShort.size()) return  sommeNombreHitsShort[i]/nombreTestsOKShort[i];
+      else return -1;
+    }
+    inline double GetNumberOKShort(int i )
+    {
+      if(i<=nombreTestsOKShort.size()) return nombreTestsOKShort[i];
+      else return -1;
+    }
     inline void ClearShort()
     {
      for(int i=0;i<6;++i)
@@ -59,10 +70,20 @@ public:
       sommeNombreHitsShort[i]=0;
      }
     }
-    inline double efficiencyShort() {return nombreTestsOKShort[5]/nombreTestsShort;}
-    inline double efficiency()
+    inline double efficiencyShort(int i) 
     {
-        return nombreTestsOK[5]/nombreTests;
+      if(i<=nombreTestsOKShort.size())return nombreTestsOKShort[i]/nombreTestsShort;
+      else return -1;
+    }
+    inline double efficiency(int i)
+    {
+        if(i<=nombreTestsOK.size())return nombreTestsOK[i]/nombreTests;
+        else return -1;
+    }
+    inline double efficiency(int i,bool IsShort)
+    {
+      if(IsShort==true) return efficiencyShort(int i);
+      else return efficiency(int i);
     }
     inline int NbrPlate()
     {
@@ -112,9 +133,10 @@ public:
     {
         return Jm;
     }
-    inline double GetNumberOK()
+    inline double GetNumberOK(int i)
     {
-        return nombreTestsOK[5];
+       if(i<=nombreTestsOK.size()) return nombreTestsOK[i];
+       else return -1;
     }
     inline float GetZexp(const double & pxz0,const double & pyz0,const double & pxz1,const double& pyz1)
     {
@@ -128,9 +150,10 @@ public:
     {
         return (Xexp-X0)*xj+(Yexp-Y0)*yj+(Zexp-Z0)*zj;
     }
-    inline double multiplicity()
+    inline double multiplicity(int i)
     {
-        return sommeNombreHits[5]/nombreTestsOK[5];
+        if(i<=nombreTestsOK.size())  return sommeNombreHits[i]/nombreTestsOK[i];
+        else return -1;
     }
     inline void clear()
     {
@@ -312,7 +335,6 @@ public:
     void init();
     void processEvent(EVENT::LCEvent *evtP);
     void end();
-    
 protected:
     std::vector<std::string> _hcalCollections;
     LCWriter* _EventWriter;
@@ -321,6 +343,7 @@ protected:
     unsigned int _skip;
     unsigned int _maxRecord;
     unsigned int _GlobalEvents;
+   
     int _NbrRun;
     
     Geometry geom;

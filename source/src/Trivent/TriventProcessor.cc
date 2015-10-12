@@ -26,6 +26,7 @@
 #include "TObject.h"
 #include "TPDF.h"
 #include "TCanvas.h"
+#include "Trivent/SpillStudy.h"
 #ifndef COLORS_H
 #define normal " "
 #define red "  "
@@ -49,7 +50,6 @@
 #include "TColor.h"
 #include "TNamed.h"
 #include "THnSparse.h"
-#include "marlin/Global.h"
 #include "IO/LCReader.h"
 #include "IMPL/LCTOOLS.h"
 #include "EVENT/LCRunHeader.h" 
@@ -60,7 +60,7 @@
 //#include "THClass.h"
 bool pdf=false;
 bool HasScintiSignal=false;
-std::vector<int>EffiwithDiscri;
+
 
 
 enum Threshold{Threshold2=1,Threshold1,Threshold3};
@@ -72,27 +72,17 @@ unsigned int EventsNoise=0;
 
 unsigned int EventsSelected=0;
 unsigned int EventsSelectedt=0;
-unsigned int TOTALNUMBERHITSCINTI=0;
+
 unsigned int _eventNr=0;
 #define size_pad 10.4125
 #define size_strip 2.5
-unsigned long int total_time_file=0;
-unsigned long int total_time_by_user=0;
+//unsigned long int total_time_file=0;
+//unsigned long int total_time_by_user=0;
 unsigned long int min_by_user=0;
 unsigned long int max_by_user=0;
 unsigned long long int HistoPlane::global_total_time =0;
 //std::map<int,TGraphTime*>time_graph;
-int bin[3]={110,110,700};
-int bin2[3]={100,100,1000};
-double xmin[3]={0,0,0};
-double xmax[3]={110,110,700};
-double xmin2[3]={0,0,0};
-double xmax2[3]={1000,1000,1000};
-extern TCanvas* canvas;
-THnSparseI hs("Noise", "Noise", 3, bin, xmin, xmax);
-THnSparseI hs2("Events", "Events", 3, bin, xmin, xmax);
-THnSparseD hss("Noise_2", "Noise_2", 3, bin2, xmin2, xmax2);
-THnSparseD hss2("Events_2", "Events_2", 3, bin2, xmin2, xmax2);
+
 TH1F diff("diff","diff",1000,-500,500);
 std::map<std::string,std::vector<double>>Types;
 //class ToTree
@@ -132,331 +122,7 @@ std::vector<std::string> th2 {
                              };
 std::vector<std::string>th2_Asic{"Flux_Noise_Asic","Flux_Events_Asic"};
 int _NbrRun=0;
-TH1D* timestamp=nullptr;
-TH1D* timestamps=nullptr;
-TH1D* time2read=nullptr;
-TH1D* time2readtime=nullptr;
-TH1D* TimeSpill=new TH1D("Duration Spill","Duration Spill",50000,0,500);
-TH1D* TimeRamFull=new TH1D("Duration Frame","Duration Frame",1000,0,1);
-TH1D* UsefullTime=new TH1D("UselessTime","UselessTime",1000,0,1);
-std::vector<TH1*>typeee;
-void TriventProcessor::FillTimes()
-{
-  bool eraseFirst=false;
-  bool nextHasBeenErased=false;
-  for (std::map<int,int>::iterator it=Times.begin(); it!= Times.end(); ++it) 
-  {
-    if (nextHasBeenErased) --it;
-    nextHasBeenErased=false;
-    bool eraseIt=(it->second<_noiseCut);
-    if (!eraseIt) 
-    {
-      std::map<int,int>::iterator itnext=it;
-      ++itnext;
-      if (fabs(itnext->first-it->first)<=_timeWin) 
-      {
-        if (itnext->second >= it->second)	eraseIt=true;
-        else 
-        {
-          Times.erase(itnext);
-          nextHasBeenErased=true;
-        }
-      }
-    }
-    if (eraseIt) 
-    {
-      std::map<int,int>::iterator itprev=it;
-      --itprev;
-      if (it == Times.begin()) eraseFirst=true;
-      else 
-      {
-        Times.erase(it);
-        it=itprev;
-      }
-    }
-  }
-  if (eraseFirst) Times.erase(Times.begin());
-  std::set<int>touched;
-  for(std::map< int,int>::iterator firstit=Times.begin(); firstit!=Times.end(); ++firstit) 
-  {
-    eventtotal++;
-    if(firstit!=--(Times.end())) 
-    {
-      std::map< int,int>::iterator secondit=firstit;
-      secondit++;
-      if(secondit->first-firstit->first<2*_timeWin)
-      {
-        streamlog_message(DEBUG,std::cout<<magenta<<secondit->first<<"  "<<firstit->first<<normal<<std::endl;touched.insert(firstit->first);touched.insert(secondit->first);,"";);
-      } 
-      else streamlog_message(DEBUG,std::cout<<green<<secondit->first<<"  "<<firstit->first<<normal<<std::endl; ,"";);
-    }
-  }
-  TouchedEvents+=touched.size();
-  for(std::set< int>::iterator it=touched.begin(); it!=touched.end(); ++it) 
-  {
-    Times.erase(*it);
-  }
-  streamlog_message(MESSAGE0,if(touched.size()!=0)std::cout<<touched.size()<<" Events are touched !"<<std::endl; ,"";);
-}
 
-void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollectionVec* col,CellIDEncoder<CalorimeterHitImpl>& cd, int IsNoise)
-{
-  std::vector<std::map<int,int> >Times_Plates_S1;
-  std::vector<std::map<int,int> >Times_Plates_S2;
-  std::vector<std::map<int,int> >Times_Plates_S3;
-  std::vector<std::vector<std::map<int,int> >>Times_Plates{Times_Plates_S1,Times_Plates_S2,Times_Plates_S3};
-  for(unsigned int j=0; j<HistoPlanes.size(); ++j) 
-  {
-    for(unsigned int i=0; i<Times_Plates.size(); ++i)
-    {
-      Times_Plates[i].emplace_back(std::map<int,int>());
-    }
-  }
-  for(std::vector<RawCalorimeterHit *>::iterator it=vec.begin(); it!=vec.end(); ++it) 
-  {
-    CalorimeterHitImpl* caloHit = new CalorimeterHitImpl();
-    int dif_id  = (*it)->getCellID0() & 0xFF ;
-    int asic_id = ((*it)->getCellID0() & 0xFF00)>>8;
-    int chan_id = ((*it)->getCellID0() & 0x3F0000)>>16;
-    int Seuil = ((*it)->getAmplitude());
-    double ca=SinCos[dif_id][0];
-	  double sa=SinCos[dif_id][1];
-    double cb=SinCos[dif_id][2];
-	  double sb=SinCos[dif_id][3];
-    double cg=SinCos[dif_id][4];
-	  double sg=SinCos[dif_id][5];
-    /*float ca=cos(geom.GetDifAlpha(dif_id)*degtorad);
-    float sa=sin(geom.GetDifAlpha(dif_id)*degtorad);
-    float cb=cos(geom.GetDifBeta(dif_id)*degtorad);
-    float sb=sin(geom.GetDifBeta(dif_id)*degtorad);
-    float cg=cos(geom.GetDifGamma(dif_id)*degtorad);
-    float sg=sin(geom.GetDifGamma(dif_id)*degtorad);*/
-    unsigned int NbrPlate =geom.GetDifNbrPlate(dif_id)-1;
-    float Z= geom.GetPlatePositionZ(NbrPlate);
-    cd["Dif_id"]=dif_id;
-    cd["Asic_id"]=asic_id;
-    cd["Chan_id"]=chan_id;
-    caloHit->setTime(float((*it)->getTimeStamp()));
-    caloHit->setEnergy(float((*it)->getAmplitude()&3));
-    unsigned int K =geom.GetDifNbrPlate(dif_id);
-    unsigned int I=0;
-    unsigned int J=0;
-    if(geom.GetDifType(dif_id)==pad) 
-    {
-      I =(1+MapILargeHR2[chan_id]+AsicShiftI[asic_id])+geom.GetDifPositionX(dif_id);
-      J =(32-(MapJLargeHR2[chan_id]+AsicShiftJ[asic_id]))+geom.GetDifPositionY(dif_id);
-      pos[0] = cg*cb*I*size_pad+(-sg*ca+cg*sb*sa)*J*size_pad+(sg*sa+cg*sb*ca)*Z+geom.GetPlatePositionX(NbrPlate);
-      pos[1] = sg*cb*I*size_pad+(cg*ca+sg*sb*sa)*J*size_pad+(-cg*sa+sg*sb*ca)*Z+geom.GetPlatePositionY(NbrPlate);
-      pos[2] = -sb*I*size_pad+cb*sa*J*size_pad+cb*ca*Z;
-    }
-    if(geom.GetDifType(dif_id)==positional) 
-    {
-      if(asic_id%2==0) Z= geom.GetPlatePositionZ(NbrPlate)+2;
-      //if((asic_id%2==0&&geom.GetDifUpDown(dif_id)==1)||(asic_id%2==1&&geom.GetDifUpDown(dif_id)==0))
-      if(geom.GetDifUpDown(dif_id)==1) 
-      {
-        I =(2*chan_id)+geom.GetDifPositionX(dif_id);
-      } 
-      else I =2*(64-chan_id)-1+geom.GetDifPositionX(dif_id);
-      J =0;
-      pos[0] = cg*cb*I*size_strip+(-sg*ca+cg*sb*sa)*J*size_strip+(sg*sa+cg*sb*ca)*Z+geom.GetPlatePositionX(NbrPlate);
-      if(asic_id%2==1) 
-      {
-        pos[0]=cg*cb*I*size_strip+(-sg*ca+cg*sb*sa)*J*size_strip+(sg*sa+cg*sb*ca)*Z+geom.GetPlatePositionX(NbrPlate)+1;
-      }
-        pos[1] = sg*cb*I*size_strip+(cg*ca+sg*sb*sa)*J*size_strip+(-cg*sa+sg*sb*ca)*Z+geom.GetPlatePositionY(NbrPlate);
-        pos[2] = -sb*I*size_strip+cb*sa*J*size_strip+cb*ca*Z;
-    }
-    Times_Plates[Seuil-1][geom.GetDifNbrPlate(dif_id)-1][(*it)->getTimeStamp()]++;
-    if(IsNoise==1) 
-    {
-      HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Noise")->Fill((*it)->getTimeStamp(),1);
-      if(Seuil==1)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Noise_S1")->Fill((*it)->getTimeStamp(),1);
-      else if (Seuil==2)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Noise_S2")->Fill((*it)->getTimeStamp(),1);
-      else if (Seuil==3)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Noise_S3")->Fill((*it)->getTimeStamp(),1);
-    } 
-    else if (IsNoise==0) 
-    {
-      HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Events")->Fill((*it)->getTimeStamp(),1);
-      if(Seuil==1)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Events_S1")->Fill((*it)->getTimeStamp(),1);
-      else if (Seuil==2)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Events_S2")->Fill((*it)->getTimeStamp(),1);
-      else if (Seuil==3)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Events_S3")->Fill((*it)->getTimeStamp(),1);
-    }
-    if(IsNoise==1) 
-    {
-      //TMarker *m = new TMarker(I*10.4125,J*10.4125,21);
-      //m->SetMarkerColor(kRed);
-      //m->SetMarkerSize(1.4125);
-      //time_graph[geom.GetDifNbrPlate(dif_id)-1]->Add(m,_eventNr);
-      //time_graph[geom.GetDifNbrPlate(dif_id)-1]->Add(new TPaveLabel(.90,.92,.98,.97,Form("%d",_eventNr),"brNDC"),_eventNr);
-      HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise")->Fill(I,J);
-      HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_Pon")->Fill(I,J,Seuil);
-      if(Seuil==1)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_S1")->Fill(I,J);
-      else if (Seuil==2)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_S2")->Fill(I,J);
-      else if (Seuil==3)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_S3")->Fill(I,J);
-      if(geom.GetDifType(dif_id)==positional)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_Asic")->Fill(asic_id,asic_id);
-      else HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_Asic")->Fill((AsicShiftI[asic_id]+geom.GetDifPositionX(dif_id))/8,(32-AsicShiftJ[asic_id]+geom.GetDifPositionY(dif_id))/8);
-      ///////////////
-      if(_WantDistribution==true)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_Hit_In_Pad_Per_RamFull(dif_id,asic_id,chan_id);
-	    //////////
-      //if(_WantCalibration==true)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_Calibration(dif_id,asic_id,chan_id);
-      if(_WantCalibration==true)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_NumberHitsDistribution(dif_id,asic_id,chan_id);
-      //std::cout<<green<<HistoPlanes[geom.GetDifNbrPlate(dif_id)-1].Get_Calibration(dif_id,asic_id,chan_id)<<normal<<std::endl;
-    } 
-    else if (IsNoise==0) 
-    {
-      HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events")->Fill(I,J);
-      HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events_Pon")->Fill(I,J,Seuil);
-      if(Seuil==1)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events_S1")->Fill(I,J);
-      else if (Seuil==2)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events_S2")->Fill(I,J);
-      else if (Seuil==3)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events_S3")->Fill(I,J);
-      if(geom.GetDifType(dif_id)==positional)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events_Asic")->Fill(asic_id,asic_id);
-      else HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events_Asic")->Fill((AsicShiftI[asic_id]+geom.GetDifPositionX(dif_id))/8,(32-AsicShiftJ[asic_id]+geom.GetDifPositionY(dif_id))/8);
-    }
-    cd["I"] = I ;
-    cd["J"] = J ;
-    cd["K"] = K ;
-    //totree.pI=I;
-    //totree.pJ=J;
-    //totree.pK=K;
-    //totree.pX=pos[0];
-    //totree.pY=pos[1];
-    //totree.pZ=pos[2];
-    //totree.pAsic=asic_id;
-    //totree.pDifId=dif_id;
-    //totree.pAsicChannel=chan_id;
-    //totree.pTime=(*it)->getTimeStamp();
-    //if(IsNoise==1)totree.pEvent=0;
-    //else totree.pEvent=1;
-    caloHit->setPosition(pos);
-    cd.setCellID( caloHit ) ;
-    double fill[3]={double(I),double(J),double(10*K)};
-    double fill2[3]={pos[0],pos[1],pos[2]};
-    if(IsNoise==1) 
-    {            
-      hs.Fill(fill,1);
-      hss.Fill(fill2,1);
-      //hist->Fill(I,J,10*K,1);
-    }
-    //else histt->Fill(I,J,10*K,1);
-    else if (IsNoise==0) 
-    {
-      hs2.Fill(fill,1);
-		  hss2.Fill(fill2,1);
-	  }
-    //int a,b,c,d;
-    //if(Delimiter.find(dif_id)==Delimiter.end()){a=Delimiter[1][0];b=Delimiter[1][1];c=Delimiter[1][2];d=Delimiter[1][3];}
-    //else {a=Delimiter[dif_id][0];b=Delimiter[dif_id][1];c=Delimiter[dif_id][2];d=Delimiter[dif_id][3];}
-    //std::cout<<Delimiter.size()<<std::endl;
-    //std::cout<<Delimiter[dif_id][0]<<"  "<<std::endl;//<<Delimiter[dif_id][1]<<"  "<<Delimiter[dif_id][2]<<"  "<<Delimiter[dif_id][3]<<std::endl;
-    //if(a<=I&&b>=I&&c<=J&&d>=J)
-    //{
-    col->addElement(caloHit);
-    //}
-    //std::cout<<magenta<<totree.pI<<"  "<<totree.pJ<<"  "<<red<<(*it)->getTimeStamp()<<"  "<<totree.pTime<<normal<<std::endl;
-    //t->Fill();
-  }
-  if(IsNoise==1) 
-  {
-    for(unsigned int k=0; k<Times_Plates.size(); ++k)for(unsigned int i=0; i<Times_Plates[k].size(); ++i)for(std::map<int,int>::iterator it = Times_Plates[k][i].begin(); it!=Times_Plates[k][i].end(); ++it) 
-    {
-      HistoPlanes[i]->Return_TH1F("Hits_Distr_Noise")->Fill(it->second,1);
-      if(k==0)HistoPlanes[i]->Return_TH1F("Hits_Distr_Noise_S1")->Fill(it->second,1);
-      else if (k==1)HistoPlanes[i]->Return_TH1F("Hits_Distr_Noise_S2")->Fill(it->second,1);
-      else if (k==2)HistoPlanes[i]->Return_TH1F("Hits_Distr_Noise_S3")->Fill(it->second,1);  
-    }
-  } 
-  else if (IsNoise==0) 
-  {
-    for(unsigned int k=0; k<Times_Plates.size(); ++k)for(unsigned int i=0; i<Times_Plates[k].size(); ++i)for(std::map<int,int>::iterator it = Times_Plates[k][i].begin(); it!=Times_Plates[k][i].end(); ++it)
-    { 
-      HistoPlanes[i]->Return_TH1F("Hits_Distr_Events")->Fill(it->second,1);
-      if(k==0)HistoPlanes[i]->Return_TH1F("Hits_Distr_Events_S1")->Fill(it->second,1);
-      else if (k==1)HistoPlanes[i]->Return_TH1F("Hits_Distr_Events_S2")->Fill(it->second,1);
-      else if (k==2)HistoPlanes[i]->Return_TH1F("Hits_Distr_Events_S3")->Fill(it->second,1);  
-    }
-  }
-}
-
-std::vector<bool>hitinit;
-
-void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec)
-{
-  std::vector<std::map<int,int> >Times_Plates;
-  hitinit.clear();
-  for(unsigned int j=0; j<HistoPlanes.size(); ++j) 
-  {
-    Times_Plates.emplace_back(std::map<int,int>());
-    hitinit.push_back(false);
-  }
-  for(std::vector<RawCalorimeterHit *>::iterator it=vec.begin(); it!=vec.end(); ++it) 
-  {
-    TOTALNUMBERHITSCINTI++;
-    int dif_id  = (*it)->getCellID0() & 0xFF ;
-    int asic_id = ((*it)->getCellID0() & 0xFF00)>>8;
-    int chan_id = ((*it)->getCellID0() & 0x3F0000)>>16;
-    double ca=SinCos[dif_id][0];
-	  double sa=SinCos[dif_id][1];
-    double cb=SinCos[dif_id][2];
-	  double sb=SinCos[dif_id][3];
-    double cg=SinCos[dif_id][4];
-	  double sg=SinCos[dif_id][5];
-    unsigned int NbrPlate =geom.GetDifNbrPlate(dif_id)-1;
-    float Z= geom.GetPlatePositionZ(NbrPlate);
-    unsigned int K =geom.GetDifNbrPlate(dif_id);
-    unsigned int I=0;
-    unsigned int J=0;
-    if(geom.GetDifType(dif_id)==pad) 
-    {
-      I =(1+MapILargeHR2[chan_id]+AsicShiftI[asic_id])+geom.GetDifPositionX(dif_id);
-      J =(32-(MapJLargeHR2[chan_id]+AsicShiftJ[asic_id]))+geom.GetDifPositionY(dif_id);
-      pos[0] = cg*cb*I*size_pad+(-sg*ca+cg*sb*sa)*J*size_pad+(sg*sa+cg*sb*ca)*Z+geom.GetPlatePositionX(NbrPlate);
-      pos[1] = sg*cb*I*size_pad+(cg*ca+sg*sb*sa)*J*size_pad+(-cg*sa+sg*sb*ca)*Z+geom.GetPlatePositionY(NbrPlate);
-      pos[2] = -sb*I*size_pad+cb*sa*J*size_pad+cb*ca*Z;
-    }
-    if(geom.GetDifType(dif_id)==positional) 
-    {
-      if(asic_id%2==0) Z= geom.GetPlatePositionZ(NbrPlate)+2;
-      //if((asic_id%2==0&&geom.GetDifUpDown(dif_id)==1)||(asic_id%2==1&&geom.GetDifUpDown(dif_id)==0))
-      if(geom.GetDifUpDown(dif_id)==1) 
-      {
-        I =(2*chan_id)+geom.GetDifPositionX(dif_id);
-      } 
-      else I =2*(64-chan_id)-1+geom.GetDifPositionX(dif_id);
-      J =0;
-      pos[0] = cg*cb*I*size_strip+(-sg*ca+cg*sb*sa)*J*size_strip+(sg*sa+cg*sb*ca)*Z+geom.GetPlatePositionX(NbrPlate);
-      if(asic_id%2==1) 
-      {
-        pos[0]=cg*cb*I*size_strip+(-sg*ca+cg*sb*sa)*J*size_strip+(sg*sa+cg*sb*ca)*Z+geom.GetPlatePositionX(NbrPlate)+1;
-      }
-        pos[1] = sg*cb*I*size_strip+(cg*ca+sg*sb*sa)*J*size_strip+(-cg*sa+sg*sb*ca)*Z+geom.GetPlatePositionY(NbrPlate);
-        pos[2] = -sb*I*size_strip+cb*sa*J*size_strip+cb*ca*Z;
-    }
-    Times_Plates[geom.GetDifNbrPlate(dif_id)-1][(*it)->getTimeStamp()]++; 
-      int a,b,c,d;
-      
-	    if(Delimiter.find(dif_id)==Delimiter.end()){a=Delimiter[1][0];b=Delimiter[1][1];c=Delimiter[1][2];d=Delimiter[1][3];}
-	    else {a=Delimiter[dif_id][0];b=Delimiter[dif_id][1];c=Delimiter[dif_id][2];d=Delimiter[dif_id][3];}
-	    
-      if(a<=I&&b>=I&&c<=J&&d>=J)
-	    {
-	    
-	    hitinit[geom.GetDifNbrPlate(dif_id)-1]=true; 
-      HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("EffiScintiOnly")->Fill(I,J);
-      
-      
-      }
-    }
-  for(unsigned int i=0;i!=hitinit.size();++i)
-  {
-    if(hitinit[i]==true)
-    {
-      EffiwithDiscri[i]+=1;
-    }
-      std::cout<<green<<i<<"  "<<EffiwithDiscri[i]<<"  ";
-  }
-  std::cout<<normal<<std::endl;
-}
 
 TriventProcessor aTriventProcessor;
 
@@ -499,24 +165,9 @@ TriventProcessor::TriventProcessor() : Processor("TriventProcessorType")
   registerProcessorParameter("Delimiters" ,"Delimiters",_Delimiters,_Delimiters);  
 }
 
-void TriventProcessor::Writer(IO::LCWriter* file,const char * name,std::map<int,std::vector<EVENT::RawCalorimeterHit *> >& vec, EVENT::LCEvent* event,unsigned int & nbr,unsigned int IsNoise)
-{
-  LCEventImpl*  evt = new LCEventImpl() ;
-  LCCollectionVec* col_event = new LCCollectionVec(LCIO::CALORIMETERHIT);
-  col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_LONG));
-  col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_TIME));
-  CellIDEncoder<CalorimeterHitImpl> cd( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event) ;
-  for(std::map<int,std::vector<RawCalorimeterHit *> >::iterator itt=vec.begin(); itt!=vec.end(); ++itt) 
-	{
-    FillIJK((itt->second),col_event,cd,IsNoise);
-  }
-  evt->addCollection(col_event,name);
-  evt->setEventNumber(nbr);
-  evt->setTimeStamp(event->getTimeStamp());
-  evt->setRunNumber(event->getRunNumber());
-  file->writeEvent( evt ) ;
-  delete evt;
-}
+
+
+
 int counttt=0;
 TriventProcessor::~TriventProcessor() {}
 
@@ -524,10 +175,10 @@ void TriventProcessor::processRunHeader( LCRunHeader* run)
 {
     LCTOOLS::dumpRunHeader(run);
 }
-std::map<unsigned long long int,int>Time_stamps;
-std::map<unsigned long long int,int>Time_stampss;
+
 void TriventProcessor::init()
 {   
+  TOTALNUMBERHITSCINTI=0;
   ReaderFactory readerFactory;
   Reader* myReader = readerFactory.CreateReader(_ReaderType);
   if(myReader) 
@@ -574,215 +225,7 @@ void TriventProcessor::init()
     delete lcReader;
   }
   std::cout<<yellow<<_GlobalEvents<<normal<<std::endl;
-  if(_Spill_Study)
-  {
-  
-  int32_t timetime=0;
-  LCReader* lcReader = LCFactory::getInstance()->createLCReader() ;
-  std::vector<std::string>colee{"DHCALRawHits"};
-  std::string namea="DHCALRawHits";
-  lcReader->setReadCollectionNames( colee ) ;
-  unsigned eventnumber=-1;
-  unsigned long long int min_by_user=999999999999;
-  unsigned long long int  max_by_user=1;
-  for(unsigned int i=0;i!=LCIOFiles.size();++i)
-  {
-    std::cout<<"I'm Readind The DATA in "<<LCIOFiles[i]<<std::endl;
-    LCEvent* evt(0) ;
-    lcReader->open( LCIOFiles[i] ) ;
-    _GlobalEvents=lcReader->getNumberOfEvents()-1;
-    std::cout<<lcReader->getNumberOfRuns()<<" "<<lcReader->getNumberOfEvents()<<std::endl;
-    evt=lcReader->readNextEvent();
-    unsigned int counter=0;
-    std::cout<<"Spill Study progression"<<std::endl;
-    do
-    {
-      counter++;
-      Progress(_skip,_GlobalEvents,_maxRecord,counter);
-		  //if(counter%1000==0)std::cout<<counter<<std::endl;
-      LCCollection* col=evt->getCollection("DHCALRawHits");
-      if(col!=nullptr)
-      //for(unsigned int hit=0;hit<col->getNumberOfElements();++hit)
-	    //{
-		  {
-        eventnumber++;
-        RawCalorimeterHit * myhit = dynamic_cast<RawCalorimeterHit*>(col->getElementAt(/*hit*/0)) ;
-        //std::cout<<blue<<myhit->getCellID0()<<"  "<<std::endl;
-        unsigned int dif_id=myhit->getCellID0()&0xFF;
-        if (dif_id==0) return;
-        std::string name="DIF"+patch::to_string(dif_id)+"_Triggers";
-        //std::cout<<name<<std::endl;
-        lcio::IntVec vTrigger;
-        col->getParameters().getIntVals(name,vTrigger);
-        unsigned long long _bcid=0;
-        if (vTrigger.size()>=5)
-        {
-          unsigned long long Shift=16777216ULL;
-  	      _bcid=vTrigger[4]*Shift+vTrigger[3];
-        }
-        Time_stamps[_bcid]++;
-        for(unsigned int i=0;i<col->getNumberOfElements();++i)
-        {
-        myhit=dynamic_cast<RawCalorimeterHit*>(col->getElementAt(i));
-        unsigned int dif_id=myhit->getCellID0()&0xFF;
-        
-        //std::cout<<yellow<<dif_id<<"  "<<geom.GetDifNbrPlate(int(dif_id))<<"  "<<geom.GetDifType(int(dif_id))<<normal<<std::endl;
-        if(geom.GetDifType(int(dif_id))<=1)if(geom.GetDifNbrPlate(int(dif_id))!=-1) HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("timestamp")->Fill(_bcid*200e-9,1);
-        }
-        Time_stampss[_bcid]=col->getNumberOfElements();
-        //std::cout<<red<<col->getNumberOfElements()<<normal<<std::endl;
-        if(eventnumber>=_skip&&eventnumber<=_maxRecord)
-				{
-          //std::cout<<eventnumber<<" "<<_skip<<"  "<<_maxRecord<<"  "<<_bcid<<std::endl;
-					if(_bcid<min_by_user)
-          {
-				    min_by_user=_bcid;
-			 			//std::cout<<red<<_bcid<<normal<<std::endl;
-					}
-        	if(_bcid>max_by_user)
-					{
-		        //std::cout<<green<<_bcid<<normal<<std::endl;
-						max_by_user=_bcid;
-					}
-				}
-		  }
-		  //}
-		  if(counter<=_maxRecord) evt=lcReader->readNextEvent();
-      else evt =nullptr;
-	  }
-	  while(evt!=nullptr);
-    lcReader->close();
-    delete lcReader ;
-  }
-  
-  
-  //////////////////////////////////////////////
-  unsigned int total_Ram_Full;
-  unsigned int total_hits;
-  for(std::map<unsigned long long int,int>::iterator it=Time_stampss.begin();it!=Time_stampss.end();++it) total_hits+=it->second;
-  for(std::map<unsigned long long int,int>::iterator it=Time_stamps.begin();it!=Time_stamps.end();++it) total_Ram_Full+=it->second;
-  double moyenne=total_hits/(total_Ram_Full*1.0);
-  std::cout<<total_Ram_Full<<"  "<<total_hits<<"  "<<moyenne<<std::endl;
-  //////////////////////////////////////////////
-  unsigned long long int min=9999999999;
-  unsigned long long int  max=1;
-  double min_between=99999;
-  double max_between=0;
-  double min_betweentime=99999;
-  double max_betweentime=0;
-  std::vector<double>Vec_timebetween;
-  std::vector<double>timebetweentime_toplot;
-  std::map<double,std::vector<double>>Vec_timebetweentime;
-  Vec_timebetween.reserve(Time_stamps.size()-1);
-  std::map<unsigned long long int,int>::iterator ultimate=--Time_stamps.end();
-  std::map<unsigned long long int,int>::iterator ultimateless=ultimate; --ultimateless;
-  bool skip=false;
-  for(std::map<unsigned long long int,int>::iterator it=Time_stamps.begin();it!=Time_stamps.end();++it)
-  {
-    if(skip) 
-    {
-      skip=false; 
-      continue;
-    }
-    if(it!=ultimate)
-    {
-      std::map<unsigned long long int,int>::iterator itt=it;
-		  ++itt;
-      double timebetween=(itt->first-it->first)*200e-9;
-      if(timebetween<min_between)min_between=timebetween;
-      if(timebetween>max_between)max_between=timebetween;
-      Vec_timebetween.push_back(timebetween);
-      if(it==Time_stamps.begin())
-      {
-        Vec_timebetweentime[(itt->first-it->first)*200e-9].push_back(it->first);
-			  Vec_timebetweentime[(itt->first-it->first)*200e-9].push_back(itt->first);
-	    }
-      if(it!=ultimateless)
-		  {
-			  std::map<unsigned long long int,int>::iterator ittt=itt;
-			  ++ittt;
-        double a= (ittt->first-itt->first);
-			  double b=(itt->first-it->first);
-			  double timebetweentime=(a-b)*200e-9;
-        //std::cout<<red<<fabs((b-a))*200e-9;
-        timebetweentime_toplot.push_back((b-a)*200e-9);
-			  //std::cout<<yellow<<ittt->first<<"  "<<itt->first<<"  "<<it->first<<"  "<<(ittt->first-itt->first)<<"  "<<(itt->first-it->first)<<"  "<<timebetweentime<<normal<<std::endl;
-        if(timebetweentime<min_betweentime)min_betweentime=timebetweentime;
-        if(timebetweentime>max_betweentime)max_betweentime=timebetweentime;
-        std::map<double,std::vector<double>>::iterator toadd=Vec_timebetweentime.end();
-			  --toadd;
-        for(std::map<double,std::vector<double>>::iterator j=Vec_timebetweentime.begin();j!=Vec_timebetweentime.end();++j)
-			  {
-          //std::cout<<"Vector size : "<<Vec_timebetweentime.size()<<std::endl;
-          //std::cout<<"fabs(timebetweentime-j->first) : "<<fabs(timebetweentime-j->first) << "  "<< timebetweentime<< " "<<j->first<<"  "<<std::endl;
-          if(fabs(fabs(timebetweentime)-j->first) <=0.50)
-				  {
-					  (j->second).push_back(ittt->first);
-            //std::cout<<"ittt->first : "<<ittt->first<<"  "<<std::endl;
-            break;
-				  }
-          else if(j==toadd&&it!=Time_stamps.begin()) 
-          {
-					  Vec_timebetweentime[(ittt->first-itt->first)*200e-9].push_back(ittt->first);
-					  //std::cout<<red<<"Added to vec "<<(ittt->first-itt->first)*200e-9<<"  "<<ittt->first<<normal<<std::endl;
-            skip=true;
-   					break;
-				  }
-			  }
-		  }
-	  }
-	  if(it->first<min&&it->first!=0)min=it->first;
-    if(it->first>max)max=it->first;
-    //std::cout<<it->first<<std::endl;
-  }
-  //Vec_timebetweentime.clear();
-  int diffbetweentime=(int((max_betweentime-min_betweentime))+1)*10;
-  time2readtime = new TH1D("Difference in time bettwen two time","Difference in time bettwen two time",10000000,-10,10);
-  for(unsigned int i =0;i<timebetweentime_toplot.size();++i)
-  {
-	  time2readtime->Fill(timebetweentime_toplot[i]);
-    //std::cout<<Vec_timebetween[i]<<"  "<<diffbetween<<"  "<<min_between<<"  "<<max_between<<std::endl;
-  }
-  int diffbetween=(int((max_between-min_between))+1)*100;
-  time2read = new TH1D("Distribution time between 2 read out","Distribution time between 2 read out",5000000,min_between,100);
-  for(unsigned int i =0;i<Vec_timebetween.size();++i)
-  {
-	  time2read->Fill(Vec_timebetween[i]);
-    //std::cout<<Vec_timebetween[i]<<"  "<<diffbetween<<"  "<<min_between<<"  "<<max_between<<std::endl;
-  }
-  double diff=(max-min);
-  if(diff>9999999)diff=9999999;
-  std::cout<<red<<"rrrrrrrrrrrrrrrrrrrrrrrrrr"<<diff<<"  "<<INT_MAX<<normal<<std::endl;
-  timestamp= new TH1D("timestamp","timestamp",diff,min*200e-9,max*200e-9);
-  timestamps= new TH1D("timestampS","timestampS",diff,min*200e-9,max*200e-9);
-  for(std::map<double,std::vector<double>>::iterator j=Vec_timebetweentime.begin();j!=Vec_timebetweentime.end();++j)
-  {
-    std::string name = "type"+patch::to_string(j->first);
-	  typeee.push_back(new TH1D(name.c_str(),name.c_str(),1000000,0.,10000.));
-    for(unsigned int i =0;i<j->second.size();++i)
-	  {
-		  typeee[typeee.size()-1]->Fill(j->second[i]*200e-9);
-		  //timestamp->Fill(j->second[i]*200e-9);
-	  }
-  }
-
-  for(std::map<unsigned long long int ,int>::iterator it=Time_stamps.begin();it!=Time_stamps.end();++it)
-  {
-	  timestamp->Fill(it->first*200e-9,it->second);
-	  
-    //std::cout<<yellow<<it->first<<"  "<<it->second<<normal<<std::endl;
-  }
-  for(std::map<unsigned long long int ,int>::iterator it=Time_stampss.begin();it!=Time_stampss.end();++it)
-  {
-	  timestamps->Fill(it->first*200e-9,it->second);
-    //std::cout<<red<<it->first<<"  "<<it->second<<normal<<std::endl;
-  }
-  total_time_by_user=(max_by_user-min_by_user)*200e-9;
-  total_time_file=(max-min)*200e-9;
-  //std::cout<<min<<"   "<<max<<"  "<<(max-min)*200e-9<<std::endl;
-  
-  }
-  //_rolling=Every(_maxRecord);
+  SpillStudy(_skip,_GlobalEvents,_maxRecord,geom,HistoPlanes,LCIOFiles,_Spill_Study);
   printParameters();
   if(_WantCalibration==true&&_Database_name ==""){std::cout<<red<<"Name's Database is unknown from the xml file"<<normal<<std::endl;std::exit(1);}
   if(_LayerCut==-1){std::cout<<red<<"LayerCut set to -1, assuming that you want to use trigger to see events"<<normal<<std::endl;}
@@ -1218,7 +661,7 @@ void TriventProcessor::end()
     }
     h22->Write();
     h22->Draw("glcolz");
-    canvas->Print((namepdf+")").c_str(),"Title:Results");
+    if(pdf)canvas->Print((namepdf+")").c_str(),"Title:Results");
     delete tf;
     delete h1;
     delete h2;
@@ -1334,20 +777,4 @@ fichier.open("ResultsScinti.txt", ios::out | ios::app);  //déclaration du flux 
     delete canvas;
 }
 
-void TriventProcessor::save_calibration(std::string filename)
-{
-  std::ofstream f(filename);
-  for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i]->SaveCalibration(f);
-}
 
-
-void TriventProcessor::read_calibration(std::string filename)
-{
-  std::ifstream f(filename);
-  int difN,asicN,channelN; double v;
-  while (f.good())
-    {
-      f >> difN >> asicN >> channelN >> v;
-      if (f.good() and !f.eof()) {HistoPlanes[geom.GetDifNbrPlate(difN)-1]->Set_Calibration(difN,asicN,channelN,v);}
-    }
-}

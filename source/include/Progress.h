@@ -2,24 +2,33 @@
 #define Progress_H
 #include <iostream> 
 #include"Colors.h"
-#include <vector>
-#include <map>
-#include <string>
 #include <cstdlib>
+#include "marlin/Global.h"
+#include "Patch.h"
 
 std::string Shift(double val)
 {
         std::string ret="";
-	if(val<10) return ret="  ";
-	if(val>=10&&val<100) return ret=" ";
-        else return ret;
+	if(val<10) return ret="  "+patch::to_string(val);
+	if(val>=10&&val<1000) return ret=" "+patch::to_string(val);
+	if(val>=1000&&val<10000) return ret=patch::to_string(val);
+        else return ret+patch::to_string(val);
 }
 std::string Shift(int val)
 {
         std::string ret="";
-	if(val<10) return ret="  ";
-	if(val>=10&&val<100) return ret=" ";
-        else return ret;
+	if(val<10) return ret="  "+patch::to_string(val);
+	if(val>=10&&val<1000) return ret=" "+patch::to_string(val);
+	if(val>=1000&&val<10000) return ret=patch::to_string(val);
+        else return ret+patch::to_string(val);
+}
+std::string Shift(unsigned int val)
+{
+        std::string ret="";
+	if(val<10) return ret="  "+patch::to_string(val);
+	if(val>=10&&val<1000) return ret=" "+patch::to_string(val);
+	if(val>=1000&&val<10000) return ret=patch::to_string(val);
+        else return ret+patch::to_string(val);
 }
 unsigned int Every(unsigned int & _maxRecord)
 {
@@ -47,19 +56,19 @@ void Progress(unsigned int& _skip,unsigned int& _GlobalEvents, unsigned int& _ma
   {
     	if(_maxRecord==-1)
 	{
-		std::cout<<red<<"[";
-                int percent=int((_eventNr-skip)*100.0/(_GlobalEvents-skip));
-                if(percent<10)std::cout<<"  ";
-   		if(percent>=10&&percent!=100)std::cout<<" ";
-		std::cout<<percent<<"%]"<<normal<<" Event Number : "<<_eventNr<<"/"<<_GlobalEvents<<std::endl;
+    int percent=int((_eventNr-skip)*100.0/(_GlobalEvents-skip));
+    if(percent<100) 
+		{
+		  std::cout<<red<<"["<<Shift(percent)<<"%]"<<normal<<" Event Number : "<<Shift(_eventNr)<<"/"<<_GlobalEvents<<std::endl;
+		}
 	}
         else 
 	{
-		std::cout<<red<<"[";
-		int percent=int((_eventNr-skip)*100.0/(_maxRecord));
-		if(percent<10)std::cout<<"  ";
-    if(percent>=10&&percent!=100)std::cout<<" ";
-		std::cout<<percent<<"%]"<<normal<<" Event Number : "<<_eventNr<<"/"<<maxRecordplusskip<<" Total : "<<_GlobalEvents<<std::endl;
+	  int percent=int((_eventNr-skip)*100.0/(_maxRecord));
+	  if(percent<100) 
+		{
+		std::cout<<red<<"["<<Shift(percent)<<"%]"<<normal<<" Event Number : "<<Shift(_eventNr)<<"/"<<maxRecordplusskip<<" Total : "<<_GlobalEvents<<std::endl;
+		}
 	}
   }
 

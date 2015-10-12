@@ -23,7 +23,7 @@ HistoPlane::HistoPlane(bool Distr,int NbrPlate,std::vector<int>Difs_Names,int Si
         Addone=1;
         addnbr="Distribution Nbr Hits in Plane : "+patch::to_string(NbrPlatee+1);
         std::string a = "Distribution Nbr Hits in Plane : "+patch::to_string(NbrPlatee+1);
-        if (gROOT->FindObject(addnbr.c_str()) == NULL) Plate_Dist=new TH1F (a.c_str(),a.c_str(),20,0.,20.);
+        if (gROOT->FindObject(addnbr.c_str()) == NULL) Plate_Dist=new TH1D (a.c_str(),a.c_str(),20,0.,20.);
         }
         for(int i=0;i<_Difs_Names.size();++i)
 	{
@@ -33,21 +33,21 @@ HistoPlane::HistoPlane(bool Distr,int NbrPlate,std::vector<int>Difs_Names,int Si
 			addnbr="Distribution Nbr Hits in Dif : "+patch::to_string(_Difs_Names[i])+" Plane : "+patch::to_string(NbrPlatee+1);
 			std::string a = "Distribution Nbr Hits in Dif : "+patch::to_string(_Difs_Names[i]);
 			if (gROOT->FindObject(addnbr.c_str()) != NULL)continue;
-		 	Difs_Distr[_Difs_Names[i]]=new TH1F (addnbr.c_str(),a.c_str(),10,0.,10.);
+		 	Difs_Distr[_Difs_Names[i]]=new TH1D (addnbr.c_str(),a.c_str(),10,0.,10.);
 			for(int j=1;j<=48;++j)
 			{
 				std::vector<int>vec{_Difs_Names[i],j};
                         	addnbr="Distribution Nbr Hits in Asic : "+patch::to_string(j)+"Dif : "+patch::to_string(_Difs_Names[i])+" Plane : "+patch::to_string(NbrPlatee+1);
 				std::string b = "Distribution Nbr Hits in Asic : "+patch::to_string(j);
 				if (gROOT->FindObject(addnbr.c_str()) != NULL)continue;
-				Asics_Distr[vec]= new TH1F (addnbr.c_str(),b.c_str(),10,0.,10.);
+				Asics_Distr[vec]= new TH1D (addnbr.c_str(),b.c_str(),10,0.,10.);
 				for(int k=0;k<=63;++k)
 		        	{
   					std::vector<int>vec{_Difs_Names[i],j,k};
                         		addnbr="Distribution Nbr Hits in Pad : "+patch::to_string(k)+"Asic : "+patch::to_string(j)+"Dif : "+patch::to_string(_Difs_Names[i])+" Plane : "+patch::to_string(NbrPlatee+1);
 					std::string c = "Distribution Nbr Hits in Pad : "+patch::to_string(k);
 					if (gROOT->FindObject(addnbr.c_str()) != NULL)continue;
-					Pads_Distr[vec]= new TH1F (addnbr.c_str(),c.c_str(),5,0.,5.);
+					Pads_Distr[vec]= new TH1D (addnbr.c_str(),c.c_str(),5,0.,5.);
 				}
 			}
 		}
@@ -56,7 +56,7 @@ HistoPlane::HistoPlane(bool Distr,int NbrPlate,std::vector<int>Difs_Names,int Si
 	{
                 addnbr=(*it)+patch::to_string(NbrPlate);
                 if (gROOT->FindObject(addnbr.c_str()) != NULL) continue;
-  		TH1Fs.insert(std::pair<std::string,TH1F*>((*it),new TH1F(addnbr.c_str(),(*it).c_str(),25000,0,25000)));
+  		TH1Fs.insert(std::pair<std::string,TH1D*>((*it),new TH1D(addnbr.c_str(),(*it).c_str(),25000,0,25000)));
 	}
 	for(std::vector< std::basic_string<char>  >::iterator it=vec_name_th2.begin();it!=vec_name_th2.end();++it)
 	{
@@ -76,23 +76,23 @@ HistoPlane::HistoPlane(bool Distr,int NbrPlate,std::vector<int>Difs_Names,int Si
 HistoPlane::HistoPlane(const HistoPlane &source):_Distr(source._Distr),NbrPlatee(source.NbrPlatee),Means(source.Means),Nbrof0Hits(source.Nbrof0Hits),local_max(source.local_max),local_min(source.local_min),total_time(source.total_time),_SizeX(source._SizeX),_SizeY(source._SizeY),_Difs_Names(source._Difs_Names)
 {   
         std::cout<<"Create copy"<<std::endl;
-        Plate_Dist=new TH1F (*(source.Plate_Dist));
+        Plate_Dist=new TH1D (*(source.Plate_Dist));
         
-        for(std::map<int,TH1F*>::const_iterator it=(source.Difs_Distr).begin();it!=(source.Difs_Distr).end();++it)
+        for(std::map<int,TH1D*>::const_iterator it=(source.Difs_Distr).begin();it!=(source.Difs_Distr).end();++it)
 	{
-		Difs_Distr[it->first]=new TH1F (*it->second);
+		Difs_Distr[it->first]=new TH1D (*it->second);
         }
-	for(std::map<std::vector<int>,TH1F*>::const_iterator it=(source.Asics_Distr).begin();it!=(source.Asics_Distr).end();++it)
+	for(std::map<std::vector<int>,TH1D*>::const_iterator it=(source.Asics_Distr).begin();it!=(source.Asics_Distr).end();++it)
         {
-		Asics_Distr[it->first]= new TH1F (*it->second);
+		Asics_Distr[it->first]= new TH1D (*it->second);
         }
-	for(std::map<std::vector<int>,TH1F*>::const_iterator it=(source.Pads_Distr).begin();it!=(source.Pads_Distr).end();++it)
+	for(std::map<std::vector<int>,TH1D*>::const_iterator it=(source.Pads_Distr).begin();it!=(source.Pads_Distr).end();++it)
 	{
-		Pads_Distr[it->first]= new TH1F (*it->second);
+		Pads_Distr[it->first]= new TH1D (*it->second);
 	}
-        for(std::map<std::string,TH1F*>::const_iterator it=(source.TH1Fs).begin();it!=(source.TH1Fs).end();++it)
+        for(std::map<std::string,TH1D*>::const_iterator it=(source.TH1Fs).begin();it!=(source.TH1Fs).end();++it)
 	{
-  		TH1Fs.insert(std::pair<std::string,TH1F*>(it->first,new TH1F (*it->second)));
+  		TH1Fs.insert(std::pair<std::string,TH1D*>(it->first,new TH1D (*it->second)));
 	}
 	for(std::map<std::string,TH2F*>::const_iterator it=(source.TH2Fs).begin();it!=(source.TH2Fs).end();++it)
 	{
@@ -118,7 +118,7 @@ HistoPlane::~HistoPlane()
 			}
 		}
 	}
-	for(std::map<std::string,TH1F*>::iterator it=TH1Fs.begin();it!=TH1Fs.end();++it)
+	for(std::map<std::string,TH1D*>::iterator it=TH1Fs.begin();it!=TH1Fs.end();++it)
 	{
                 delete it->second;          
 	}
@@ -130,7 +130,7 @@ HistoPlane::~HistoPlane()
         TH2Fs.clear();
 }
 
-TH1F* HistoPlane::Return_TH1F(const char* name)
+TH1D* HistoPlane::Return_TH1F(const char* name)
 {
 	if (TH1Fs.find(name)!=TH1Fs.end())return TH1Fs.find(name)->second;
   else {std::cout<<"Impossible to find "<<name<<normal<<std::endl;return NULL;}
@@ -152,7 +152,7 @@ void HistoPlane::WriteAll(int NbrPlatee,std::string namepdf)
 {
    
   std::string name="Title:Plate "+ patch::to_string(NbrPlatee+1);
-  for(std::map<std::string,TH1F*>::iterator it=TH1Fs.begin();it!=TH1Fs.end();++it)
+  for(std::map<std::string,TH1D*>::iterator it=TH1Fs.begin();it!=TH1Fs.end();++it)
   {
   		std::string nameth1= name+"TH1";
   		(it->second)->Write();

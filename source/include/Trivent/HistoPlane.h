@@ -215,7 +215,7 @@ void inline Get_Calibration(double minvalue=1.0,double maxvalue=254.0,double RMS
   };*/
   void inline Print_Calibration(std::ostream& file){for(std::map<std::vector<int>,double>::iterator it=Calibration.begin();it!=Calibration.end();++it){/*std::cout<<"s.ChangeGain("<<(it->first)[0]<<","<<(it->first)[1]<<","<<(it->first)[2]<<","<<(it->second)<<")"<<std::endl;*/file<<"s.SetGain("<<(it->first)[0]<<","<<(it->first)[1]<<","<<(it->first)[2]<<","<<(int)(it->second)<<")"<<std::endl;}};
   void inline SaveCalibration(std::ostream& file){for(std::map<std::vector<int>,double>::iterator it=Calibration.begin();it!=Calibration.end();++it){file<<(it->first)[0]<<" "<<(it->first)[1]<<" "<<(it->first)[2]<<" "<<int(it->second)<<std::endl;}}
-  TH1F* Return_TH1F(const char* name);
+  TH1D* Return_TH1F(const char* name);
   TH2F* Return_TH2F(const char* name);
   double inline GetArea(){return _SizeX*_SizeY;};
   void  ScaleHisto(const char* name,float i);
@@ -223,15 +223,15 @@ void inline Get_Calibration(double minvalue=1.0,double maxvalue=254.0,double RMS
   double inline Efficiency(){std::cout<<hit_other<<"  "<<hit_trigger<<std::endl;return 1.0*hit_trigger/(hit_other+hit_trigger);};
   
  private:
-  TH1F* Plate_Dist;
-  std::map<int,TH1F*>Difs_Distr;
-  std::map<std::vector<int>,TH1F*>Asics_Distr;
-  std::map<std::vector<int>,TH1F*>Pads_Distr;
+  TH1D* Plate_Dist;
+  std::map<int,TH1D*>Difs_Distr;
+  std::map<std::vector<int>,TH1D*>Asics_Distr;
+  std::map<std::vector<int>,TH1D*>Pads_Distr;
   unsigned int hit_other;
   unsigned int hit_trigger;
   std::map<int,int>Time_Plates;
   std::map<int,int>Times_Plates_perRun;
-  std::map<std::string,TH1F*>TH1Fs;
+  std::map<std::string,TH1D*>TH1Fs;
   std::map<std::string,TH2F*>TH2Fs;
   double Means;
   int NbrPlatee;

@@ -26,6 +26,7 @@
 #include "TGraph2D.h"
 #include "Utilities.h"
 #include <map>
+#include<cmath>
 #include <IMPL/RawCalorimeterHitImpl.h>
 #ifndef COLORS_H
 #define normal " "
@@ -44,7 +45,8 @@
 int totalTrace=0;
 int eventnbrr=0;
 std::ofstream Verif( "Verif.txt", std::ios_base::out ); 
-std::map<std::string,std::vector<TH1F*>>Short_Efficiency;
+std::map<std::string,std::vector<std::vector<TH1F*>>>Short_Efficiency;
+std::map<std::string,std::vector<std::vector<TH1F*>>>Short_Multiplicity;
 class ToTreee
 {
 public:
@@ -94,39 +96,66 @@ std::map<std::string,std::vector<TH2F*>>Distribution_exp={{"NORMAL",{}},{"SCINTI
 //std::vector<TGraph2D*>Distribution_exp_tgraph;
 //std::vector<TH2F*>Correlations;
 unsigned NbrRunn=0;
+
+
+
+
+
 void AnalysisProcessor::PrintStatShort(bool IsScinti)
 {
     ofstream fichier;
+    for(unsigned int hhh=0;hhh!=Thresholds_name.size();++hhh)
+    {
     std::string namee="ResultsShorts"+std::to_string((long long int)_NbrRun);
     if(IsScinti==true)namee+="Scinti";
+    namee+=Thresholds_name[hhh];
     namee+=".txt";
     fichier.open(namee.c_str(), ios::out | ios::app);  //déclaration du flux et ouverture du fichier
     if(fichier) { // si l'ouverture a réussi
         fichier<<_NbrRun<<"   ";
-        for(unsigned int i=0; i!=testedPlanList.size(); ++i) {
-            if(IsScinti==true)Short_Efficiency["SCINTILLATOR"][i]->Fill(_eventNr,testedPlanList[i].efficiencyShort());
-            else Short_Efficiency["NORMAL"][i]->Fill(_eventNr,testedPlanList[i].efficiencyShort());
-            fichier<<testedPlanList[i].efficiencyShort()<<" "<<sqrt(testedPlanList[i].GetNumberOKShort()*testedPlanList[i].efficiencyShort()*(1-testedPlanList[i].efficiencyShort()))*1.0/testedPlanList[i].GetNumberOKShort()<<" "<<testedPlanList[i].multiplicityShort()<<" 0 "<<"  ";
+        for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
+        {
+            if(IsScinti==true)
+            {
+              if(isfinite(testedPlanList[i].efficiencyShort(hhh)))Short_Efficiency["SCINTILLATOR"][i][hhh]->Fill(_eventNr,testedPlanList[i].efficiencyShort(hhh));
+              if(isfinite(testedPlanList[i].multiplicityShort(hhh)))Short_Multiplicity["SCINTILLATOR"][i][hhh]->Fill(_eventNr,testedPlanList[i].multiplicityShort(hhh));
+            }
+            else 
+            {
+              if(isfinite(testedPlanList[i].efficiencyShort(hhh)))Short_Efficiency["NORMAL"][i][hhh]->Fill(_eventNr,testedPlanList[i].efficiencyShort(hhh));
+              if(isfinite(testedPlanList[i].multiplicityShort(hhh)))Short_Multiplicity["NORMAL"][i][hhh]->Fill(_eventNr,testedPlanList[i].multiplicityShort(hhh));
+            }
+            std::cout<<yellow<<_eventNr<<"  "<<testedPlanList[i].efficiencyShort(hhh)<<normal<<std::endl;
+            fichier<<testedPlanList[i].efficiencyShort(hhh)<<" "<<sqrt(testedPlanList[i].GetNumberOKShort(hhh)*testedPlanList[i].efficiencyShort(hhh)*(1-testedPlanList[i].efficiencyShort(hhh)))*1.0/testedPlanList[i].GetNumberOKShort(hhh)<<" "<<testedPlanList[i].multiplicityShort(hhh)<<" 0 "<<"  ";
         }
         fichier<<std::endl;
         fichier.close();  // on referme le fichier
     }
+    }
+    for(unsigned int hhh=0;hhh!=Thresholds_name.size();++hhh)
+    {
+    
     if(IsScinti==true)
     {
+      if(hhh==0)std::cout<<"Result Scinti: "<<std::endl;
+      std::cout<<"Run Number : "<<_NbrRun<<" Thresholds "<<Thresholds_name[hhh]<<std::endl;
       for(unsigned int i=0; i!=testedPlanListScinti.size(); ++i) 
       {
       // testedPlanList[i].print();
-      std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanListScinti[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanListScinti[i].efficiency()<<" Error : "<<setw(6)<<sqrt(testedPlanListScinti[i].GetNumberOK()*testedPlanListScinti[i].efficiency()*(1-testedPlanListScinti[i].efficiency()))*1.0/testedPlanListScinti[i].GetNumberOK()<<" Multiplicity : "<<setw(6)<<testedPlanListScinti[i].multiplicity()<<normal<<std::endl;
+      std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanListScinti[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanListScinti[i].efficiency(hhh)<<" Error : "<<setw(6)<<sqrt(testedPlanListScinti[i].GetNumberOK(hhh)*testedPlanListScinti[i].efficiency(hhh)*(1-testedPlanListScinti[i].efficiency(hhh)))*1.0/testedPlanListScinti[i].GetNumberOK(hhh)<<" Multiplicity : "<<setw(6)<<testedPlanListScinti[i].multiplicity(hhh)<<normal<<std::endl;
       }
     }
     else
     {
+      if(hhh==0)std::cout<<"Result  : "<<std::endl;
+      std::cout<<"Run Number : "<<_NbrRun<<" Thresholds "<<Thresholds_name[hhh]<<std::endl;
       for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
       {
       // testedPlanList[i].print();
-      std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanList[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanList[i].efficiency()<<" Error : "<<setw(6)<<sqrt(testedPlanList[i].GetNumberOK()*testedPlanList[i].efficiency()*(1-testedPlanList[i].efficiency()))*1.0/testedPlanList[i].GetNumberOK()<<" Multiplicity : "<<setw(6)<<testedPlanList[i].multiplicity()<<normal<<std::endl;
+      std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanList[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanList[i].efficiency(hhh)<<" Error : "<<setw(6)<<sqrt(testedPlanList[i].GetNumberOK(hhh)*testedPlanList[i].efficiency(hhh)*(1-testedPlanList[i].efficiency(hhh)))*1.0/testedPlanList[i].GetNumberOK(hhh)<<" Multiplicity : "<<setw(6)<<testedPlanList[i].multiplicity(hhh)<<normal<<std::endl;
       }
     }
+  }
 }
 
 unsigned int Number_hits=-1;
@@ -382,37 +411,43 @@ void testedPlan::print()
 void AnalysisProcessor::PrintStat(bool IsScinti)
 {
     ofstream fichier;
-    std::string namme ="Results";
-    if(IsScinti==true) namme+="Scinti";
-    namme+=".txt";
-    fichier.open(namme, ios::out | ios::app);  //déclaration du flux et ouverture du fichier
-    if(fichier) 
-    { // si l'ouverture a réussi
-        fichier<<_NbrRun<<"   ";
+    for(unsigned int hhh=0;hhh!=Thresholds_name.size();++hhh)
+    {
+      std::string namme ="Results";
+      if(IsScinti==true) namme+="Scinti";
+      namme+=".txt";
+      fichier.open(namme, ios::out | ios::app);  //déclaration du flux et ouverture du fichier
+      if(fichier) 
+      { // si l'ouverture a réussi
+        fichier<<Thresholds_name[hhh]<<";"<<std::endl;
+        fichier<<_NbrRun<<";#;";
         if(IsScinti==false)
         {
           for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
           {
-            fichier<<testedPlanList[i].efficiency()<<";"<<sqrt(testedPlanList[i].GetNumberOK()*testedPlanList[i].efficiency()*(1-testedPlanList[i].efficiency()))*1.0/testedPlanList[i].GetNumberOK()<<";"<<testedPlanList[i].multiplicity()<<";0;";
+            fichier<<testedPlanList[i].efficiency(hhh)<<";"<<sqrt(testedPlanList[i].GetNumberOK(hhh)*testedPlanList[i].efficiency(hhh)*(1-testedPlanList[i].efficiency(hhh)))*1.0/testedPlanList[i].GetNumberOK(hhh)<<";"<<testedPlanList[i].multiplicity(hhh)<<";0;";
           }
         }
         else
         {
           for(unsigned int i=0; i!=testedPlanListScinti.size(); ++i) 
           {
-            fichier<<testedPlanListScinti[i].efficiency()<<";"<<sqrt(testedPlanListScinti[i].GetNumberOK()*testedPlanListScinti[i].efficiency()*(1-testedPlanListScinti[i].efficiency()))*1.0/testedPlanListScinti[i].GetNumberOK()<<";"<<testedPlanListScinti[i].multiplicity()<<";0;";
+            fichier<<testedPlanListScinti[i].efficiency(hhh)<<";"<<sqrt(testedPlanListScinti[i].GetNumberOK(hhh)*testedPlanListScinti[i].efficiency(hhh)*(1-testedPlanListScinti[i].efficiency(hhh)))*1.0/testedPlanListScinti[i].GetNumberOK(hhh)<<";"<<testedPlanListScinti[i].multiplicity(hhh)<<";0;";
           }
         }
         fichier<<std::endl;
         fichier.close();  // on referme le fichier
     }
-    std::cout<<"Run Number : "<<_NbrRun<<std::endl;
+    }
+    for(unsigned int hhh=0;hhh!=Thresholds_name.size();++hhh)
+    {
+    std::cout<<"Run Number : "<<_NbrRun<<" Thresholds "<<Thresholds_name[hhh]<<std::endl;
     if(IsScinti==false)
     {
       for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
       {
         // testedPlanList[i].print();
-        std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanList[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanList[i].efficiency()<<" Error : "<<setw(6)<<sqrt(testedPlanList[i].GetNumberOK()*testedPlanList[i].efficiency()*(1-testedPlanList[i].efficiency()))*1.0/testedPlanList[i].GetNumberOK()<<" Multiplicity : "<<setw(6)<<testedPlanList[i].multiplicity()<<normal<<std::endl;
+        std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanList[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanList[i].efficiency(hhh)<<" Error : "<<setw(6)<<sqrt(testedPlanList[i].GetNumberOK(hhh)*testedPlanList[i].efficiency(hhh)*(1-testedPlanList[i].efficiency(hhh)))*1.0/testedPlanList[i].GetNumberOK(hhh)<<" Multiplicity : "<<setw(6)<<testedPlanList[i].multiplicity(hhh)<<normal<<std::endl;
       }
     }
     else
@@ -420,8 +455,9 @@ void AnalysisProcessor::PrintStat(bool IsScinti)
       for(unsigned int i=0; i!=testedPlanListScinti.size(); ++i) 
       {
         // testedPlanList[i].print();
-        std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanListScinti[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanListScinti[i].efficiency()<<" Error : "<<setw(6)<<sqrt(testedPlanListScinti[i].GetNumberOK()*testedPlanListScinti[i].efficiency()*(1-testedPlanListScinti[i].efficiency()))*1.0/testedPlanListScinti[i].GetNumberOK()<<" Multiplicity : "<<setw(6)<<testedPlanListScinti[i].multiplicity()<<normal<<std::endl;
+        std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanListScinti[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanListScinti[i].efficiency(hhh)<<" Error : "<<setw(6)<<sqrt(testedPlanListScinti[i].GetNumberOK(hhh)*testedPlanListScinti[i].efficiency(hhh)*(1-testedPlanListScinti[i].efficiency(hhh)))*1.0/testedPlanListScinti[i].GetNumberOK(hhh)<<" Multiplicity : "<<setw(6)<<testedPlanListScinti[i].multiplicity(hhh)<<normal<<std::endl;
       }
+    }
     }
 }
 
@@ -526,9 +562,20 @@ void AnalysisProcessor::init()
 		    for(unsigned int i=0;i<testedPlanList.size();++i)
 		    {
 			    std::string name="Short_Efficiency"+patch::to_string(i+1);
+			    std::string namee="Short_Multiplicity"+patch::to_string(i+1);
 			    for(unsigned int i=0;i<names.size();++i)
           {
-			      Short_Efficiency[names[i]].push_back(new TH1F((name+names[i]).c_str(),name.c_str(),1000,0,_ShortEfficiency*1000));
+            name+=names[i];
+            namee+=names[i];
+            std::vector<TH1F*>vec;
+            std::vector<TH1F*>vec2;
+            for(unsigned int j=0;j!=Thresholds_name.size();++j)
+            {
+			        vec.push_back(new TH1F((name+Thresholds_name[j]).c_str(),(name+Thresholds_name[j]).c_str(),1000,0,_ShortEfficiency*1000));
+			        vec2.push_back(new TH1F((namee+Thresholds_name[j]).c_str(),(namee+Thresholds_name[j]).c_str(),1000,0,_ShortEfficiency*1000));
+			      }
+			      Short_Efficiency[names[i]].push_back(vec);
+			      Short_Multiplicity[names[i]].push_back(vec2);
 			    }
 		    }
 	    }
@@ -610,7 +657,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
         else for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans,false);
         if(_ShortEfficiency!=0) 
         {
-        	if(_eventNr%_ShortEfficiency==0)
+        	if(_eventNr%_ShortEfficiency==0&&_eventNr!=0)
         	{
         	  PrintStatShort(0);
         	  for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
@@ -618,7 +665,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
               testedPlanList[i].ClearShort();
             }
           }
-        	if(_eventNrSC%_ShortEfficiency==0)
+        	if(_eventNrSC%_ShortEfficiency==0&&_eventNrSC!=0)
         	{
         	  PrintStatShort(1);
             for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
@@ -697,7 +744,12 @@ void AnalysisProcessor::end()
 	      HowLongFromExpectedX[names[naa]][i]->Write();
     	  HowLongFromExpectedY[names[naa]][i]->Write();
         Distribution_hits[names[naa]][i]->Write();
-        if(_ShortEfficiency!=0)Short_Efficiency[names[naa]][i]->Write();
+        
+        if(_ShortEfficiency!=0) for(unsigned j=0;j!=Thresholds_name.size();++j)
+        {
+          Short_Efficiency[names[naa]][i][j]->Write();
+          Short_Multiplicity[names[naa]][i][j]->Write();
+        }
         Distribution_exp[names[naa]][i]->Write();
         for(int j=0;j<Efficiency_pads.size();++j)
           {
@@ -717,7 +769,11 @@ void AnalysisProcessor::end()
             delete Efficiency_pads[j][names[naa]][i];
             delete Multiplicity_pads[j][names[naa]][i];
           }
-          if(_ShortEfficiency!=0) delete Short_Efficiency[names[naa]][i];
+          if(_ShortEfficiency!=0) for(unsigned j=0;j!=Thresholds_name.size();++j)
+          {
+            delete Short_Efficiency[names[naa]][i][j];
+            delete Short_Multiplicity[names[naa]][i][j];
+          }
           //delete Correlations[i];
         }
         delete Distribution_hits_tgraph[names[naa]];
