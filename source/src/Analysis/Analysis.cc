@@ -118,8 +118,8 @@ void AnalysisProcessor::PrintStatShort(bool IsScinti)
               
               if(isfinite(testedPlanListScinti[i].multiplicityShort(hhh)))Short_Multiplicity["SCINTILLATOR"][i][hhh]->Fill(_eventNr,testedPlanListScinti[i].multiplicityShort(hhh));
             }
-            /*else 
-            {*/
+            else 
+            {
               if(isfinite(testedPlanList[i].efficiencyShort(hhh)))
               {
                 Short_Efficiency["NORMAL"][i][hhh]->Fill(_eventNr,testedPlanList[i].efficiencyShort(hhh));
@@ -127,7 +127,7 @@ void AnalysisProcessor::PrintStatShort(bool IsScinti)
               }
 
               if(isfinite(testedPlanList[i].multiplicityShort(hhh)))Short_Multiplicity["NORMAL"][i][hhh]->Fill(_eventNr,testedPlanList[i].multiplicityShort(hhh));
-            /*}*/
+            }
             fichier<<testedPlanList[i].efficiencyShort(hhh)<<" "<<sqrt(testedPlanList[i].GetNumberOKShort(hhh)*testedPlanList[i].efficiencyShort(hhh)*(1-testedPlanList[i].efficiencyShort(hhh)))*1.0/testedPlanList[i].GetNumberOKShort(hhh)<<" "<<testedPlanList[i].multiplicityShort(hhh)<<" 0 "<<"  ";
         }
         fichier<<std::endl;
@@ -188,19 +188,19 @@ std::array<double,6> plan::countHitAt(double& x, double& y, double dlim,int Iexp
               HowLongFromExpectedX["SCINTILLATOR"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
               HowLongFromExpectedY["SCINTILLATOR"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[1]-y);
             }
-           /* else
-            {*/
+           else
+            {
               Distribution_hits["NORMAL"][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
               Distribution_hits_tgraph["NORMAL"]->SetPoint(Number_hits,(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
               HowLongFromExpectedX["NORMAL"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
               HowLongFromExpectedY["NORMAL"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[1]-y);
-           /* }*/
+           }
         }
     }
     for(int i=0;i<Threshold_Counters.size();++i)
     {
       if(IsScinti==true) Efficiency_per_padScinti[i][IJKexpected].push_back(Threshold_Counters[i]);
-     /* else */Efficiency_per_pad[i][IJKexpected].push_back(Threshold_Counters[i]);
+     else Efficiency_per_pad[i][IJKexpected].push_back(Threshold_Counters[i]);
     }
    
     
@@ -225,15 +225,15 @@ int plan::countHitAtStrip(double& x, double dlim, bool IsScinti)
               HowLongFromExpectedX["SCINTILLATOR"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
               HowLongFromExpectedY["SCINTILLATOR"][cd(*it)["K"]-1]->Fill(0);
             }
-            /*else
-            {*/
+            else
+            {
               //std::cout<<fabs(x-(*it)->getPosition()[0])<<"  "<<dlim<<std::endl;
               Distribution_hits["NORMAL"][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
               //Distribution_hits[cd(*it)["K"]-1]->Fill((*it)->getPosition()[0],(*it)->getPosition()[1]);
               Distribution_hits_tgraph["NORMAL"]->SetPoint(Number_hits,(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
               HowLongFromExpectedX["NORMAL"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
               HowLongFromExpectedY["NORMAL"][cd(*it)["K"]-1]->Fill(0);
-           /* }*/
+            }
         }
     }
     return n;
@@ -352,7 +352,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan,bool IsScinti)
         sg=this->get_sg();
         
         if(IsScinti==true) Distribution_exp_tgraph["SCINTILLATOR"]->SetPoint(nombreTests,Projectioni,Projectionj,Zexp);
-        /*else */Distribution_exp_tgraph["NORMAL"]->SetPoint(nombreTests,Projectioni,Projectionj,Zexp);
+        else Distribution_exp_tgraph["NORMAL"]->SetPoint(nombreTests,Projectioni,Projectionj,Zexp);
         
         std::array<double,6>Thresholds;
         counts[NOHITINPLAN]++;
@@ -364,7 +364,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan,bool IsScinti)
         	//K=(sg*sa+cg*sb*ca)*1.0/size_pad*(Projectioni-this->get_X0())+(-cg*sa+sg*sb*ca)*1.0/size_pad*(Projectionj-this->get_Y0())+cb*ca*this->get_Z0();
         	K=this->NbrPlate()+1;
           if(IsScinti==true)Distribution_exp["SCINTILLATOR"][this->NbrPlate()]->Fill(ceil(I),ceil(J));
-          /*else */Distribution_exp["NORMAL"][this->NbrPlate()]->Fill(ceil(I),ceil(J));
+          else Distribution_exp["NORMAL"][this->NbrPlate()]->Fill(ceil(I),ceil(J));
           Thresholds=thisPlan->countHitAt(Projectioni,Projectionj,/*6*10.4125*/_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),IsScinti);
         } 
         else 
@@ -656,11 +656,11 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
                       PlansScintillator[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
                       PlansScintillator[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
                     }
-                    /*else
-                    {*/
+                    else
+                    {
                       Plans[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
                       Plans[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
-                   /* }*/
+                    }
                 }
             }
         }
