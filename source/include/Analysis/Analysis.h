@@ -82,8 +82,8 @@ public:
     }
     inline double efficiency(int i,bool IsShort)
     {
-      if(IsShort==true) return efficiencyShort(int i);
-      else return efficiency(int i);
+      if(IsShort==true) return efficiencyShort(i);
+      else return efficiency(i);
     }
     inline int NbrPlate()
     {
@@ -320,10 +320,10 @@ int _NbrHitPerPlaneMax ;
 int _NbrPlaneUseForTracking ;
 double _dlimforPad;
 bool IsScinti;
+int _NbrRun;
 double _dlimforStrip;
 std::map<int ,std::vector<double> >Delimiter;
 std::string _Delimiters;
-
 class AnalysisProcessor : public marlin::Processor
 {
 public:
@@ -344,7 +344,7 @@ protected:
     unsigned int _maxRecord;
     unsigned int _GlobalEvents;
    
-    int _NbrRun;
+    
     
     Geometry geom;
     std::string _ReaderType;

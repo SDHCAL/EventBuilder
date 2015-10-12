@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include "marlin/Global.h"
 #include "Patch.h"
+#include<string>
 
 std::string Shift(double val)
 {
@@ -40,7 +41,7 @@ unsigned int Every(unsigned int & _maxRecord)
 }
 
 
-void Progress(unsigned int& _skip,unsigned int& _GlobalEvents, unsigned int& _maxRecord, unsigned int& _eventNr)
+void Progress(unsigned int& _skip,unsigned int& _GlobalEvents, unsigned int& _maxRecord, unsigned int& _eventNr,std::string Perso="")
 {
   unsigned int _rolling=Every(_maxRecord);
   unsigned int skip=0;
@@ -59,6 +60,7 @@ void Progress(unsigned int& _skip,unsigned int& _GlobalEvents, unsigned int& _ma
     int percent=int((_eventNr-skip)*100.0/(_GlobalEvents-skip));
     if(percent<100) 
 		{
+		  if(Perso!="")std::cout<<Perso<<std::endl;
 		  std::cout<<red<<"["<<Shift(percent)<<"%]"<<normal<<" Event Number : "<<Shift(_eventNr)<<"/"<<_GlobalEvents<<std::endl;
 		}
 	}
@@ -67,6 +69,7 @@ void Progress(unsigned int& _skip,unsigned int& _GlobalEvents, unsigned int& _ma
 	  int percent=int((_eventNr-skip)*100.0/(_maxRecord));
 	  if(percent<100) 
 		{
+		if(Perso!="")std::cout<<Perso<<std::endl;
 		std::cout<<red<<"["<<Shift(percent)<<"%]"<<normal<<" Event Number : "<<Shift(_eventNr)<<"/"<<maxRecordplusskip<<" Total : "<<_GlobalEvents<<std::endl;
 		}
 	}

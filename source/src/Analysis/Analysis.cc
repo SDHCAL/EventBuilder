@@ -95,11 +95,6 @@ std::map<std::string,TGraph2D*> Distribution_exp_tgraph={{"NORMAL",new TGraph2D(
 std::map<std::string,std::vector<TH2F*>>Distribution_exp={{"NORMAL",{}},{"SCINTILLATOR",{}}};
 //std::vector<TGraph2D*>Distribution_exp_tgraph;
 //std::vector<TH2F*>Correlations;
-unsigned NbrRunn=0;
-
-
-
-
 
 void AnalysisProcessor::PrintStatShort(bool IsScinti)
 {
@@ -117,15 +112,22 @@ void AnalysisProcessor::PrintStatShort(bool IsScinti)
         {
             if(IsScinti==true)
             {
-              if(isfinite(testedPlanList[i].efficiencyShort(hhh)))Short_Efficiency["SCINTILLATOR"][i][hhh]->Fill(_eventNr,testedPlanList[i].efficiencyShort(hhh));
-              if(isfinite(testedPlanList[i].multiplicityShort(hhh)))Short_Multiplicity["SCINTILLATOR"][i][hhh]->Fill(_eventNr,testedPlanList[i].multiplicityShort(hhh));
+              if(isfinite(testedPlanListScinti[i].efficiencyShort(hhh)))
+              
+              Short_Efficiency["SCINTILLATOR"][i][hhh]->Fill(_eventNr,testedPlanListScinti[i].efficiencyShort(hhh));
+              
+              if(isfinite(testedPlanListScinti[i].multiplicityShort(hhh)))Short_Multiplicity["SCINTILLATOR"][i][hhh]->Fill(_eventNr,testedPlanListScinti[i].multiplicityShort(hhh));
             }
-            else 
-            {
-              if(isfinite(testedPlanList[i].efficiencyShort(hhh)))Short_Efficiency["NORMAL"][i][hhh]->Fill(_eventNr,testedPlanList[i].efficiencyShort(hhh));
+            /*else 
+            {*/
+              if(isfinite(testedPlanList[i].efficiencyShort(hhh)))
+              {
+                Short_Efficiency["NORMAL"][i][hhh]->Fill(_eventNr,testedPlanList[i].efficiencyShort(hhh));
+                if(testedPlanList[i].efficiencyShort(hhh)>1) std::cout<<red<<i<<"   "<<hhh<<"   "<< _eventNr<<"  "<<testedPlanList[i].efficiencyShort(hhh)<<normal<<std::endl;
+              }
+
               if(isfinite(testedPlanList[i].multiplicityShort(hhh)))Short_Multiplicity["NORMAL"][i][hhh]->Fill(_eventNr,testedPlanList[i].multiplicityShort(hhh));
-            }
-            std::cout<<yellow<<_eventNr<<"  "<<testedPlanList[i].efficiencyShort(hhh)<<normal<<std::endl;
+            /*}*/
             fichier<<testedPlanList[i].efficiencyShort(hhh)<<" "<<sqrt(testedPlanList[i].GetNumberOKShort(hhh)*testedPlanList[i].efficiencyShort(hhh)*(1-testedPlanList[i].efficiencyShort(hhh)))*1.0/testedPlanList[i].GetNumberOKShort(hhh)<<" "<<testedPlanList[i].multiplicityShort(hhh)<<" 0 "<<"  ";
         }
         fichier<<std::endl;
@@ -186,19 +188,19 @@ std::array<double,6> plan::countHitAt(double& x, double& y, double dlim,int Iexp
               HowLongFromExpectedX["SCINTILLATOR"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
               HowLongFromExpectedY["SCINTILLATOR"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[1]-y);
             }
-            else
-            {
+           /* else
+            {*/
               Distribution_hits["NORMAL"][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
               Distribution_hits_tgraph["NORMAL"]->SetPoint(Number_hits,(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
               HowLongFromExpectedX["NORMAL"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
               HowLongFromExpectedY["NORMAL"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[1]-y);
-            }
+           /* }*/
         }
     }
     for(int i=0;i<Threshold_Counters.size();++i)
     {
       if(IsScinti==true) Efficiency_per_padScinti[i][IJKexpected].push_back(Threshold_Counters[i]);
-      else Efficiency_per_pad[i][IJKexpected].push_back(Threshold_Counters[i]);
+     /* else */Efficiency_per_pad[i][IJKexpected].push_back(Threshold_Counters[i]);
     }
    
     
@@ -223,15 +225,15 @@ int plan::countHitAtStrip(double& x, double dlim, bool IsScinti)
               HowLongFromExpectedX["SCINTILLATOR"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
               HowLongFromExpectedY["SCINTILLATOR"][cd(*it)["K"]-1]->Fill(0);
             }
-            else
-            {
+            /*else
+            {*/
               //std::cout<<fabs(x-(*it)->getPosition()[0])<<"  "<<dlim<<std::endl;
               Distribution_hits["NORMAL"][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
               //Distribution_hits[cd(*it)["K"]-1]->Fill((*it)->getPosition()[0],(*it)->getPosition()[1]);
               Distribution_hits_tgraph["NORMAL"]->SetPoint(Number_hits,(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
               HowLongFromExpectedX["NORMAL"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
               HowLongFromExpectedY["NORMAL"][cd(*it)["K"]-1]->Fill(0);
-            }
+           /* }*/
         }
     }
     return n;
@@ -350,7 +352,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan,bool IsScinti)
         sg=this->get_sg();
         
         if(IsScinti==true) Distribution_exp_tgraph["SCINTILLATOR"]->SetPoint(nombreTests,Projectioni,Projectionj,Zexp);
-        else Distribution_exp_tgraph["NORMAL"]->SetPoint(nombreTests,Projectioni,Projectionj,Zexp);
+        /*else */Distribution_exp_tgraph["NORMAL"]->SetPoint(nombreTests,Projectioni,Projectionj,Zexp);
         
         std::array<double,6>Thresholds;
         counts[NOHITINPLAN]++;
@@ -362,7 +364,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan,bool IsScinti)
         	//K=(sg*sa+cg*sb*ca)*1.0/size_pad*(Projectioni-this->get_X0())+(-cg*sa+sg*sb*ca)*1.0/size_pad*(Projectionj-this->get_Y0())+cb*ca*this->get_Z0();
         	K=this->NbrPlate()+1;
           if(IsScinti==true)Distribution_exp["SCINTILLATOR"][this->NbrPlate()]->Fill(ceil(I),ceil(J));
-          else Distribution_exp["NORMAL"][this->NbrPlate()]->Fill(ceil(I),ceil(J));
+          /*else */Distribution_exp["NORMAL"][this->NbrPlate()]->Fill(ceil(I),ceil(J));
           Thresholds=thisPlan->countHitAt(Projectioni,Projectionj,/*6*10.4125*/_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),IsScinti);
         } 
         else 
@@ -382,7 +384,7 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan,bool IsScinti)
           }
         }
         totalTrace++;
-	Verif<<NbrRunn<<"  "<<eventnbrr<<"  "<<totalTrace<<"  "<<kxz<<"  "<<kyz<<"  "<<pxz0<<"  "<<pyz0<<"  "<<pxz1<<"  "<<pyz1<<"  "<<plansUsedForTrackMaking.size()<<"  ";
+	      Verif<<_NbrRun<<"  "<<eventnbrr<<"  "<<totalTrace<<"  "<<kxz<<"  "<<kyz<<"  "<<pxz0<<"  "<<pyz0<<"  "<<pxz1<<"  "<<pyz1<<"  "<<plansUsedForTrackMaking.size()<<"  ";
         totreee.ChiXZ=kxz;
         totreee.ChiYZ=kyz;
         totreee.CDXZ=pxz1;
@@ -489,7 +491,22 @@ AnalysisProcessor::AnalysisProcessor() : Processor("AnalysisProcessorType")
 
 AnalysisProcessor::~AnalysisProcessor() {}
 void AnalysisProcessor::init()
-{
+{ 
+  _maxRecord= Global::parameters->getIntVal("MaxRecordNumber")-1;
+    _skip= Global::parameters->getIntVal("SkipNEvents");
+
+    std::vector<std::string>LCIOFiles;
+  Global::parameters->getStringVals("LCIOInputFiles" ,LCIOFiles );
+  
+  for(unsigned int i=0;i!=LCIOFiles.size();++i)
+  {
+    LCReader* lcReader = LCFactory::getInstance()->createLCReader() ;
+    std::vector<std::string>colee{"DHCALRawHits"};
+    lcReader->open( LCIOFiles[i] ) ;
+    lcReader->setReadCollectionNames( colee ) ;
+    _GlobalEvents+=lcReader->getNumberOfEvents()-1;
+    delete lcReader;
+  }
     printParameters();
     Verif<<"Run Event Num trace ChiXZ ChiYZ CDXZ CDYZ OrdXZ OrdYZ LayTouch PosX1 PosX2 PosX3 PosX4 PosX5 PosX6 PosX7 PosX8 PosY1 PosY2 PosY3 PosY4PosY5 PosY6 PosY7 PosY8"<<std::endl;
     ReaderFactory readerFactory;
@@ -591,15 +608,9 @@ void AnalysisProcessor::init()
 
 void AnalysisProcessor::processEvent( LCEvent * evtP )
 { 
-
-    _maxRecord= Global::parameters->getIntVal("MaxRecordNumber")-1;
-    _skip= Global::parameters->getIntVal("SkipNEvents");
     _NbrRun=evtP->getRunNumber();
-    NbrRunn=_NbrRun;
     Plans.clear();
     PlansScintillator.clear();
- 
- //   Progress(_skip,_GlobalEvents,_maxRecord,_eventNr);
     if (evtP != nullptr) {
         
         std::vector<std::string>names=*evtP->getCollectionNames();
@@ -614,7 +625,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
                 col = evtP ->getCollection(names[i].c_str());
                 _eventNr=evtP->getEventNumber();
                 eventnbrr=_eventNr;
-                if(_eventNr %1000 ==0)std::cout<<"Event Number : "<<_eventNr<<std::endl;
+                Progress(_skip,_GlobalEvents,_maxRecord,_eventNr);
               }
               else if(names[i]=="SDHCAL_HIT_SC") 
               {
@@ -645,15 +656,19 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
                       PlansScintillator[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
                       PlansScintillator[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
                     }
-                    else
-                    {
+                    /*else
+                    {*/
                       Plans[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
                       Plans[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
-                    }
+                   /* }*/
                 }
             }
         }
-        if(IsScinti==true) for (std::vector<testedPlan>::iterator iter=testedPlanListScinti.begin(); iter != testedPlanListScinti.end(); ++iter) iter->testYou(PlansScintillator,true);
+        if(IsScinti==true)
+        {
+           for (std::vector<testedPlan>::iterator iter=testedPlanListScinti.begin(); iter != testedPlanListScinti.end(); ++iter) iter->testYou(PlansScintillator,true);
+           for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(PlansScintillator,true);
+        }
         else for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans,false);
         if(_ShortEfficiency!=0) 
         {
@@ -663,12 +678,13 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
         	  for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
 		        {
               testedPlanList[i].ClearShort();
+              std::cout<<yellow<<"done"<<normal<<std::endl;
             }
           }
         	if(_eventNrSC%_ShortEfficiency==0&&_eventNrSC!=0)
         	{
         	  PrintStatShort(1);
-            for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
+            for(unsigned int i=0; i!=testedPlanListScinti.size(); ++i) 
 		        {
               testedPlanListScinti[i].ClearShort();
             }
