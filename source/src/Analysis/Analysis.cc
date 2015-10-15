@@ -667,7 +667,6 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
         if(IsScinti==true)
         {
            for (std::vector<testedPlan>::iterator iter=testedPlanListScinti.begin(); iter != testedPlanListScinti.end(); ++iter) iter->testYou(PlansScintillator,true);
-           for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(PlansScintillator,true);
         }
         else for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans,false);
         if(_ShortEfficiency!=0) 
