@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 #include "Geometry/Geometry.h"
+#include "Config/Config.h"
 #include "DIFSlowControl.h"
 #include "IMPL/LCFlagImpl.h"
 #include "UTIL/LCTOOLS.h"

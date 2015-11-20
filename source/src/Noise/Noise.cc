@@ -203,7 +203,7 @@ void NoiseProcessor::end()
   std::vector<int> number;
   for(unsigned int i=0;i!= Noise.size();++i)
     {
-	Histos[i]->SetBit(TH1::kCanRebin);
+	//Histos[i]->SetBit(TH1::kCanRebin);
 	number.push_back(0);
 	for(std::map<int,int>::iterator it = Noise[i].begin();it!=Noise[i].end();++it)
 	  {

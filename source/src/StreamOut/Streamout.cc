@@ -37,7 +37,6 @@
 #include <sstream>
 #include <set>
 std::map<int,unsigned long long> BCID_old;
-
 //int _NbrRun=0;
 std::map<int,TH1F*>HistoTimeAsic1;
 std::map<int,TH1F*>HistoTimeAsic2;
@@ -107,6 +106,7 @@ void Streamout::init()
     printParameters() ;
     ReaderFactory readerFactory;
     Reader* myReader = readerFactory.CreateReader(_ReaderType);
+    
     if(myReader) 
     {
         myReader->Read(_FileNameGeometry,geom);
@@ -179,7 +179,9 @@ void Streamout::processEvent( LCEvent * evt )
             _nProcessedObject++;
             //LMGeneric *lmobj=(LMGeneric *) obj;
             //unsigned char* debug_variable_1=lmobj->getSDHCALBuffer().endOfBuffer();
+          
             SDHCAL_RawBuffer_Navigator bufferNavigator(lmobj->getSDHCALBuffer(), _BitsToSkip);
+            
             //unsigned char* debug_variable_2=bufferNavigator.getDIFBuffer().endOfBuffer();
             //streamlog_out(DEBUG)<<"DIF BUFFER END "<<(unsigned int *) debug_variable_1<<" "<< (unsigned int *) debug_variable_2 << std::endl;
             //if (_debugMode) assert (debug_variable_1 == debug_variable_2);
@@ -340,10 +342,17 @@ void Streamout::processEvent( LCEvent * evt )
 
             } else {
                 //create RawCalorimeterHit
+                //std::cout<<d->getNumberOfFrames()<<std::endl;
                 for (uint32_t i=0; i<d->getNumberOfFrames(); i++) {
+                    //int uuu=-1;
+                    //int yyy=0;
                     for (uint32_t j=0; j<64; j++) {
+                        
+                        //++uuu;
+                        //std::cout<<uuu<<std::endl;
                         if (!(d->getFrameLevel(i,j,0) || d->getFrameLevel(i,j,1))) continue; // skip empty pads
                         //  std::cout <<" New hit "<<std::endl;
+                        //yyy++;
                         unsigned long int ID0;
                         ID0=(unsigned long int)(((unsigned short)d->getID())&0xFF);			//8 firsts bits: DIF Id
                         ID0+=(unsigned long int)(((unsigned short)d->getFrameAsicHeader(i)<<8)&0xFF00);	//8 next bits:   Asic Id
@@ -371,6 +380,7 @@ void Streamout::processEvent( LCEvent * evt )
                         RawVec->addElement(hit);
                         
                     }//for (uint32_t j=0;j<64;j++)
+                    //std::cout<<yellow<<yyy<<normal<<std::endl;
                 }//for (uint32_t i=0;i<d->getNumberOfFrames();i++)
                 //register Triggers'time : lots of values here ?
             }

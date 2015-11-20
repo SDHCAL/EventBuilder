@@ -11,24 +11,34 @@
 #include <array>
 #include <TF1.h>
 #include <vector>
+#include "Config/Config.h"
 #define degtorad 0.0174532925
 
-
+enum Threshold{Threshold_2=1,Threshold_1,Threshold_3};
 class plan;
 class testedPlan
 {
 public:
-    testedPlan(int numeroPlan,float x ,float y,float z,float xy, float xz, float yz, int type,double _Ip,double _Im, double _Jp, double _Jm) : Nbr(numeroPlan),X0(x),Y0(y),Z0(z),XY(xy),XZ(xz),YZ(yz),Type(type),Ip(_Ip),Im(_Im),Jp(_Jp),Jm(_Jm), nombreTests(0)
+    testedPlan(int numeroPlan,float x ,float y,float z,float xy, float xz, float yz, int type,double _Ip,double _Im, double _Jp, double _Jm) : Nbr(numeroPlan),X0(x),Y0(y),Z0(z),XY(xy),XZ(xz),YZ(yz),Type(type),Ip(_Ip),Im(_Im),Jp(_Jp),Jm(_Jm)
     {
-        for (int i=0;i<=5;++i) 
+    
+      
+        for (int i=0;i!=nombreTests.size();++i) 
         {
-          nombreTestsOKShort[i]=0;
-          nombreTestsOK[i]=0;
-          sommeNombreHits[i]=0;
-          sommeNombreHitsShort[i]=0;
-          
+          nombreTests[i]=0;
+          nombreTestsShort[i]=0;
         }
-        for (unsigned int i=0; i<NCOUNTERS; ++i) counts[i]=0;
+        for (unsigned int i=0; i!=Counts.size(); ++i) 
+        {
+          for(unsigned int j=0;j!=Counts[i].size();++j) 
+          {
+            Counts[i][j]=0;
+            nombreTestsOKShort[i][j]=0;
+            nombreTestsOK[i][j]=0;
+            sommeNombreHits[i][j]=0;
+            sommeNombreHitsShort[i][j]=0;
+          }
+        }
         ca=cos(xy*degtorad);
         sa=sin(xy*degtorad);
         cb=cos(xz*degtorad);
@@ -51,39 +61,34 @@ public:
         yj=cg*ca+sg*sb*sa;
         zj=cb*sa;
     }
-    inline double multiplicityShort(int i) 
+    inline double multiplicityShort(int i, bool IsScinti) 
     {
-      if(i<=nombreTestsOKShort.size()) return  sommeNombreHitsShort[i]/nombreTestsOKShort[i];
+      if(i<=nombreTestsOKShort[IsScinti].size()) return  sommeNombreHitsShort[IsScinti][i]/nombreTestsOKShort[IsScinti][i];
       else return -1;
     }
-    inline double GetNumberOKShort(int i )
+    inline double GetNumberOKShort(int i,bool IsScinti )
     {
-      if(i<=nombreTestsOKShort.size()) return nombreTestsOKShort[i];
+      if(i<=nombreTestsOKShort[IsScinti].size()) return nombreTestsOKShort[IsScinti][i];
       else return -1;
     }
-    inline void ClearShort()
+    inline void ClearShort(bool IsScinti)
     {
      for(int i=0;i<6;++i)
      {
-      nombreTestsShort=0;
-      nombreTestsOKShort[i]=0;
-      sommeNombreHitsShort[i]=0;
+      nombreTestsShort[IsScinti]=0;
+      nombreTestsOKShort[IsScinti][i]=0;
+      sommeNombreHitsShort[IsScinti][i]=0;
      }
     }
-    inline double efficiencyShort(int i) 
+    inline double efficiencyShort(int i, bool IsScinti) 
     {
-      if(i<=nombreTestsOKShort.size())return nombreTestsOKShort[i]/nombreTestsShort;
+      if(i<=nombreTestsOKShort[IsScinti].size())return nombreTestsOKShort[IsScinti][i]/nombreTestsShort[IsScinti];
       else return -1;
     }
-    inline double efficiency(int i)
+    inline double efficiency(int i,bool IsScinti)
     {
-        if(i<=nombreTestsOK.size())return nombreTestsOK[i]/nombreTests;
+        if(i<=nombreTestsOK[IsScinti].size())return nombreTestsOK[IsScinti][i]/nombreTests[IsScinti];
         else return -1;
-    }
-    inline double efficiency(int i,bool IsShort)
-    {
-      if(IsShort==true) return efficiencyShort(i);
-      else return efficiency(i);
     }
     inline int NbrPlate()
     {
@@ -133,9 +138,9 @@ public:
     {
         return Jm;
     }
-    inline double GetNumberOK(int i)
+    inline double GetNumberOK(int i,bool IsScinti)
     {
-       if(i<=nombreTestsOK.size()) return nombreTestsOK[i];
+       if(i<=nombreTestsOK[IsScinti].size())return nombreTestsOK[IsScinti][i];
        else return -1;
     }
     inline float GetZexp(const double & pxz0,const double & pyz0,const double & pxz1,const double& pyz1)
@@ -150,18 +155,21 @@ public:
     {
         return (Xexp-X0)*xj+(Yexp-Y0)*yj+(Zexp-Z0)*zj;
     }
-    inline double multiplicity(int i)
+    inline double multiplicity(int i,bool IsScinti)
     {
-        if(i<=nombreTestsOK.size())  return sommeNombreHits[i]/nombreTestsOK[i];
+        if(i<=nombreTestsOK[IsScinti].size())  return sommeNombreHits[IsScinti][i]/nombreTestsOK[IsScinti][i];
         else return -1;
     }
     inline void clear()
     {
+        nombreTests[0]=0;
+        nombreTests[1]=0;
         for(unsigned int i=0;i<6;++i)
         {
-          nombreTests=0;
-          nombreTestsOK[i]=0;
-          sommeNombreHits[i]=0;
+          nombreTestsOK[0][i]=0;
+          nombreTestsOK[1][i]=0;
+          sommeNombreHits[0][i]=0;
+          sommeNombreHits[1][i]=0;
         }
     }
     inline float get_ca(){return ca;};
@@ -174,7 +182,7 @@ public:
     inline float get_Y0(){return Y0;};
     inline float get_Z0(){return Z0;};
     void testYou(std::map<int,plan>& mapDIFplan,bool IsScinti);
-    void print();
+    void print(bool);
 private:
     int Nbr;
     float X0,Y0,Z0,XY,XZ,YZ,xnorm,ynorm,znorm,xi,yi,zi,xj,yj,zj,ca,sa,cb,sb,cg,sg;
@@ -183,25 +191,18 @@ private:
     double Im;
     double Jp;
     double Jm;
-    double nombreTests;
-    std::array<double,6>nombreTestsOK;
-    std::array<double,6>sommeNombreHits;
-    //double nombreTestsOK;
-    //double sommeNombreHits;
-    //double sommeNombreHits_all_Threshold;
-    
-    //double sommeNombreHits_Threshold1;
-    //double sommeNombreHits_Threshold2;
-    //double sommeNombreHits_Threshold3;
-    //double sommeNombreHits_Threshold12;
-    //double sommeNombreHits_Threshold23;
-    double nombreTestsShort;
-    std::array<double,6>nombreTestsOKShort;
-    std::array<double,6>sommeNombreHitsShort;
+    std::array<double,2>nombreTests;
+    std::array<double,2>nombreTestsShort;
+    std::array<std::array<double,6>,2>nombreTestsOK;
+    std::array<std::array<double,6>,2>nombreTestsOKShort;
+    std::array<std::array<double,6>,2>sommeNombreHits;
+    std::array<std::array<double,6>,2>sommeNombreHitsShort;
     //double nombreTestsOKShort;
     //double sommeNombreHitsShort;
     enum {TESTYOUCALLED,NOTOOMUCHHITSINPLAN,XZTRACKFITPASSED,YZTRACKFITPASSED,NOHITINPLAN, NCOUNTERS};
-    double counts[NCOUNTERS];
+    std::array<std::array<double,5>,2>Counts;
+    //double counts[NCOUNTERS];
+    //double countsScinti[NCOUNTERS];
 };
 
 
@@ -299,7 +300,7 @@ public:
     }
     inline std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,bool IsScinti);
     inline int countHitAtStrip(double& x, double dlim,bool IsScinti);
-    void GivePoint();
+    //void GivePoint();
 private:
     int _type;
     std::vector<CalorimeterHit*> hits;
@@ -345,12 +346,12 @@ protected:
     unsigned int _GlobalEvents;
    
     
-    
+    ConfigInfos conf;
     Geometry geom;
     std::string _ReaderType;
     std::map<int,plan>Plans;
     std::map<int,plan>PlansScintillator;
     std::vector<testedPlan> testedPlanList;
-    std::vector<testedPlan> testedPlanListScinti;
+    //std::vector<testedPlan> testedPlanListScinti;
 };
 #endif

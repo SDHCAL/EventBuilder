@@ -26,6 +26,17 @@ INSTALL(
 	TARGETS Common
 	LIBRARY DESTINATION lib
 )
+FILE (
+	GLOB_RECURSE
+	GRPC_SRC_FILES
+	src/GRPC/*
+)
+ADD_SHARED_LIBRARY( GRPC ${GRPC_SRC_FILES} )
+TARGET_LINK_LIBRARIES( GRPC )
+INSTALL(
+	TARGETS GRPC
+	LIBRARY DESTINATION lib
+)
 
 # -------------------------------------------------
 # build the analysis library

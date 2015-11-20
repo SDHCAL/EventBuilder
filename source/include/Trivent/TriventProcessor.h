@@ -20,21 +20,22 @@
 #include <iomanip>
 #include <fstream>
 #include <iostream>
+
 #define size_pad 10.4125
 #define size_strip 2.5
 
-int bin[3]={110,110,700};
-int bin2[3]={100,100,1000};
+int bin[3]={31,31,70};
+int bin2[3]={310,310,100};
 double xmin[3]={0,0,0};
-double xmax[3]={110,110,700};
+double xmax[3]={31,31,100};
 double xmin2[3]={0,0,0};
-double xmax2[3]={1000,1000,1000};
+double xmax2[3]={310,310,100};
 extern TCanvas* canvas;
 THnSparseI hs("Noise", "Noise", 3, bin, xmin, xmax);
 THnSparseI hs2("Events", "Events", 3, bin, xmin, xmax);
 THnSparseD hss("Noise_2", "Noise_2", 3, bin2, xmin2, xmax2);
 THnSparseD hss2("Events_2", "Events_2", 3, bin2, xmin2, xmax2);
-
+enum Threshold{Threshold_2=1,Threshold_1,Threshold_3};
 
 class TriventProcessor : public marlin::Processor
 {
@@ -52,7 +53,7 @@ public:
     void end();
     inline void FillTimes();
     void FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollectionVec* col,CellIDEncoder<CalorimeterHitImpl>& cd,int IsNoise);
-    void FillIJK(std::vector<RawCalorimeterHit *>vec);
+    void CalculateEfficiencyScinti(std::vector<RawCalorimeterHit *>vec);
 private:
     void processCollection(EVENT::LCEvent *evtP,LCCollection* col);    
 protected:
@@ -83,7 +84,6 @@ protected:
     bool _WantDistribution;
     bool _WantCalibration;
     bool _Spill_Study;
-    std::vector<bool>hitinit;
     unsigned int TOTALNUMBERHITSCINTI;
     std::vector<int>EffiwithDiscri;
     std::string _Database_name;
@@ -241,16 +241,16 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
     if(IsNoise==1) 
     {
       HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Noise")->Fill((*it)->getTimeStamp(),1);
-      if(Seuil==1)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Noise_S1")->Fill((*it)->getTimeStamp(),1);
-      else if (Seuil==2)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Noise_S2")->Fill((*it)->getTimeStamp(),1);
-      else if (Seuil==3)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Noise_S3")->Fill((*it)->getTimeStamp(),1);
+      if(Seuil==Threshold_1)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Noise_S1")->Fill((*it)->getTimeStamp(),1);
+      else if (Seuil==Threshold_2)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Noise_S2")->Fill((*it)->getTimeStamp(),1);
+      else if (Seuil==Threshold_3)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Noise_S3")->Fill((*it)->getTimeStamp(),1);
     } 
     else if (IsNoise==0) 
     {
       HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Events")->Fill((*it)->getTimeStamp(),1);
-      if(Seuil==1)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Events_S1")->Fill((*it)->getTimeStamp(),1);
-      else if (Seuil==2)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Events_S2")->Fill((*it)->getTimeStamp(),1);
-      else if (Seuil==3)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Events_S3")->Fill((*it)->getTimeStamp(),1);
+      if(Seuil==Threshold_1)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Events_S1")->Fill((*it)->getTimeStamp(),1);
+      else if (Seuil==Threshold_2)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Events_S2")->Fill((*it)->getTimeStamp(),1);
+      else if (Seuil==Threshold_3)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("Time_Distr_Events_S3")->Fill((*it)->getTimeStamp(),1);
     }
     if(IsNoise==1) 
     {
@@ -261,9 +261,9 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
       //time_graph[geom.GetDifNbrPlate(dif_id)-1]->Add(new TPaveLabel(.90,.92,.98,.97,Form("%d",_eventNr),"brNDC"),_eventNr);
       HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise")->Fill(I,J);
       HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_Pon")->Fill(I,J,Seuil);
-      if(Seuil==1)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_S1")->Fill(I,J);
-      else if (Seuil==2)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_S2")->Fill(I,J);
-      else if (Seuil==3)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_S3")->Fill(I,J);
+      if(Seuil==Threshold_1)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_S1")->Fill(I,J);
+      else if (Seuil==Threshold_2)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_S2")->Fill(I,J);
+      else if (Seuil==Threshold_3)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_S3")->Fill(I,J);
       if(geom.GetDifType(dif_id)==positional)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_Asic")->Fill(asic_id,asic_id);
       else HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Noise_Asic")->Fill((AsicShiftI[asic_id]+geom.GetDifPositionX(dif_id))/8,(32-AsicShiftJ[asic_id]+geom.GetDifPositionY(dif_id))/8);
       ///////////////
@@ -277,9 +277,9 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
     {
       HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events")->Fill(I,J);
       HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events_Pon")->Fill(I,J,Seuil);
-      if(Seuil==1)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events_S1")->Fill(I,J);
-      else if (Seuil==2)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events_S2")->Fill(I,J);
-      else if (Seuil==3)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events_S3")->Fill(I,J);
+      if(Seuil==Threshold_1)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events_S1")->Fill(I,J);
+      else if (Seuil==Threshold_2)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events_S2")->Fill(I,J);
+      else if (Seuil==Threshold_3)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events_S3")->Fill(I,J);
       if(geom.GetDifType(dif_id)==positional)HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events_Asic")->Fill(asic_id,asic_id);
       else HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("Flux_Events_Asic")->Fill((AsicShiftI[asic_id]+geom.GetDifPositionX(dif_id))/8,(32-AsicShiftJ[asic_id]+geom.GetDifPositionY(dif_id))/8);
     }
@@ -351,27 +351,16 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
 }
 
 
-void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec)
+void TriventProcessor::CalculateEfficiencyScinti(std::vector<RawCalorimeterHit *>vec)
 {
-  std::vector<std::map<int,int> >Times_Plates;
-  hitinit.clear();
-  for(unsigned int j=0; j<HistoPlanes.size(); ++j) 
-  {
-    Times_Plates.emplace_back(std::map<int,int>());
-    hitinit.push_back(false);
-  }
+  unsigned roll=0;
   for(std::vector<RawCalorimeterHit *>::iterator it=vec.begin(); it!=vec.end(); ++it) 
   {
+    
     TOTALNUMBERHITSCINTI++;
     int dif_id  = (*it)->getCellID0() & 0xFF ;
     int asic_id = ((*it)->getCellID0() & 0xFF00)>>8;
     int chan_id = ((*it)->getCellID0() & 0x3F0000)>>16;
-    double ca=SinCos[dif_id][0];
-	  double sa=SinCos[dif_id][1];
-    double cb=SinCos[dif_id][2];
-	  double sb=SinCos[dif_id][3];
-    double cg=SinCos[dif_id][4];
-	  double sg=SinCos[dif_id][5];
     unsigned int NbrPlate =geom.GetDifNbrPlate(dif_id)-1;
     float Z= geom.GetPlatePositionZ(NbrPlate);
     unsigned int K =geom.GetDifNbrPlate(dif_id);
@@ -381,9 +370,6 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec)
     {
       I =(1+MapILargeHR2[chan_id]+AsicShiftI[asic_id])+geom.GetDifPositionX(dif_id);
       J =(32-(MapJLargeHR2[chan_id]+AsicShiftJ[asic_id]))+geom.GetDifPositionY(dif_id);
-      pos[0] = cg*cb*I*size_pad+(-sg*ca+cg*sb*sa)*J*size_pad+(sg*sa+cg*sb*ca)*Z+geom.GetPlatePositionX(NbrPlate);
-      pos[1] = sg*cb*I*size_pad+(cg*ca+sg*sb*sa)*J*size_pad+(-cg*sa+sg*sb*ca)*Z+geom.GetPlatePositionY(NbrPlate);
-      pos[2] = -sb*I*size_pad+cb*sa*J*size_pad+cb*ca*Z;
     }
     if(geom.GetDifType(dif_id)==positional) 
     {
@@ -395,15 +381,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec)
       } 
       else I =2*(64-chan_id)-1+geom.GetDifPositionX(dif_id);
       J =0;
-      pos[0] = cg*cb*I*size_strip+(-sg*ca+cg*sb*sa)*J*size_strip+(sg*sa+cg*sb*ca)*Z+geom.GetPlatePositionX(NbrPlate);
-      if(asic_id%2==1) 
-      {
-        pos[0]=cg*cb*I*size_strip+(-sg*ca+cg*sb*sa)*J*size_strip+(sg*sa+cg*sb*ca)*Z+geom.GetPlatePositionX(NbrPlate)+1;
-      }
-        pos[1] = sg*cb*I*size_strip+(cg*ca+sg*sb*sa)*J*size_strip+(-cg*sa+sg*sb*ca)*Z+geom.GetPlatePositionY(NbrPlate);
-        pos[2] = -sb*I*size_strip+cb*sa*J*size_strip+cb*ca*Z;
     }
-    Times_Plates[geom.GetDifNbrPlate(dif_id)-1][(*it)->getTimeStamp()]++; 
       int a,b,c,d;
       
 	    if(Delimiter.find(dif_id)==Delimiter.end()){a=Delimiter[1][0];b=Delimiter[1][1];c=Delimiter[1][2];d=Delimiter[1][3];}
@@ -411,23 +389,14 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec)
 	    
       if(a<=I&&b>=I&&c<=J&&d>=J)
 	    {
-	    
-	    hitinit[geom.GetDifNbrPlate(dif_id)-1]=true; 
-      HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH2F("EffiScintiOnly")->Fill(I,J);
-      
+	   
+	    roll++;
+	    if(roll==1)EffiwithDiscri[geom.GetDifNbrPlate(dif_id)-1]+=1;
+      if(roll==1)std::cout<<geom.GetDifNbrPlate(dif_id)-1<<"  "<<EffiwithDiscri[geom.GetDifNbrPlate(dif_id)-1]<<std::endl;
       
       }
     }
-  for(unsigned int i=0;i!=hitinit.size();++i)
-  {
-    if(hitinit[i]==true)
-    {
-      EffiwithDiscri[i]+=1;
     }
-      std::cout<<green<<i<<"  "<<EffiwithDiscri[i]<<"  ";
-  }
-  std::cout<<normal<<std::endl;
-}
 
 void TriventProcessor::Writer(IO::LCWriter* file,const char * name,std::map<int,std::vector<EVENT::RawCalorimeterHit *> >& vec, EVENT::LCEvent* event,unsigned int & nbr,unsigned int IsNoise)
 {
