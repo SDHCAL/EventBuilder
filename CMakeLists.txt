@@ -24,9 +24,9 @@ endif()
 include_directories(include)
 
 # project version
-SET( ${PROJECT_NAME}_VERSION_MAJOR 2 )
+SET( ${PROJECT_NAME}_VERSION_MAJOR 3 )
 SET( ${PROJECT_NAME}_VERSION_MINOR 0 )
-SET( ${PROJECT_NAME}_VERSION_PATCH b )
+SET( ${PROJECT_NAME}_VERSION_PATCH a )
 
 
 
