@@ -1,4 +1,32 @@
 #!/bin/bash
+
+
+#function to set geometry file in Marlin xml
+# first parameter is the xml file to modify
+# second parameter is the name of the modified xml file
+# third parameter is the geometry file
+SetGeometryInXML () 
+{
+   outputfile=$(mktemp --suffix=.py run-XXXX) && 
+   {
+       cat > "$outputfile" <<EOF
+import xml.etree.ElementTree as ET
+tree=ET.parse("$1")
+root=tree.getroot()
+for t in root.iter('parameter'):
+    if t.get('name')=='FileNameGeometry':
+       t.set('value',"$3")
+tree.write("$2")
+EOF
+       python "$outputfile"
+       rm "$outputfile"
+   }
+}
+
+#SetGeometryInXML xml/Streamout.xml ZOU.xml DetectorGeometry/Tomuvol.xml
+#SetGeometryInXML ZOU.xml ZOU.xml DetectorGeometry/YO.xml
+
+
  if [ "$#" -eq  "0" ]
    then
  echo "all? streamout? Trivent? Analysis? ... "
@@ -110,6 +138,7 @@ else
 	sed -i "s|NOISES|$(pwd)/DHCAL_Noise_"$m"_I0.slcio|" Trivent.xml
         now=$(date +"%m_%d_%Y")
         #mv Results_"m".root $(pwd)/Results_Trivent_"m"_"$now".root
+	#gdb Marlin 
 	Marlin Trivent.xml
 	rm Trivent.xml
 	done
