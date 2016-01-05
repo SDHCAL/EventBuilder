@@ -30,6 +30,7 @@
 	</processor>
 	<processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
         	<parameter name="LCIOWriteMode" type="string">WRITE_NEW </parameter>
-                <parameter name="LCIOOutputFile" type="string"> OUTPUT </parameter>
-        </processor>
+          <parameter name="LCIOOutputFile" type="string"> OUTPUT </parameter>
+          <parameter name="DropCollectionNames" type="string">RU_XDAQ</parameter> 
+  </processor>
 </marlin>
