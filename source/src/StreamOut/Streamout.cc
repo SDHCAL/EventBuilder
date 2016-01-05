@@ -2,6 +2,7 @@
 #include "Streamout/BufferNavigator.h"
 #include "Streamout/LMGenericObject.h"
 #include "Progress.h"
+#include "Intro.h"
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -9,6 +10,7 @@
 #include <cstdint>
 #include <iomanip>
 #include <assert.h>
+#include "UTIL/LCTime.h"
 #include "Colors.h"
 #include <EVENT/LCCollection.h>
 #include <EVENT/LCGenericObject.h>
@@ -74,10 +76,14 @@ Streamout::Streamout() : Processor("Streamout")
     registerProcessorParameter("BitsToSkip","BitsToSkip (default 24)",_BitsToSkip,_BitsToSkip);
     _TcherenkovSignalDuration=5;
     registerProcessorParameter("TcherenkovSignalDuration","Duration of the Tcherenkov Signal",_TcherenkovSignalDuration,_TcherenkovSignalDuration);
+    bool virer_full_asic=false;
+    registerProcessorParameter("Virer_full_asic","Virer_full_asic",virer_full_asic,virer_full_asic);
+    
 }
 
 void Streamout::init()
 {
+    Intro();
     LCEvent* evt(0) ;
     _maxRecord= Global::parameters->getIntVal("MaxRecordNumber")-1;
     _skip= Global::parameters->getIntVal("SkipNEvents");
@@ -114,13 +120,14 @@ void Streamout::init()
         std::map<int, Dif > Difs=geom.GetDifs();
         for(std::map<int, Dif >::iterator it=Difs.begin(); it!=Difs.end(); ++it) 
         {
+          BCID_old.insert(std::pair<int,unsigned int>(it->first,0));
           if(geom.GetDifType(it->first)==temporal) 
           {
-            std::string name1="Times_given_by_TDC_Asics_1"+patch::to_string(it->first);
-            std::string name2="Times_given_by_TDC_Asics_2"+patch::to_string(it->first);
+            std::string name1="Times_given_by_TDC_Asics_1_"+patch::to_string(it->first);
+            std::string name2="Times_given_by_TDC_Asics_2_"+patch::to_string(it->first);
             HistoTimeAsic1.insert ( std::pair<int,TH1F*>(it->first,new TH1F(name1.c_str(),name1.c_str(),501,-250,250)) );
             HistoTimeAsic2.insert ( std::pair<int,TH1F*>(it->first,new TH1F(name2.c_str(),name2.c_str(),501,-250,250)) );
-            BCID_old.insert(std::pair<int,unsigned int>(it->first,0));
+            
           }
         }
     } 
@@ -169,6 +176,7 @@ void Streamout::processEvent( LCEvent * evt )
         _CollectionSizeCounter[nElement]++;
         for (int iel=0; iel<nElement; iel++) 
         {
+            
             //LCGenericObject* obj=dynamic_cast<LCGenericObject*>(col->getElementAt(iel));
             //LMGeneric *lmobj=(LMGeneric *) obj;
             LMGeneric* lmobj=(LMGeneric *)(col->getElementAt(iel));
@@ -200,8 +208,10 @@ void Streamout::processEvent( LCEvent * evt )
             _SizeAfterDIFPtr[bufferNavigator.getSizeAfterDIFPtr()]++;
 
             //Make something with the Tcherenkov signal
+            if(isFirstEvent()==true)BCID_old[d->getID()]=d->getAbsoluteBCID();
             unsigned int difAbsoluteBCID = (d->getAbsoluteBCID() - BCID_old[d->getID()]);
-            unsigned int rolling=(difAbsoluteBCID/16777216)*16777216;
+            unsigned int rolling=int((difAbsoluteBCID/16777216)*16777216);
+            //std::cout<<red<<BCID_old[d->getID()]<<"  "<<d->getAbsoluteBCID()<<"  "<<rolling<<normal<<std::endl;
             BCID_old[d->getID()]=d->getAbsoluteBCID();
             //if(rolling>0) std::cout<<red<<rolling<<normal<<std::endl;
             if(geom.GetDifType(d->getID())==tcherenkov) 
@@ -343,9 +353,36 @@ void Streamout::processEvent( LCEvent * evt )
             } else {
                 //create RawCalorimeterHit
                 //std::cout<<d->getNumberOfFrames()<<std::endl;
-                for (uint32_t i=0; i<d->getNumberOfFrames(); i++) {
+                std::map<unsigned int long,unsigned int>hits_asic_total;
+                hits_asic_total.clear();
+                for (uint32_t i=0; i<d->getNumberOfFrames(); i++) 
+                {
+                    
+                    for (uint32_t j=0; j<64; j++) 
+                    {
+                      if (!(d->getFrameLevel(i,j,0) || d->getFrameLevel(i,j,1))) continue;
+                   
+                      hits_asic_total[(unsigned long int)((unsigned short)d->getFrameAsicHeader(i))]++;
+                 
+                      
+                    }
+                }
+                std::cout<<std::endl;
+                for(std::map<unsigned int long,unsigned int>::iterator it=hits_asic_total.begin();it!=hits_asic_total.end();++it)
+                {
+                  if(it->second<128||it->second>128)std::cout<<green<<d->getID()<<"  "<<it->first<<"  "<<it->second<<normal<<std::endl;
+                  else if (it->second==128)std::cout<<red<<d->getID()<<"  "<<it->first<<"  "<<it->second<<normal<<std::endl;
+                }
+                std::cout<<std::endl;
+                for (uint32_t i=0; i<d->getNumberOfFrames(); i++) 
+                {
                     //int uuu=-1;
                     //int yyy=0;
+                    unsigned int nbr_hit_in_asic=0;
+                    bool virer_full_asic=false;
+                    for (uint32_t j=0; j<64; j++) if (d->getFrameLevel(i,j,0) || d->getFrameLevel(i,j,1))nbr_hit_in_asic++;
+                    if(!(nbr_hit_in_asic==64&&virer_full_asic==true))
+                    {
                     for (uint32_t j=0; j<64; j++) {
                         
                         //++uuu;
@@ -372,14 +409,16 @@ void Streamout::processEvent( LCEvent * evt )
                         //std::cout<<yellow<<hit->getAmplitude()<<normal<<std::endl;
                         //unsigned int TTT = (unsigned int)(d->getFrameTimeToTrigger(i));
                         //hit->setTimeStamp(TTT);		      		//Time stamp of this event from Run Begining
-                        int Tjj=  d->getBCID()-d->getFrameBCID(i)+rolling;
+                        int Tjj=  rolling+d->getBCID()-d->getFrameBCID(i);
                         //std::cout<<Tjj<<std::endl;
                         hit->setTimeStamp(Tjj);
-                       //if(hit->getTimeStamp()<0)std::cout<<red<<rolling<<"  "<<Tjj<<"  "<<hit->getTimeStamp()<<"  "<<TTT<<"  "<<d->getBCID()<<"  "<<d->getFrameBCID(i)<<"  "<<d->getBCID()-d->getFrameBCID(i)<<normal<<std::endl;
+                        
+                       if(Tjj<0)std::cout<<"BCID "<<d->getBCID()<<" FrameBCID "<<d->getFrameBCID(i)<<" d->getBCID()-d->getFrameBCID(i) "<<d->getBCID()-d->getFrameBCID(i)<<" Rolling "<<rolling <<"  "<<hit->getTimeStamp()<<std::endl;
                         //std::cout<<yellow<<TTT<<"  "<<Tjj<<normal<<std::endl;
                         RawVec->addElement(hit);
                         
                     }//for (uint32_t j=0;j<64;j++)
+                    }
                     //std::cout<<yellow<<yyy<<normal<<std::endl;
                 }//for (uint32_t i=0;i<d->getNumberOfFrames();i++)
                 //register Triggers'time : lots of values here ?
@@ -389,6 +428,7 @@ void Streamout::processEvent( LCEvent * evt )
             trig[2] = d->getBCID();
             trig[3] = d->getAbsoluteBCID()&0xFFFFFF;
             trig[4] = (d->getAbsoluteBCID()/(0xFFFFFF+1))&0xFFFFFF;
+
             //std::cout<<red<<d->getAbsoluteBCID()<<normal<<std::endl;
             trig[5] = d->getTASU1(); //what happen if no temperature ?
             trig[6] = d->getTASU2();

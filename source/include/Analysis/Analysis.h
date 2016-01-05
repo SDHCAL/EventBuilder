@@ -21,24 +21,13 @@ class testedPlan
 public:
     testedPlan(int numeroPlan,float x ,float y,float z,float xy, float xz, float yz, int type,double _Ip,double _Im, double _Jp, double _Jm) : Nbr(numeroPlan),X0(x),Y0(y),Z0(z),XY(xy),XZ(xz),YZ(yz),Type(type),Ip(_Ip),Im(_Im),Jp(_Jp),Jm(_Jm)
     {
-    
-      
-        for (int i=0;i!=nombreTests.size();++i) 
-        {
-          nombreTests[i]=0;
-          nombreTestsShort[i]=0;
-        }
-        for (unsigned int i=0; i!=Counts.size(); ++i) 
-        {
-          for(unsigned int j=0;j!=Counts[i].size();++j) 
-          {
-            Counts[i][j]=0;
-            nombreTestsOKShort[i][j]=0;
-            nombreTestsOK[i][j]=0;
-            sommeNombreHits[i][j]=0;
-            sommeNombreHitsShort[i][j]=0;
-          }
-        }
+
+        nombreTests.clear();
+        nombreTestsShort.clear();
+        nombreTestsOK.clear();
+        nombreTestsOKShort.clear();
+        sommeNombreHits.clear();
+        sommeNombreHitsShort.clear();
         ca=cos(xy*degtorad);
         sa=sin(xy*degtorad);
         cb=cos(xz*degtorad);
@@ -61,36 +50,25 @@ public:
         yj=cg*ca+sg*sb*sa;
         zj=cb*sa;
     }
-    inline double multiplicityShort(int i, bool IsScinti) 
+    inline float GetZexp(const double & pxz0,const double & pyz0,const double & pxz1,const double& pyz1)
     {
-      if(i<=nombreTestsOKShort[IsScinti].size()) return  sommeNombreHitsShort[IsScinti][i]/nombreTestsOKShort[IsScinti][i];
-      else return -1;
+        return (xnorm*(pxz0-X0)+ynorm*(pyz0-Y0)+znorm*Z0)/(xnorm*pxz1+ynorm*pyz1+znorm);
     }
-    inline double GetNumberOKShort(int i,bool IsScinti )
+    inline float GetProjectioni(const double & Xexp,const double & Yexp,const double & Zexp)
     {
-      if(i<=nombreTestsOKShort[IsScinti].size()) return nombreTestsOKShort[IsScinti][i];
-      else return -1;
+        return (Xexp-X0)*xi+(Yexp-Y0)*yi+(Zexp-Z0)*zi;
     }
-    inline void ClearShort(bool IsScinti)
+    inline float GetProjectionj(const double & Xexp,const double & Yexp,const double & Zexp)
     {
-     for(int i=0;i<6;++i)
-     {
-      nombreTestsShort[IsScinti]=0;
-      nombreTestsOKShort[IsScinti][i]=0;
-      sommeNombreHitsShort[IsScinti][i]=0;
-     }
+        return (Xexp-X0)*xj+(Yexp-Y0)*yj+(Zexp-Z0)*zj;
     }
-    inline double efficiencyShort(int i, bool IsScinti) 
+    inline void ClearShort(std::string name)
     {
-      if(i<=nombreTestsOKShort[IsScinti].size())return nombreTestsOKShort[IsScinti][i]/nombreTestsShort[IsScinti];
-      else return -1;
+      nombreTestsShort.clear();
+      nombreTestsOKShort.clear();
+      sommeNombreHitsShort.clear();
     }
-    inline double efficiency(int i,bool IsScinti)
-    {
-        if(i<=nombreTestsOK[IsScinti].size())return nombreTestsOK[IsScinti][i]/nombreTests[IsScinti];
-        else return -1;
-    }
-    inline int NbrPlate()
+        inline int NbrPlate()
     {
         return Nbr;
     }
@@ -138,40 +116,62 @@ public:
     {
         return Jm;
     }
-    inline double GetNumberOK(int i,bool IsScinti)
+        inline void clear()
     {
-       if(i<=nombreTestsOK[IsScinti].size())return nombreTestsOK[IsScinti][i];
-       else return -1;
+        nombreTests.clear();
+        nombreTestsOK.clear();
+        sommeNombreHits.clear(); 
     }
-    inline float GetZexp(const double & pxz0,const double & pyz0,const double & pxz1,const double& pyz1)
+    
+    
+    
+    inline double multiplicityShort(int i, std::string name)
     {
-        return (xnorm*(pxz0-X0)+ynorm*(pyz0-Y0)+znorm*Z0)/(xnorm*pxz1+ynorm*pyz1+znorm);
+      if(sommeNombreHitsShort.find(name)==sommeNombreHitsShort.end()||nombreTestsOKShort.find(name)==nombreTestsOKShort.end())return -1;
+      else return  sommeNombreHitsShort[name][i]/nombreTestsOKShort[name][i];
     }
-    inline float GetProjectioni(const double & Xexp,const double & Yexp,const double & Zexp)
+    inline double GetNumberOKShort(int i,std::string name )
     {
-        return (Xexp-X0)*xi+(Yexp-Y0)*yi+(Zexp-Z0)*zi;
+      if(nombreTestsOKShort.find(name)==nombreTestsOKShort.end())return -1;
+      else return nombreTestsOKShort[name][i];
     }
-    inline float GetProjectionj(const double & Xexp,const double & Yexp,const double & Zexp)
-    {
-        return (Xexp-X0)*xj+(Yexp-Y0)*yj+(Zexp-Z0)*zj;
+    inline double efficiencyShort(int i, std::string name)
+    { 
+      if(nombreTestsOKShort.find(name)==nombreTestsOKShort.end()||nombreTestsShort.find(name)==nombreTestsShort.end())return -1;
+      else return nombreTestsOKShort[name][i]/nombreTestsShort[name];
     }
-    inline double multiplicity(int i,bool IsScinti)
+    inline double efficiency(int i,std::string name)
     {
-        if(i<=nombreTestsOK[IsScinti].size())  return sommeNombreHits[IsScinti][i]/nombreTestsOK[IsScinti][i];
-        else return -1;
+        if(nombreTestsOK.find(name)==nombreTestsOK.end()||nombreTests.find(name)==nombreTests.end())return -1;
+        else return nombreTestsOK[name][i]/nombreTests[name];
     }
-    inline void clear()
+    inline double GetNumberOK(int i,std::string name)
     {
-        nombreTests[0]=0;
-        nombreTests[1]=0;
-        for(unsigned int i=0;i<6;++i)
+       if(nombreTestsOK.find(name)==nombreTestsOK.end())return -1;
+       else return nombreTestsOK[name][i];
+    }
+    inline double multiplicity(int i,std::string name)
+    {
+        if(sommeNombreHits.find(name)==sommeNombreHits.end()||sommeNombreHits.find(name)==sommeNombreHits.end())return -1; 
+        else return sommeNombreHits[name][i]/nombreTestsOK[name][i];
+    }
+     inline double GetNombreHits(int i,std::string name)
+    {
+        if(sommeNombreHits.find(name)==sommeNombreHits.end())
         {
-          nombreTestsOK[0][i]=0;
-          nombreTestsOK[1][i]=0;
-          sommeNombreHits[0][i]=0;
-          sommeNombreHits[1][i]=0;
+          std::cout<<red<<name<<" unknown"<<std::endl;
+          return -1; 
         }
+        else return sommeNombreHits[name][i];
     }
+    
+    std::map<std::string,std::array<double,5>>Counts;
+    std::map<std::string,double>nombreTests;
+    std::map<std::string,double>nombreTestsShort;
+    std::map<std::string,std::array<double,6>>nombreTestsOK;
+    std::map<std::string,std::array<double,6>>nombreTestsOKShort;
+    std::map<std::string,std::array<double,6>>sommeNombreHits;
+    std::map<std::string,std::array<double,6>>sommeNombreHitsShort;
     inline float get_ca(){return ca;};
     inline float get_sa(){return sa;};
     inline float get_cb(){return cb;};
@@ -181,9 +181,10 @@ public:
     inline float get_X0(){return X0;};
     inline float get_Y0(){return Y0;};
     inline float get_Z0(){return Z0;};
-    void testYou(std::map<int,plan>& mapDIFplan,bool IsScinti);
-    void print(bool);
-private:
+    //void testYou(std::map<int,plan>& mapDIFplan,bool IsScinti,std::vector<testedPlan>& tested);
+    void testYou(std::map<std::string,std::map<int,plan>>&mapDIFplan,std::vector<testedPlan>& tested);
+    void print(std::string name);
+    private:
     int Nbr;
     float X0,Y0,Z0,XY,XZ,YZ,xnorm,ynorm,znorm,xi,yi,zi,xj,yj,zj,ca,sa,cb,sb,cg,sg;
     int Type;
@@ -191,16 +192,11 @@ private:
     double Im;
     double Jp;
     double Jm;
-    std::array<double,2>nombreTests;
-    std::array<double,2>nombreTestsShort;
-    std::array<std::array<double,6>,2>nombreTestsOK;
-    std::array<std::array<double,6>,2>nombreTestsOKShort;
-    std::array<std::array<double,6>,2>sommeNombreHits;
-    std::array<std::array<double,6>,2>sommeNombreHitsShort;
+    
     //double nombreTestsOKShort;
     //double sommeNombreHitsShort;
     enum {TESTYOUCALLED,NOTOOMUCHHITSINPLAN,XZTRACKFITPASSED,YZTRACKFITPASSED,NOHITINPLAN, NCOUNTERS};
-    std::array<std::array<double,5>,2>Counts;
+    
     //double counts[NCOUNTERS];
     //double countsScinti[NCOUNTERS];
 };
@@ -216,16 +212,25 @@ public:
     {
       ;
     }
-    inline void addHit(CalorimeterHit* a)
+    inline void addHit(CalorimeterHit* a,std::string name)
+    {
+        hits[name].push_back(a);
+    }
+    /*inline void addHit(CalorimeterHit* a)
     {
         hits.push_back(a);
-    }
-    inline int nHits()
+    }*/
+    /*inline int nHits()
     {
         return hits.size();
+    }*/
+    inline int nHits(std::string name)
+    {
+        return hits[name].size();
     }
-    inline void computeBarycentre();
-    inline double barycentreX()
+    //inline void computeBarycentre();
+    inline void computeBarycentre(std::string);
+    /*inline double barycentreX()
     {
         return barycentre[0];
     }
@@ -241,12 +246,29 @@ public:
     inline double minX()
     {
         return min[0];
+    }*/
+    inline double barycentreX(std::string name)
+    {
+        return barycentre[name][0];
+    }
+    inline double barycentreY(std::string name)
+    {
+        return barycentre[name][1];
+    }
+    inline double barycentreZ(std::string name)
+    {
+        return barycentre[name][2];
+    }
+    inline void computeMaxima(std::string name);
+    inline double minX(std::string name)
+    {
+        return min[name][0];
     }
     inline void SetType(int i )
     {
         _type=i;
     }
-    inline double minY()
+    /*inline double minY()
     {
         return min[1];
     }
@@ -265,6 +287,26 @@ public:
     inline double maxZ()
     {
         return max[2];
+    }*/
+    inline double minY(std::string name)
+    {
+        return min[name][1];
+    }
+    inline double minZ(std::string name)
+    {
+        return min[name][2];
+    }
+    inline double maxX(std::string name)
+    {
+        return max[name][0];
+    }
+    inline double maxY(std::string name)
+    {
+        return max[name][1];
+    }
+    inline double maxZ(std::string name)
+    {
+        return max[name][2];
     }
     inline double ErrorX()
     {
@@ -280,7 +322,7 @@ public:
         //return 2.5;
         return 10;
         if(this->GetType()==pad)return 0;
-        
+
     }
     inline double ErrorZ()
     {
@@ -288,69 +330,85 @@ public:
     }
     inline bool operator==(plan b);
     inline bool operator!=(plan b);
-    void printBarycentre();
-    void printMaxima();
-    inline void Clear()
+    //void printBarycentre();
+    //void printMaxima();
+    void printBarycentre(std::string name);
+    void printMaxima(std::string name);
+    inline void Clear(std::string name)
     {
-        hits.clear();
+        hits[name].clear();
     }
     inline int GetType()
     {
         return _type;
     }
-    inline std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,bool IsScinti);
-    inline int countHitAtStrip(double& x, double dlim,bool IsScinti);
+    //inline std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,bool IsScinti);
+    inline std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,std::string);
+    inline std::map<std::string,int> countHitAtStrip(double& x, double dlim,std::string);
     //void GivePoint();
+    inline std::map<std::string,std::vector<CalorimeterHit*>> GetHits() 
+    {
+      return hits;
+    }
+    std::vector<CalorimeterHit*>& GetHits(std::string name) 
+    {
+      return hits[name];
+    }
 private:
     int _type;
-    std::vector<CalorimeterHit*> hits;
-    double barycentre[3];
-    double min[3];
-    double max[3];
-    
+    std::map<std::string,std::vector<CalorimeterHit*>> hits;
+    //std::vector<CalorimeterHit*>
+    //double barycentre[3];
+    //double min[3];
+    //double max[3];
+    std::map<std::string,std::array<double,3>>barycentre;
+    std::map<std::string,std::array<double,3>>min;
+    std::map<std::string,std::array<double,3>>max;
+
 };
 
 
-std::array<std::map<std::vector<int>,std::vector<int>>,6>Efficiency_per_pad;
-std::array<std::map<std::vector<int>,std::vector<int>>,6>Efficiency_per_padScinti;
+std::map<std::string,std::array<std::map<std::vector<int>,std::vector<int>>,6>>Efficiency_per_pad;
+//std::array<std::map<std::vector<int>,std::vector<int>>,6>Efficiency_per_padScinti;
+//std::array<std::map<std::vector<int>,std::vector<int>>,6>Efficiency_per_pad;
 double _Chi2;
-unsigned int _eventNr;
-unsigned int _eventNrSC;
 int _ShortEfficiency;
 int _NbrHitPerPlaneMax ;
 int _NbrPlaneUseForTracking ;
 double _dlimforPad;
-bool IsScinti;
 int _NbrRun;
 double _dlimforStrip;
 std::map<int ,std::vector<double> >Delimiter;
 std::string _Delimiters;
+   std::vector<std::string> _hcalCollections;
 class AnalysisProcessor : public marlin::Processor
 {
 public:
     AnalysisProcessor();
     ~AnalysisProcessor();
-    void PrintStat(bool IsScinti);
-    void PrintStatShort(bool IsScinti);
+    void PrintStat(std::string);
+    void PrintStatShort(std::string);
     marlin::Processor *newProcessor(){return new AnalysisProcessor();}
     void init();
     void processEvent(EVENT::LCEvent *evtP);
+    void processRunHeader( LCRunHeader* run);
     void end();
 protected:
-    std::vector<std::string> _hcalCollections;
+ 
     LCWriter* _EventWriter;
     std::string _FileNameGeometry;
     unsigned int _eventNr;
     unsigned int _skip;
     unsigned int _maxRecord;
     unsigned int _GlobalEvents;
-   
-    
+    std::string _Config_xml;   
+
     ConfigInfos conf;
     Geometry geom;
     std::string _ReaderType;
-    std::map<int,plan>Plans;
-    std::map<int,plan>PlansScintillator;
+    std::map<std::string,std::map<int,plan>>Planss;
+    //std::map<int,plan>Plans;
+    //std::map<int,plan>PlansScintillator;
     std::vector<testedPlan> testedPlanList;
     //std::vector<testedPlan> testedPlanListScinti;
 };

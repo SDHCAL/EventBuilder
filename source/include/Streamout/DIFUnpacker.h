@@ -34,7 +34,7 @@
 class DIFUnpacker {
 public:
   static unsigned long long GrayToBin(unsigned long long n);
-  static uint32_t getStartOfDIF(uint8_t* cbuf,uint32_t size_buf,uint32_t start=92);
+  static uint32_t getStartOfDIF(uint8_t* cbuf,uint32_t size_buf,uint32_t start);
   static uint32_t getID(uint8_t* cb,uint32_t idx=0);
   static uint32_t getDTC(uint8_t* cb,uint32_t idx=0);
   static uint32_t getGTC(uint8_t* cb,uint32_t idx=0);
@@ -52,7 +52,6 @@ public:
   static uint32_t getFrameBCID(uint8_t* framePtr);
   static bool getFramePAD(uint8_t* framePtr,uint32_t ip);
   static bool getFrameLevel(uint8_t* framePtr,uint32_t ip,uint32_t level);
-  
   static uint32_t getAnalogPtr(std::vector<uint8_t*> &vLines,uint8_t* cb,uint32_t idx=0) throw (std::string);
   static uint32_t getFramePtr(std::vector<uint8_t*> &vFrame,std::vector<uint8_t*> &vLines,uint32_t max_size,uint8_t* cb,uint32_t idx=0) throw (std::string);
   static void dumpFrameOld(uint8_t* buf);

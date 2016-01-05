@@ -42,5 +42,6 @@
 		3) Plane_1:Imin_1:Imax_1:Jmin_1:Jmax_1|...|Plane_n:Plane_n:Imin_n:Imax_n:Jmin_n:Jmax_n/ -> Each Delimiters need to be provided
 		-->
 		<parameter name="Delimiters" value="0:300:0:300*"/>
+		<parameter name="Config_xml" value="/home/user/Bureau/EventBuilder/GIFSPS_60.xml"/>
 	</processor>
 </marlin>

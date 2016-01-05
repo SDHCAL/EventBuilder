@@ -8,6 +8,7 @@
 #include <iostream>
 #include <sstream>
 #include <utility>
+
 std::array<unsigned int,64> ParsePAGAIN(std::string& pagain)
 {
       std::array<unsigned int,64>arr;
@@ -16,9 +17,9 @@ std::array<unsigned int,64> ParsePAGAIN(std::string& pagain)
       unsigned short index_pad=0;
       while(iss>>gain)
       {
-        std::cout<<(unsigned int )(gain)<<std::endl;
+        //std::cout<<(unsigned int )(gain)<<std::endl;
         arr[index_pad]=gain;
-        std::cout<<index_pad<<std::endl;
+        //std::cout<<index_pad<<std::endl;
         index_pad++;
       }
       return arr;
@@ -28,8 +29,7 @@ std::array<unsigned int,64> ParsePAGAIN(std::string& pagain)
 
 void XMLReaderConfig::Read(std::string &FileName,ConfigInfos& Conf)
 {
-  
-  TiXmlDocument doc(FileName.c_str());
+ TiXmlDocument doc(FileName.c_str());
   doc.LoadFile();
   if(!doc.LoadFile())
   {
@@ -41,7 +41,7 @@ void XMLReaderConfig::Read(std::string &FileName,ConfigInfos& Conf)
     DifInfo dif =DifInfo();
     streamlog_out( MESSAGE )<<"File : "<<FileName<<std::endl;
     TiXmlHandle hdl(&doc);
-    TiXmlElement* element = hdl.FirstChildElement().FirstChildElement().Element();
+    TiXmlElement*  element = hdl.FirstChildElement().FirstChildElement().Element();
     while (element)
     {
       std::string name=element->Value();
@@ -51,7 +51,6 @@ void XMLReaderConfig::Read(std::string &FileName,ConfigInfos& Conf)
         std::string NAME=element->FirstChildElement( "NAME" )->GetText();
         unsigned int ID=std::stoi(element->FirstChildElement( "ID" )->GetText());
         bool ENABLED=bool(element->FirstChildElement( "ENABLED" )->GetText()) ;
-        std::cout<<DIF_TYPE<<"  "<<NAME<<"  "<<ID<<"  "<<ENABLED<<std::endl;
         Conf.AddDif(DifInfo(NAME,DIF_TYPE,ID,ENABLED));
       }
       if(name=="ASIC")

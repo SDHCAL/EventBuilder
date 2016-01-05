@@ -1,34 +1,48 @@
 ########################################################
-# cmake file for building Marlin example Package
-# @author Jan Engels, Desy IT
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6 FATAL_ERROR)
+# cmake file for building EventBuilder
+# @author Lagarde François, IPNL
+cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 ########################################################
 
-
 # project name
-PROJECT(MyProgramm)
+project(EventBuilder)
+include(CheckIncludeFiles)
 include(CheckCXXCompilerFlag)
+
 CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 if(COMPILER_SUPPORTS_CXX14)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-elseif(COMPILER_SUPPORTS_CXX11)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif(COMPILER_SUPPORTS_CXX0X)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-
-else()
-        message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+  else()
+  CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX0X)
+  if(COMPILER_SUPPORTS_CXX11)
+	  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	  else()
+    if(COMPILER_SUPPORTS_CXX0X)
+      CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+	    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+      else()
+      message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+    endif()
+  endif()
 endif()
+
+CHECK_CXX_COMPILER_FLAG("-locci" LOCCI_SUPPORT)
+if(LOCCI_SUPPORT)
+  message("LOCCI found")
+  SET(HaveOCCI 1)
+  SET(GCC_COVERAGE_LINK_FLAGS "-locci -lclntsh -lnnz12 -g0")
+else()
+  SET(HaveOCCI 0)
+endif()
+
+SET (CMAKE_SHARED_LINKER_FLAGS "${GCC_COVERAGE_LINK_FLAGS}")
+SET(CMAKE_EXE_LINKER_FLAGS  "${GCC_COVERAGE_LINK_FLAGS}" )
 include_directories(include)
 
 # project version
 SET( ${PROJECT_NAME}_VERSION_MAJOR 3 )
 SET( ${PROJECT_NAME}_VERSION_MINOR 0 )
 SET( ${PROJECT_NAME}_VERSION_PATCH a )
-
-
 
 ### DEPENDENCIES ############################################################
 
@@ -47,6 +61,13 @@ INCLUDE_DIRECTORIES( ${ROOT_INCLUDE_DIRS} )
 LINK_LIBRARIES( ${ROOT_LIBRARIES} )
 ADD_DEFINITIONS( ${ROOT_DEFINITIONS} )
 
+
+#find_package(ORACLE REQUIRED)
+#include_directories(${ORACLE_INCLUDE_DIRS})
+#LINK_LIBRARIES( ${ORACLE_LIBRARIES} )
+#ADD_DEFINITIONS( ${ORACLE_DEFINITIONS} )
+
+
 ### DOCUMENTATION ###########################################################
 
 OPTION( INSTALL_DOC "Set to OFF to skip build/install Documentation" OFF)
@@ -58,7 +79,6 @@ ENDIF()
 ### SUB DIRECTORIES #########################################################
 ADD_SUBDIRECTORY( source )
 add_executable(Plot ./source/src/Plot/Plot.cpp )
-
 # display some variables and write them to cache
 DISPLAY_STD_VARIABLES()
 

@@ -68,6 +68,8 @@ protected:
     LCWriter* _NoiseWriter;
     unsigned int TouchedEvents;
     int _timeWin;
+    int _TimeWin_Noise;
+    int _Time_from_Track;
     unsigned int _eventNr;
     int _trig_count;
     int _noiseCut;
@@ -95,6 +97,8 @@ protected:
     std::map< int,std::vector<EVENT::RawCalorimeterHit*> > RawHits;
     std::map< int,std::vector<EVENT::RawCalorimeterHit*> > BehondTrigger;
     std::vector<RawCalorimeterHit *>EventsGrouped;
+    std::vector<RawCalorimeterHit *>EstimationNoiseAfter;
+    std::vector<RawCalorimeterHit *>EstimationNoiseBefore;
     std::vector<RawCalorimeterHit *>EventsGroupedScin;
     std::map< int,std::vector<EVENT::RawCalorimeterHit*> > RawTimeDifs;
     float pos[3];

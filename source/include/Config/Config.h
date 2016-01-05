@@ -39,6 +39,7 @@ class AsicInfo
      if(threshold==0) return getThreshold0();
      if(threshold==1) return getThreshold1();
      if(threshold==2) return getThreshold2();
+     else return -1;
    }
    
    unsigned int getThreshold0(){return B0;};

@@ -1,11 +1,13 @@
 #include "Trivent/TriventProcessor.h"
 #include "Progress.h"
 #include "Utilities.h"
+#include "Intro.h"
 #include <iostream>
 #include <string>
 #include <cstdlib>
 #include <cmath>
 #include <cstdint>
+#include <algorithm>
 #include "marlin/Processor.h"
 #include "UTIL/LCTOOLS.h"
 #include "UTIL/CellIDEncoder.h"
@@ -22,7 +24,9 @@
 #include "IMPL/LCRunHeaderImpl.h"
 #include "Colors.h"
 #include "TBranch.h"
+#include <IMPL/LCParametersImpl.h>
 #include "TObject.h"
+#include "UTIL/LCTime.h"
 #include "TPDF.h"
 #include "TCanvas.h"
 #include "Trivent/SpillStudy.h"
@@ -47,6 +51,7 @@
 #include "TNamed.h"
 #include "THnSparse.h"
 #include "IO/LCReader.h"
+#include "TTimeStamp.h"
 #include "IMPL/LCTOOLS.h"
 #include "EVENT/LCRunHeader.h" 
 #include <algorithm> 
@@ -118,6 +123,7 @@ std::vector<std::string>th2_Asic{"Flux_Noise_Asic","Flux_Events_Asic"};
 int _NbrRun=0;
 
 
+
 TriventProcessor aTriventProcessor;
 
 TriventProcessor::TriventProcessor() : Processor("TriventProcessorType")
@@ -157,6 +163,10 @@ TriventProcessor::TriventProcessor() : Processor("TriventProcessorType")
   registerProcessorParameter("IgnorebeginingSpill" ,"Ignore begining of the Spills ",_IgnorebeginningSpill,_IgnorebeginningSpill);
   _Delimiters="";
   registerProcessorParameter("Delimiters" ,"Delimiters",_Delimiters,_Delimiters);  
+  _TimeWin_Noise=2;
+  registerProcessorParameter("Time windows for exstimated noise" ,"Time windows for exstimated noise",_TimeWin_Noise,_TimeWin_Noise);
+  _Time_from_Track=4;
+  registerProcessorParameter("Time from track" ,"Time from track",_Time_from_Track,_Time_from_Track);
 }
 
 
@@ -168,21 +178,27 @@ TriventProcessor::~TriventProcessor() {}
 void TriventProcessor::processRunHeader( LCRunHeader* run)
 {
     LCTOOLS::dumpRunHeader(run);
+    //run->parameters().setValue("EventBuilderVersion",EventBuilderVersion);
+    //std::cout<<red<<run->parameters().getNString("EventBuilderVersion")<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<normal<<std::endl;
 }
-
+std::vector<std::string>bcidnames;
 void TriventProcessor::init()
-{   
+{ 
+  Intro();
   TOTALNUMBERHITSCINTI=0;
+  
   ReaderFactory readerFactory;
   Reader* myReader = readerFactory.CreateReader(_ReaderType);
   if(myReader) 
 	{
     myReader->Read(_FileNameGeometry,geom);
     geom.PrintGeom();
-    std::map<int, Dif > Difs=geom.GetDifs();
+    
     unsigned int NbrPlate =0;
+    std::map<int, Dif >Difs=geom.GetDifs();;
     for(std::map<int, Dif >::iterator it=Difs.begin(); it!=Difs.end(); ++it) 
 		{
+		  bcidnames.push_back("DIF"+patch::to_string(it->first)+"_Triggers");
       if(geom.GetDifType(it->first)!=temporal&&geom.GetDifType(it->first)!=tcherenkov&&geom.GetDifType(it->first)!=scintillator) 
 	    {
         SinCos[it->first]=std::vector<double>{cos(geom.GetDifAlpha(it->first)*degtorad),sin(geom.GetDifAlpha(it->first)*degtorad),cos(geom.GetDifBeta(it->first)*degtorad),sin(geom.GetDifBeta(it->first)*degtorad),cos(geom.GetDifGamma(it->first)*degtorad),sin(geom.GetDifGamma(it->first)*degtorad)};
@@ -233,14 +249,13 @@ void TriventProcessor::init()
     _NoiseWriter->open(_noiseFileName.c_str(),LCIO::WRITE_NEW) ;
   }
 }
- 
 unsigned long long bcid_spill=0;
 void TriventProcessor::processEvent( LCEvent * evtP )
 {
+
   if (evtP== nullptr ) return;
   _NbrRun=evtP->getRunNumber();
   _eventNr=evtP->getEventNumber()+1;
-  time_t date(evtP->getTimeStamp());
   Progress(_skip,_GlobalEvents,_maxRecord,_eventNr);
   LCCollection* col2=nullptr;
   LCCollection* col3=nullptr;
@@ -250,6 +265,21 @@ void TriventProcessor::processEvent( LCEvent * evtP )
     if(names[i]=="DHCALRawTimes")
   	{
   		col2 = evtP ->getCollection("DHCALRawTimes");
+  		lcio::IntVec vTrigger;
+  		for(unsigned int i=0; i!=bcidnames.size();++i)
+  		{
+  		  //std::cout<<bcidnames[i]<<std::endl;
+        col2->getParameters().getIntVals(bcidnames[i],vTrigger);
+        EVENT::long64 _bcid=0;
+        if (vTrigger.size()>=5)
+        {
+          static EVENT::long64 Shift=16777216ULL;
+  	      _bcid=(vTrigger[4]*Shift+vTrigger[3]*1000000000000);
+  	      LCTime evtTime(_bcid) ;
+          //std::cout << " date:      "      << evtTime.getDateString() << std::endl ; 
+        }
+      }
+          
   		RawTimeDifs.clear();
       for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) 
 		  {
@@ -334,7 +364,9 @@ void TriventProcessor::processEvent( LCEvent * evtP )
     if (vTrigger.size()>=5)
     {
       static unsigned long long Shift=16777216ULL;
+      
   	  _bcid=vTrigger[4]*Shift+vTrigger[3];
+  	
     }
     bool to_skip=false;
     
@@ -380,6 +412,26 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
   }
   BehondTrigger.clear();
   int numElements = col->getNumberOfElements();
+  ////verify if timestamp negative 
+  bool HasTimeStampNegative=false;
+  for (int ihit=0; ihit < numElements; ++ihit) 
+  {
+    RawCalorimeterHit *raw_hit = dynamic_cast<RawCalorimeterHit*>( col->getElementAt(ihit)) ;
+    if (raw_hit != nullptr) 
+    {
+        unsigned int dif_id  = (raw_hit)->getCellID0() & 0xFF ;
+	    if(geom.GetDifType(dif_id)==scintillator)continue;
+	    if(geom.GetDifNbrPlate(dif_id)==-1) continue;
+	    if(raw_hit->getTimeStamp()<0)
+	    {
+	      std::vector<unsigned int>b{dif_id,(unsigned int)((raw_hit->getCellID0() & 0xFF00)>>8),(unsigned int)((raw_hit->getCellID0() & 0xFF00)>>16)}; Negative[b][raw_hit->getTimeStamp()]++;
+	      std::cout<<"TimeStamp <=-1 : "<<raw_hit->getTimeStamp()<<std::endl;
+	      if(raw_hit->getTimeStamp()<-1)HasTimeStampNegative=true;
+        
+	    }
+	    
+	  }
+  }
 
   for (int ihit=0; ihit < numElements; ++ihit) 
   {
@@ -397,12 +449,14 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	      }
 	      continue;
 	    }
-	    if(raw_hit->getTimeStamp()<0)
+	    /*if(raw_hit->getTimeStamp()<0)
 	    {
 	      std::vector<unsigned int>b{dif_id,(unsigned int)((raw_hit->getCellID0() & 0xFF00)>>8),(unsigned int)((raw_hit->getCellID0() & 0xFF00)>>16)}; Negative[b][raw_hit->getTimeStamp()]++;
 	      std::cout<<"TimeStamp <=-1 : "<<raw_hit->getTimeStamp()<<std::endl;
-	    }
-	    if(_TriggerTime==0 || (raw_hit->getTimeStamp()<=_TriggerTime&&raw_hit->getTimeStamp()>=0))
+	      continue;
+	    }*/
+	    
+	    if(_TriggerTime==0 || raw_hit->getTimeStamp()<=_TriggerTime)
 	    {
         if(ihit==0)
 	      {
@@ -452,10 +506,13 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	      ///////////////////////////////////////
 	      //if(geom.GetDifType(dif_id)!=scintillator)
 	      //{
-	      
-	      HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Set_hit_trigger();
-	      Times[raw_hit->getTimeStamp()]++;
-	      RawHits[raw_hit->getTimeStamp()].push_back(raw_hit);//}
+	      if(HasTimeStampNegative==false)
+	      {
+	        HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Set_hit_trigger();
+	        Times[raw_hit->getTimeStamp()]++;
+	        RawHits[raw_hit->getTimeStamp()].push_back(raw_hit);//}
+	      }
+	      //else std::cout<<"I do nothing"<<std::endl;
 	      ////////////////////////////////////////
 	      //}
 	      /////////////////////////////////////////
@@ -465,8 +522,12 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	    {
 	      //if(geom.GetDifType(dif_id)!=scintillator)
 	      //{
-	      HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Set_hit_other();
-	      BehondTrigger[raw_hit->getTimeStamp()].push_back(raw_hit);
+	      if(HasTimeStampNegative==false)
+	      {
+	        HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Set_hit_other();
+	        BehondTrigger[raw_hit->getTimeStamp()].push_back(raw_hit);
+	      }
+	      //else std::cout<<"I do nothing"<<std::endl;
 	      //}
 	      //std::cout<<blue<<raw_hit->getTimeStamp()<<"  "<<BehondTrigger.size()<<normal<<std::endl;
 	    }
@@ -503,6 +564,8 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	    if(ScintillatorCoincidence[i]-itt->first>=-6&&ScintillatorCoincidence[i]-itt->first<=-3) Scintillatorseeittoo=true;
 	    }
 	    EventsGrouped.clear();
+	    EstimationNoiseBefore.clear();
+	    EstimationNoiseAfter.clear();
 	    std::map<int,std::vector<RawCalorimeterHit *> >::iterator middle=RawHits.find(itt->first);
 	    std::map<int,std::vector<RawCalorimeterHit *> >::iterator after=middle;
 	    std::map<int,std::vector<RawCalorimeterHit *> >::iterator before=middle;
@@ -523,14 +586,13 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	      {
 	      //////////////////////////Just Scintillator
 	      //std::cout<<red<<counttt++<<normal<<std::endl;
+	      
 	      for(middle=before; middle!=after;++middle ) 
 		    {
 		      EventsGroupedScin.insert(EventsGroupedScin.end(),middle->second.begin(),middle->second.end());
 		    }
 		    CalculateEfficiencyScinti(EventsGroupedScin);
 		    
-		    //////////////////////////////////////////////
-		    ////////////////Scintillator & Timewin etc
 		    if(nbrPlanestouched.size()>=(unsigned int)(_LayerCut)) 
 	      {
 	        static unsigned int EventsSelectedt=0;
@@ -551,32 +613,79 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 		    EventsGroupedScin.clear();
 		    }
 	      
+	      ////////NoiseEstimation///////////////////////
+		    //////////////////////////////////////////////
+		    
+		    int val_middle=middle->first;
+		    int d=_Time_from_Track;
+		    int win=_TimeWin_Noise;
+		    //int d=10;
+		    //int time=_timeWin;
+		    //_TimeWin_Noise="2";
+		    std::map<int,std::vector<RawCalorimeterHit *> >::iterator debut_avant=std::find_if(RawHits.begin(), before, [val_middle,d,win] (const std::pair<int, std::vector<RawCalorimeterHit *>>& v)->bool { if(v.first>=val_middle-d-win)return 1;else return 0; } );
+		    if(debut_avant==RawHits.end())debut_avant=RawHits.begin();
+		    std::map<int,std::vector<RawCalorimeterHit *> >::iterator debut_apres=std::find_if(after, RawHits.end(), [val_middle,d,win] (const std::pair<int, std::vector<RawCalorimeterHit *>>& v)->bool { if(v.first>=val_middle+d+win)return 1;else return 0; } );
+		    if(nbrPlanestouched.size()>=(unsigned int)(_LayerCut)) 
+	      {
+	        LCEventImpl*  evt = new LCEventImpl() ;
+	        EventsSelected++;
+		      for(std::map<int,std::vector<RawCalorimeterHit *> >::iterator it=debut_avant;it!=before;++it) 
+		      {
+		        //if(abs(it->first-(val_middle-d))<=time)std::cout<<blue<<val_middle<<"  "<<d<<" "<<it->first<<normal<<" ";
+		        if(abs(it->first-(val_middle-d))<=_TimeWin_Noise)EstimationNoiseBefore.insert(EstimationNoiseBefore.end(),middle->second.begin(),middle->second.end());
+		      }
+		      for(std::map<int,std::vector<RawCalorimeterHit *> >::iterator it=after;it!=debut_apres;++it) 
+		      {
+		        //if(abs(it->first-(val_middle+d))<=time)std::cout<<red<<val_middle<<"  "<<d<<" "<<it->first<<normal<<"  ";
+		        if(abs(it->first-(val_middle-d))<=_TimeWin_Noise)EstimationNoiseAfter.insert(EstimationNoiseAfter.end(),middle->second.begin(),middle->second.end());
+		      }
+	       /* LCEventImpl*  evt = new LCEventImpl() ;*/
+	        LCCollectionVec* col_event1 = new LCCollectionVec(LCIO::CALORIMETERHIT);
+		      CellIDEncoder<CalorimeterHitImpl> cd1( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event1) ;
+	        col_event1->setFlag(col_event1->getFlag()|( 1 << LCIO::RCHBIT_LONG));
+	        col_event1->setFlag(col_event1->getFlag()|( 1 << LCIO::RCHBIT_TIME));
+	        FillIJK(EstimationNoiseBefore, col_event1,cd1,0);
+	        evt->addCollection(col_event1, "NOISE_ESTIMATION_BEFORE");
+	        LCCollectionVec* col_event2 = new LCCollectionVec(LCIO::CALORIMETERHIT);
+		      CellIDEncoder<CalorimeterHitImpl> cd2( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event2) ;
+	        col_event2->setFlag(col_event2->getFlag()|( 1 << LCIO::RCHBIT_LONG));
+	        col_event2->setFlag(col_event2->getFlag()|( 1 << LCIO::RCHBIT_TIME));
+	        FillIJK(EstimationNoiseBefore, col_event2,cd2,0);
+	        evt->addCollection(col_event2, "NOISE_ESTIMATION_AFTER");
+	        //evt->setEventNumber(EventsSelected);
+	        //evt->setTimeStamp(evtP->getTimeStamp());
+	        //evt->setRunNumber(evtP->getRunNumber());
+	       // _EventWriter->writeEvent( evt ) ;
+	       
 	      
+		    //////////////////////////////////////////////
+		    ////////////////Scintillator & Timewin etc
 	      /////////////////////////////////////////////////////////////////////////
 	      ////////////////////////////////////////////////////////////////////////
-	      if(nbrPlanestouched.size()>=(unsigned int)(_LayerCut)) 
-	      {
-	        EventsSelected++;
+	     
+	        //EventsSelected++;
 	        for(middle=before; middle!=after; ) 
 		      {
 		        EventsGrouped.insert(EventsGrouped.end(),middle->second.begin(),middle->second.end());
 		        RawHits.erase(middle++);
 		      }
-	        LCEventImpl*  evt = new LCEventImpl() ;
-	        LCCollectionVec* col_event = new LCCollectionVec(LCIO::CALORIMETERHIT);
-		      CellIDEncoder<CalorimeterHitImpl> cd( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event) ;
-	        col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_LONG));
-	        col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_TIME));
+	        //LCEventImpl*  evt = new LCEventImpl() ;
+	        LCCollectionVec* col_event3 = new LCCollectionVec(LCIO::CALORIMETERHIT);
+		      CellIDEncoder<CalorimeterHitImpl> cd3( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event3) ;
+	        col_event3->setFlag(col_event3->getFlag()|( 1 << LCIO::RCHBIT_LONG));
+	        col_event3->setFlag(col_event3->getFlag()|( 1 << LCIO::RCHBIT_TIME));
 	        
-	       FillIJK(EventsGrouped, col_event,cd,0);
+	       FillIJK(EventsGrouped, col_event3,cd3,0);
 	        
-	        evt->addCollection(col_event, "SDHCAL_HIT");
+	        evt->addCollection(col_event3, "SDHCAL_HIT");
 	        evt->setEventNumber(EventsSelected);
 	        evt->setTimeStamp(evtP->getTimeStamp());
 	        evt->setRunNumber(evtP->getRunNumber());
 	        _EventWriter->writeEvent( evt ) ;
-	        delete evt;
+	        //delete evt;
+	         delete evt;
 	      }
+	     
 	  }
 	}
   else
@@ -652,11 +761,18 @@ void TriventProcessor::end()
     h22->Draw("glcolz");
     if(_Spill_Study)
   {
+  //timestamp->GetXaxis()->SetTimeDisplay(1);
+  //timestamp->GetXaxis()->SetTimeOffset(d.Convert()); 
+  //timestamp->GetXaxis()->SetTimeFormat("%d\/%m\/%H\/%M\/%S");
   timestamp->Write();
   if(pdf){timestamp->Draw();
   canvas->Print(namepdf.c_str());}
   delete timestamp;
   timestamps->Write();
+  
+  //timestamps->GetXaxis()->SetTimeDisplay(1);
+  //timestamp->GetXaxis()->SetTimeOffset(d.Convert());
+  //timestamps->GetXaxis()->SetTimeFormat("%d\/%m\/%H\/%M\/%S");
   if(pdf){timestamps->Draw();
   canvas->Print(namepdf.c_str());}
   delete timestamps;
@@ -725,7 +841,7 @@ void TriventProcessor::end()
     {
       std::cout<<green<<"Counter Front scintillator : "<<_Front_scintillator<<" Counter Back scintillator : "<< _Back_scintillator<<" Counter Both scintillator : "<<_Both_scintillator<<"  "<<normal<<std::endl;
       std::cout<<green<<"Counter Front scintillator : "<<_Front_scintillator*1.0/_efficiencyFrontScintillator<<" Counter Back scintillator : "<< _Back_scintillator*1.0/_efficiencyBackScintillator<<" Counter Both scintillator : "<<_Both_scintillator*1.0/(_efficiencyFrontScintillator*_efficiencyBackScintillator)<<"  "<<normal<<std::endl;
-      std::cout<<green<<"Efficiency Calculated with Scintillators : "<<std::endl;
+      std::cout<<green<<"Efficiency Calculated with Scintillators : "<<normal<<std::endl;
      
       for(unsigned int i=0;i!=EffiwithDiscri.size();++i)
       {

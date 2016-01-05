@@ -1,9 +1,13 @@
 #include "Analysis/Analysis.h"
+#include "Intro.h"
 #include <iostream>
 #include <string>
 #include <iomanip>
 #include "Progress.h"
 #include "marlin/Processor.h"
+#include "Database/db/DBInit.h"
+#include "Database/configObjects/Setup.h"
+#include "Database/daq/RunInfo.h"
 #include "UTIL/LCTOOLS.h"
 #include "UTIL/CellIDDecoder.h"
 #include "IMPL/CalorimeterHitImpl.h"
@@ -15,6 +19,7 @@
 #include "UTIL/CellIDDecoder.h"
 #include "Colors.h"
 #include <cstdlib>
+#include "Version.h"
 #include <cmath>
 #include "TH1F.h"
 #include "TH2F.h"
@@ -40,16 +45,26 @@
 #define size_pad 10.4125
 #define size_strip 2.5
 #define degtorad 0.0174532925
+std::vector<std::vector<std::array<int,4>>>useforrealrate;
 std::map<std::string,std::vector<std::vector<TH1F*>>>Short_Efficiency;
 std::map<std::string,std::vector<std::vector<TH1F*>>>Short_Multiplicity;
+std::map<std::string,unsigned int>Numbers;
+unsigned int SumCombinaison(int n,int kmin)
+{
+  unsigned int sumcomb=0;
+  for(unsigned int i=kmin;i<=n;++i) sumcomb=TMath::Binomial(n,i);
+  return sumcomb;
+}
+
+using namespace oracle::occi;
+
 class ToTreee
 {
 public:
 double ChiXZ, ChiYZ, CDXZ, CDYZ, OrdXZ, OrdYZ;
 };
 ToTreee totreee;
-std::string name="Treee";
-TTree* tt= new TTree(name.c_str(), name.c_str());
+TTree* tt= new TTree("Tree", "Tree");
 TBranch* Branch1 =  tt->Branch("ChiXZ",&(totreee.ChiXZ));
 TBranch* Branch2 =  tt->Branch("ChiYZ",&(totreee.ChiYZ));
 TBranch* Branch3 =  tt->Branch("CDXZ",&(totreee.CDXZ));
@@ -59,7 +74,10 @@ TBranch* Branch6 =  tt->Branch("OrdYZ",&(totreee.OrdYZ));
 
 
 using namespace std;
-std::vector<std::string> names={"NORMAL"};
+std::vector<TGraphErrors>xzaxis;
+std::map<int,int long>RealNumberPlane;
+std::vector<TGraphErrors>yzaxis;
+std::vector<std::string> names={"SDHCAL_HIT"};
 enum Tresholds {Threshold1,Threshold2,Threshold3,Threshold12,Threshold23,Thresholdall};
 std::array<std::string,6>Thresholds_name{"Threshold1","Threshold2","Threshold3","Threshold12","Threshold23","Thresholdall"};
 std::map<std::string,std::vector<TH2F*>>Distribution_hits;
@@ -68,39 +86,40 @@ std::array<std::map<std::string,std::vector<TH2F*>>,6>Multiplicity_pads;
 std::array<std::map<std::string,std::vector<TH2F*>>,6>Efficiency_asics;
 std::map<std::string,std::vector<TH1F*>>HowLongFromExpectedX;
 std::map<std::string,std::vector<TH1F*>>HowLongFromExpectedY;
-std::map<std::string,TGraph2D*> Distribution_hits_tgraph={{"NORMAL",new TGraph2D()},{"SCINTILLATOR",new TGraph2D()}};
+std::map<std::string,std::vector<TH2D*>>difxy;
+std::map<std::string,std::vector<TH1D*>>difr;
 std::array<std::map<std::string,std::vector<TH2F*>>,3>ThresholdMap;
 std::map<std::string,std::vector<TH2F*>>Gain;
-std::map<std::string,TGraph2D*> Distribution_exp_tgraph={{"NORMAL",new TGraph2D()},{"SCINTILLATOR",new TGraph2D()}};
-std::map<std::string,std::vector<TH2F*>>Distribution_exp={{"NORMAL",{}},{"SCINTILLATOR",{}}};
-
-void AnalysisProcessor::PrintStatShort(bool IsScinti)
+std::map<int,TH2F*>RealRateWithSelectedZone;
+std::map<int,TH2F*>EfficacityVsRate;
+std::map<std::string,TGraph2D*> Distribution_exp_tgraph;
+std::map<std::string,std::vector<TH2F*>>Distribution_exp;
+std::map<std::string,TGraph2D*> Distribution_hits_tgraph;
+std::vector<std::string>Maketracks{"SDHCAL_HIT","SDHCAL_HIT_SC"};
+std::vector<std::string>Makeeffi{"NOISE_ESTIMATION_BEFORE","NOISE_ESTIMATION_AFTER"};
+void AnalysisProcessor::PrintStatShort(std::string name)
 {
-    static std::vector<std::string>Mess{"Result  : ","Result Scinti: "};
+    static std::map<std::string,std::string>Mess;
+    for(unsigned int i=0;i!=_hcalCollections.size();++i)Mess[_hcalCollections[i]]="List of counters "+ _hcalCollections[i]+" : ";
     ofstream fichier;
     for(unsigned int hhh=0;hhh!=Thresholds_name.size();++hhh)
     {
     std::string namee="ResultsShorts"+std::to_string((long long int)_NbrRun);
-    if(IsScinti==true)namee+="Scinti";
+    namee+="_"+name+"_";
     namee+=Thresholds_name[hhh];
     namee+=".txt";
     fichier.open(namee.c_str(), ios::out | ios::app);  //déclaration du flux et ouverture du fichier
     if(fichier) { // si l'ouverture a réussi
         fichier<<_NbrRun<<"   ";
-        for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
+        for(unsigned int i=0; i!=testedPlanList.size(); ++i)
         {
-            if(IsScinti==true)
-            {
-              if(isfinite(testedPlanList[i].efficiencyShort(hhh,IsScinti)))Short_Efficiency["SCINTILLATOR"][i][hhh]->Fill(_eventNr,testedPlanList[i].efficiencyShort(hhh,IsScinti));
-              
-              if(isfinite(testedPlanList[i].multiplicityShort(hhh,IsScinti)))Short_Multiplicity["SCINTILLATOR"][i][hhh]->Fill(_eventNr,testedPlanList[i].multiplicityShort(hhh,IsScinti));
-            }
-            else 
-            {
-              if(isfinite(testedPlanList[i].efficiencyShort(hhh,IsScinti)))Short_Efficiency["NORMAL"][i][hhh]->Fill(_eventNr,testedPlanList[i].efficiencyShort(hhh,IsScinti));
-              if(isfinite(testedPlanList[i].multiplicityShort(hhh,IsScinti)))Short_Multiplicity["NORMAL"][i][hhh]->Fill(_eventNr,testedPlanList[i].multiplicityShort(hhh,IsScinti));
-            }
-            fichier<<testedPlanList[i].efficiencyShort(hhh,IsScinti)<<" "<<sqrt(testedPlanList[i].GetNumberOKShort(hhh,IsScinti)*testedPlanList[i].efficiencyShort(hhh,IsScinti)*(1-testedPlanList[i].efficiencyShort(hhh,IsScinti)))*1.0/testedPlanList[i].GetNumberOKShort(hhh,IsScinti)<<" "<<testedPlanList[i].multiplicityShort(hhh,IsScinti)<<" 0 "<<"  ";
+          
+              if(isfinite(testedPlanList[i].efficiencyShort(hhh,name)))Short_Efficiency[name][i][hhh]->Fill(Numbers[name],testedPlanList[i].efficiencyShort(hhh,name));
+
+              if(isfinite(testedPlanList[i].multiplicityShort(hhh,name)))Short_Multiplicity[name][i][hhh]->Fill(Numbers[name],testedPlanList[i].multiplicityShort(hhh,name));
+          
+           
+            fichier<<testedPlanList[i].efficiencyShort(hhh,name)<<" "<<sqrt(testedPlanList[i].GetNumberOKShort(hhh,name)*testedPlanList[i].efficiencyShort(hhh,name)*(1-testedPlanList[i].efficiencyShort(hhh,name)))*1.0/testedPlanList[i].GetNumberOKShort(hhh,name)<<" "<<testedPlanList[i].multiplicityShort(hhh,name)<<" 0 "<<"  ";
         }
         fichier<<std::endl;
           // on referme le fichier
@@ -109,176 +128,217 @@ void AnalysisProcessor::PrintStatShort(bool IsScinti)
     }
     for(unsigned int hhh=0;hhh!=Thresholds_name.size();++hhh)
     {
-    
-      if(hhh==0)std::cout<<Mess[IsScinti]<<std::endl;
+
+      if(hhh==0)std::cout<<Mess[name]<<std::endl;
       std::cout<<"Run Number : "<<_NbrRun<<" Thresholds "<<Thresholds_name[hhh]<<std::endl;
-      for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
+      for(unsigned int i=0; i!=testedPlanList.size(); ++i)
       {
-      std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanList[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanList[i].efficiency(hhh,IsScinti)<<" Error : "<<setw(6)<<sqrt(testedPlanList[i].GetNumberOK(hhh,IsScinti)*testedPlanList[i].efficiency(hhh,IsScinti)*(1-testedPlanList[i].efficiency(hhh,IsScinti)))*1.0/testedPlanList[i].GetNumberOK(hhh,IsScinti)<<" Multiplicity : "<<setw(6)<<testedPlanList[i].multiplicity(hhh,IsScinti)<<normal<<std::endl;
+      std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanList[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanList[i].efficiency(hhh,name)<<" Error : "<<setw(6)<<sqrt(testedPlanList[i].GetNumberOK(hhh,name)*testedPlanList[i].efficiency(hhh,name)*(1-testedPlanList[i].efficiency(hhh,name)))*1.0/testedPlanList[i].GetNumberOK(hhh,name)<<" Multiplicity : "<<setw(6)<<testedPlanList[i].multiplicity(hhh,name)<<normal<<std::endl;
       }
   }
 }
 
-unsigned int Number_hits=-1;
-unsigned int Number_HitScinti=-1;
-std::array<double,6> plan::countHitAt(double& x, double& y, double dlim,int Iexpected,int Jexpected,int Kexpected,double Imax,double Imin,double Jmax,double Jmin,bool IsScinti)
-{     
-    CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
+std::array<double,6> plan::countHitAt(double& x, double& y, double dlim,int Iexpected,int Jexpected,int Kexpected,double Imax,double Imin,double Jmax,double Jmin,std::string type)
+{
+    static std::map<std::string,unsigned int>Number_hits;
     std::array<double,6>Threshold_Counters;
-    for(int i =0;i<Threshold_Counters.size();++i)Threshold_Counters[i]=0;
+    for(unsigned int i=0;i!=Threshold_Counters.size();++i)Threshold_Counters[i]=0;
     std::vector<int>IJKexpected={Iexpected,Jexpected,Kexpected};
-    for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!= hits.end(); ++it) 
-    {
-      
-      if(fabs(x-(*it)->getPosition()[0])<dlim&&fabs(y-(*it)->getPosition()[1])<dlim) 
-      { 
-           int Threshold_Hit=(*it)->getEnergy();
-           if(Threshold_Hit==Threshold_3){Threshold_Counters[Threshold3]++;Threshold_Counters[Threshold23]++;Threshold_Counters[Thresholdall]++;}
-           else if(Threshold_Hit==Threshold_2){Threshold_Counters[Threshold2]++;Threshold_Counters[Threshold12]++;Threshold_Counters[Threshold23]++;Threshold_Counters[Thresholdall]++;}
-           else if(Threshold_Hit==Threshold_1){Threshold_Counters[Threshold1]++;Threshold_Counters[Threshold12]++;Threshold_Counters[Thresholdall]++;}
-            if(IsScinti==true)
-            {
-              Distribution_hits["SCINTILLATOR"][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
-              Distribution_hits_tgraph["SCINTILLATOR"]->SetPoint(Number_hits,(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
-              HowLongFromExpectedX["SCINTILLATOR"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
-              HowLongFromExpectedY["SCINTILLATOR"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[1]-y);
-            }
-           else
-            {
-              Distribution_hits["NORMAL"][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
-              Distribution_hits_tgraph["NORMAL"]->SetPoint(Number_hits,(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
-              HowLongFromExpectedX["NORMAL"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
-              HowLongFromExpectedY["NORMAL"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[1]-y);
-           }
+    std::vector<CalorimeterHit*>Hits=GetHits(type);
+      for (std::vector<CalorimeterHit*>::iterator it=Hits.begin(); it!=Hits.end(); ++it)
+      {
+        CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
+        difxy[type][cd(*it)["K"]-1]->Fill(x-(*it)->getPosition()[0],y-(*it)->getPosition()[1]);
+        difr[type][cd(*it)["K"]-1]->Fill(sqrt((x-(*it)->getPosition()[0])*(x-(*it)->getPosition()[0])+(y-(*it)->getPosition()[1])*(y-(*it)->getPosition()[1])));
+        if(fabs(x-(*it)->getPosition()[0])<dlim&&fabs(y-(*it)->getPosition()[1])<dlim)
+        {
+          Number_hits[type]++;
+          int Threshold_Hit=(*it)->getEnergy();
+          if(Threshold_Hit==Threshold_3)
+          {
+            Threshold_Counters[Threshold3]++;
+            Threshold_Counters[Threshold23]++;
+            Threshold_Counters[Thresholdall]++;
+          }
+          else if(Threshold_Hit==Threshold_2)
+          {
+            Threshold_Counters[Threshold2]++;
+            Threshold_Counters[Threshold12]++;
+            Threshold_Counters[Threshold23]++;
+            Threshold_Counters[Thresholdall]++;
+          }
+          else if(Threshold_Hit==Threshold_1)
+          {
+            Threshold_Counters[Threshold1]++;
+            Threshold_Counters[Threshold12]++;
+            Threshold_Counters[Thresholdall]++;
+          }
+          Distribution_hits[type][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
+          Distribution_hits_tgraph[type]->SetPoint(Number_hits[type],(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
+          HowLongFromExpectedX[type][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
+          HowLongFromExpectedY[type][cd(*it)["K"]-1]->Fill((*it)->getPosition()[1]-y);
         }
     }
-    for(int i=0;i<Threshold_Counters.size();++i)
-    {
-      if(IsScinti==true) Efficiency_per_padScinti[i][IJKexpected].push_back(Threshold_Counters[i]);
-      else Efficiency_per_pad[i][IJKexpected].push_back(Threshold_Counters[i]);
-       
-    }
+   
+      for(int i=0;i!=Threshold_Counters.size();++i)
+      {
+        Efficiency_per_pad[type][i][IJKexpected].push_back(Threshold_Counters[i]);
+      }
+    
     return Threshold_Counters;
 }
-
-int plan::countHitAtStrip(double& x, double dlim, bool IsScinti)
+std::map<std::string,int> plan::countHitAtStrip(double& x, double dlim,std::string type)
 {
-    int n=0;
-    CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
-    for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!= hits.end(); ++it) {
-        if(fabs(x-(*it)->getPosition()[0])<dlim) {
-            n++;
-            Number_hits++;
-            if(IsScinti==true)
-            {
-              //std::cout<<fabs(x-(*it)->getPosition()[0])<<"  "<<dlim<<std::endl;
-              Distribution_hits["SCINTILLATOR"][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
-              //Distribution_hits[cd(*it)["K"]-1]->Fill((*it)->getPosition()[0],(*it)->getPosition()[1]);
-              Distribution_hits_tgraph["SCINTILLATOR"]->SetPoint(Number_hits,(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
-              HowLongFromExpectedX["SCINTILLATOR"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
-              HowLongFromExpectedY["SCINTILLATOR"][cd(*it)["K"]-1]->Fill(0);
-            }
-            else
-            {
-              //std::cout<<fabs(x-(*it)->getPosition()[0])<<"  "<<dlim<<std::endl;
-              Distribution_hits["NORMAL"][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
-              //Distribution_hits[cd(*it)["K"]-1]->Fill((*it)->getPosition()[0],(*it)->getPosition()[1]);
-              Distribution_hits_tgraph["NORMAL"]->SetPoint(Number_hits,(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
-              HowLongFromExpectedX["NORMAL"][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
-              HowLongFromExpectedY["NORMAL"][cd(*it)["K"]-1]->Fill(0);
-            }
-        }
-    }
-    return n;
-}
-
-void plan::computeBarycentre( )
-{
-    for (int i=0; i<3; i++) barycentre[i]=0;
-    for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!=hits.end(); ++it) {
-        for (int i=0; i<3; i++) {
-            barycentre[i]+=(*it)->getPosition()[i];
-        }
-    }
-    if (nHits() != 0)
-        for (int i=0; i<3; i++) barycentre[i]/=nHits();
-}
-
-void plan::computeMaxima()
-{
-    for (int i=0; i<3; i++) {
-        min[i]=10000000;
-        max[i]=-10000000;
-    }
-    for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!=hits.end(); ++it) {
-        for (int i=0; i<3; i++) {
-            if((*it)->getPosition()[i]<min[i])min[i]=(*it)->getPosition()[i];
-            if((*it)->getPosition()[i]>max[i])max[i]=(*it)->getPosition()[i];
-        }
-    }
-}
-
-void testedPlan::testYou(std::map<int,plan>& mapDIFplan,bool IsScinti)
-{
-    Counts[IsScinti][TESTYOUCALLED]++;
-    std::vector<plan*> plansUsedForTrackMaking;
-    plan* thisPlan=nullptr;
-    for (std::map<int,plan>::iterator it=mapDIFplan.begin(); it!=mapDIFplan.end(); ++it) 
-    {
-        if (Nbr!=it->first) plansUsedForTrackMaking.push_back(&(it->second));
-        else thisPlan=&(it->second);
-    }
-
-    for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((*it)->nHits()>=_NbrHitPerPlaneMax ) return;
-    if(plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
-    Counts[IsScinti][NOTOOMUCHHITSINPLAN]++;
-    ////////////////////////////////////////////////////////////////////////////////////
-    TGraphErrors grxz(plansUsedForTrackMaking.size());
-    TGraphErrors gryz(plansUsedForTrackMaking.size());
-    for (unsigned int i=0; i < plansUsedForTrackMaking.size(); ++i) 
-    {
-        plan &p=*(plansUsedForTrackMaking[i]);
-        p.computeBarycentre();
-        p.computeMaxima();
-        grxz.SetPoint(i,p.barycentreZ(),p.barycentreX());
-        if(p.GetType()==pad) 
+    std::array<double,6>Threshold_Counters;
+    for(unsigned int i=0;i!=Threshold_Counters.size();++i)Threshold_Counters[i]=0;
+    //std::vector<int>IJKexpected={Iexpected,Jexpected,Kexpected};
+    std::vector<CalorimeterHit*>Hits=GetHits(type);
+    std::map<std::string,int>N;
+    N.clear();
+    static std::map<std::string,unsigned int>Number_hits;
+   
+      CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
+      for (std::vector<CalorimeterHit*>::iterator it=Hits.begin(); it!= Hits.end(); ++it) 
+      {
+        if(fabs(x-(*it)->getPosition()[0])<dlim) 
         {
-            gryz.SetPoint(i,p.barycentreZ(),p.barycentreY());
+            N[type]++;
+            Number_hits[type]++;
+            Distribution_hits[type][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
+            Distribution_hits_tgraph[type]->SetPoint(Number_hits[type],(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
+            HowLongFromExpectedX[type][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
+            HowLongFromExpectedY[type][cd(*it)["K"]-1]->Fill(0);
+        }
+      }
+    return N;  
+}
+
+void plan::computeBarycentre(std::string name)
+{
+    for (int i=0; i<3; i++) barycentre[name][i]=0;
+    for (std::vector<CalorimeterHit*>::iterator it=hits[name].begin(); it!=hits[name].end(); ++it) {
+        for (int i=0; i<3; i++) {
+            barycentre[name][i]+=(*it)->getPosition()[i];
+        }
+    }
+    if (nHits(name) != 0)
+        for (int i=0; i<3; i++) barycentre[name][i]/=nHits(name);
+}
+
+void plan::computeMaxima(std::string name)
+{
+    for (int i=0; i<3; i++) 
+    {
+        min[name][i]=10000000;
+        max[name][i]=-10000000;
+    }
+    for (std::vector<CalorimeterHit*>::iterator it=hits[name].begin(); it!=hits[name].end(); ++it) {
+        for (int i=0; i<3; i++) {
+            if((*it)->getPosition()[i]<min[name][i])min[name][i]=(*it)->getPosition()[i];
+            if((*it)->getPosition()[i]>max[name][i])max[name][i]=(*it)->getPosition()[i];
+        }
+    }
+}
+
+void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,std::vector<testedPlan>& tested)
+{
+    for(std::map<std::string,std::map<int,plan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
+    {
+      bool Doit=false;
+      for(unsigned int mm=0;mm!=Maketracks.size();++mm)
+      {
+        if(itt->first!=Maketracks[mm]) continue;
+        else Doit=true;
+      }
+      if(Doit==true)
+      {
+      std::vector<std::string>ToComputeEffi=Makeeffi;
+      ToComputeEffi.push_back(itt->first);
+      //std::cout<<itt->first<<std::endl;
+      for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][TESTYOUCALLED]++;
+      std::vector<plan*> plansUsedForTrackMaking;
+      plan* thisPlan=nullptr;
+      std::vector<int>PlaneNbr;
+      for (std::map<int,plan>::iterator it=mapDIFplan[itt->first].begin(); it!=mapDIFplan[itt->first].end(); ++it)
+      {
+        if (Nbr!=it->first) 
+        {
+            plansUsedForTrackMaking.push_back(&(it->second));
+            PlaneNbr.push_back(it->first);
+        }
+        else thisPlan=&(it->second);
+      }
+
+      for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((*it)->nHits(itt->first)>=_NbrHitPerPlaneMax ) return;
+      if(plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
+      for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][NOTOOMUCHHITSINPLAN]++;
+      ////////////////////////////////////////////////////////////////////////////////////
+      TGraphErrors grxz(plansUsedForTrackMaking.size());
+      TGraphErrors gryz(plansUsedForTrackMaking.size());
+      for (unsigned int i=0; i < plansUsedForTrackMaking.size(); ++i)
+      {
+        plan &p=*(plansUsedForTrackMaking[i]);
+        p.computeBarycentre(itt->first);
+        p.computeMaxima(itt->first);
+        grxz.SetPoint(i,p.barycentreZ(itt->first),p.barycentreX(itt->first));
+        if(p.GetType()==pad)
+        {
+            gryz.SetPoint(i,p.barycentreZ(itt->first),p.barycentreY(itt->first));
             gryz.SetPointError(i,p.ErrorZ(),p.ErrorY());
         }
         grxz.SetPointError(i,p.ErrorZ(),p.ErrorX());
-    }
-    grxz.Fit("pol1","QRO","",-50000.0,50000.0);
-    TF1 *myfitxz = (TF1*) grxz.GetFunction("pol1");
-    double  kxz = myfitxz->GetChisquare();
-    if (kxz>= _Chi2) return;
-    double pxz0 = myfitxz->GetParameter(0);
-    double  pxz1 = myfitxz->GetParameter(1);
-    Counts[IsScinti][XZTRACKFITPASSED]++;
-    gryz.Fit("pol1","QRO","",-50000.0,50000.0);
-    TF1 *myfityz = (TF1*) gryz.GetFunction("pol1");
-    double  kyz = myfityz->GetChisquare();
-    if(this->GetType()==positional) kyz=0;
-    if (kyz>= _Chi2) return;
-    double pyz0 = myfityz->GetParameter(0);
-    double  pyz1 = myfityz->GetParameter(1);
-    Counts[IsScinti][YZTRACKFITPASSED]++;
-    double Zexp=this->GetZexp(pxz0,pyz0,pxz1,pyz1);
+      }
+      grxz.Fit("pol1","QRO","",-50000.0,50000.0);
+      TF1 *myfitxz = (TF1*) grxz.GetFunction("pol1");
+      double  kxz = myfitxz->GetChisquare();
+      if (kxz>= _Chi2) return;
+      double pxz0 = myfitxz->GetParameter(0);
+      double  pxz1 = myfitxz->GetParameter(1);
+      for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][XZTRACKFITPASSED]++;
+      gryz.Fit("pol1","QRO","",-50000.0,50000.0);
+      TF1 *myfityz = (TF1*) gryz.GetFunction("pol1");
+      double  kyz = myfityz->GetChisquare();
+      if(this->GetType()==positional) kyz=0;
+      if (kyz>= _Chi2) return;
+      double pyz0 = myfityz->GetParameter(0);
+      double  pyz1 = myfityz->GetParameter(1);
+      for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][YZTRACKFITPASSED]++;
+      double Zexp=this->GetZexp(pxz0,pyz0,pxz1,pyz1);
+      xzaxis.push_back(grxz);
+      yzaxis.push_back(gryz);
+      ///////////////////////////////
+      //double Xexp = pxz0+pxz1*Zexp;
+      //double Yexp = pyz0+pyz1*Zexp;
+      ///////////////////////////////
+      double Projectioni=GetProjectioni(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
+      double Projectionj=GetProjectionj(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
+   
     
-    ///////////////////////////////
-    //double Xexp = pxz0+pxz1*Zexp;
-    //double Yexp = pyz0+pyz1*Zexp;
-    ///////////////////////////////
-    double Projectioni=GetProjectioni(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
-    double Projectionj=GetProjectionj(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
     bool Pass;
     if(Delimiter.size()==0)Pass=1;
     else Pass=Projectioni<=this->GetIp()&&Projectioni>=this->GetIm()&&Projectionj<=this->GetJp()&&Projectionj>=this->GetJm();
-    if(Pass) 
+    if(Pass)
     {
-        nombreTests[IsScinti]++;
-        nombreTestsShort[IsScinti]++;
-        
+        std::vector<std::array<int,4>>XYZExpected;
+        for (unsigned int i=0; i < tested.size(); ++i)
+        {
+            int istouched=0;
+            for(unsigned int j=0; j < PlaneNbr.size(); ++j) if(PlaneNbr[j]==tested[i].NbrPlate()) istouched=1;             
+            double Zexpp=tested[i].GetZexp(pxz0,pyz0,pxz1,pyz1);
+            double iexp=tested[i].GetProjectioni(pxz0+pxz1*Zexpp,pyz0+pyz1*Zexpp,Zexpp);
+            double jexp=tested[i].GetProjectionj(pxz0+pxz1*Zexpp,pyz0+pyz1*Zexpp,Zexpp);
+            double I=cg*cb*1.0/size_pad*(iexp-tested[i].get_X0())+sg*cb*1.0/size_pad*(jexp-tested[i].get_Y0())+-sb*tested[i].get_Z0();
+        	double J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(iexp-tested[i].get_X0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(jexp-tested[i].get_Y0())+cb*sa*tested[i].get_Z0();
+        	int K=tested[i].NbrPlate();
+          //  std::cout<<green<<Zexpp<<"  "<<iexp<<"  "<<jexp<<"  "<<I<<"  "<<J<<"  "<<K<<"  "<<int(ceil(I))<<"  "<<int(ceil(J))<<"  "<<istouched<<normal<<std::endl;
+            XYZExpected.push_back({int(ceil(I)),int(ceil(J)),K,istouched});
+        }
+        useforrealrate.push_back(XYZExpected);
+        //std::cout<<std::endl;
+        for(unsigned int i=0;i!=ToComputeEffi.size();++i) nombreTests[ToComputeEffi[i]]++;
+        //std::cout<<nombreTests[itt->first]<<"  "<<itt->first<<std::endl;
+        for(unsigned int i=0;i!=ToComputeEffi.size();++i) nombreTestsShort[ToComputeEffi[i]]++;
+
         if (nullptr==thisPlan) return;
         int I,J,K;
         ca=this->get_ca();
@@ -287,38 +347,47 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan,bool IsScinti)
         sb=this->get_sb();
         cg=this->get_cg();
         sg=this->get_sg();
+        Distribution_exp_tgraph[itt->first]->SetPoint(nombreTests[itt->first],Projectioni,Projectionj,Zexp);
         
-        if(IsScinti==true) Distribution_exp_tgraph["SCINTILLATOR"]->SetPoint(nombreTests[IsScinti],Projectioni,Projectionj,Zexp);
-        else Distribution_exp_tgraph["NORMAL"]->SetPoint(nombreTests[IsScinti],Projectioni,Projectionj,Zexp);
-        
-        std::array<double,6>Thresholds;
-        Counts[IsScinti][NOHITINPLAN]++;
-        int nhit;
-        if(this->GetType()==pad) 
+        for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][NOHITINPLAN]++;
+        //for(unsigned int i=0;i!=ToComputeEffi.size();++i) std::cout<<yellow<<ToComputeEffi[i]<<normal<<std::endl;
+        for(unsigned int i=0;i!=ToComputeEffi.size();++i)
         {
-          I=cg*cb*1.0/size_pad*(Projectioni-this->get_X0())+sg*cb*1.0/size_pad*(Projectionj-this->get_Y0())+-sb*this->get_Z0();
-        	J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(Projectioni-this->get_X0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(Projectionj-this->get_Y0())+cb*sa*this->get_Z0();
-        	K=this->NbrPlate()+1;
-          if(IsScinti==true)Distribution_exp["SCINTILLATOR"][this->NbrPlate()]->Fill(ceil(I),ceil(J));
-          else Distribution_exp["NORMAL"][this->NbrPlate()]->Fill(ceil(I),ceil(J));
-          Thresholds=thisPlan->countHitAt(Projectioni,Projectionj,/*6*10.4125*/_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),IsScinti);
-        } 
-        else 
-        {  
-            nhit=thisPlan->countHitAtStrip(Projectioni,_dlimforStrip,IsScinti);
-            Thresholds[5]=nhit;
-        }
-        for(int i=0;i<Thresholds.size();++i)
-        {
-          if (Thresholds[i]>0) 
-	        {
-		        nombreTestsOK[IsScinti][i]++;	
-		        nombreTestsOKShort[IsScinti][i]++;
-        
-            sommeNombreHits[IsScinti][i]+=Thresholds[i];
-            sommeNombreHitsShort[IsScinti][i]+=Thresholds[i];
-            
+          std::array<double,6>Thresholds;
+          std::map<std::string,int> nhit;
+          if(this->GetType()==pad)
+          {
+            I=cg*cb*1.0/size_pad*(Projectioni-this->get_X0())+sg*cb*1.0/size_pad*(Projectionj-this->get_Y0())+-sb*this->get_Z0();
+        	  J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(Projectioni-this->get_X0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(Projectionj-this->get_Y0())+cb*sa*this->get_Z0();
+        	  K=this->NbrPlate()+1;
+            Distribution_exp[itt->first][this->NbrPlate()]->Fill(ceil(I),ceil(J));
+            Thresholds=thisPlan->countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
           }
+          else
+          {
+              nhit=thisPlan->countHitAtStrip(Projectioni,_dlimforStrip,ToComputeEffi[i]);
+              Thresholds[5]=nhit[itt->first];
+          }
+          
+            for(int kk=0;kk!=Thresholds.size();++kk)
+            {
+              if (Thresholds[kk]==0)
+              {
+                nombreTestsOK[ToComputeEffi[i]][kk]=nombreTestsOK[ToComputeEffi[i]][kk];
+                sommeNombreHits[ToComputeEffi[i]][kk]+=Thresholds[kk];
+              }
+              if (Thresholds[kk]>0)
+	            {
+		            nombreTestsOK[ToComputeEffi[i]][kk]++;
+		            std::cout<<ToComputeEffi[i]<<nombreTestsOK[ToComputeEffi[i]][kk]<<red<<this->GetNumberOK(kk,ToComputeEffi[i])<<normal<<std::endl;
+		            nombreTestsOKShort[ToComputeEffi[i]][kk]++;
+
+                sommeNombreHits[ToComputeEffi[i]][kk]+=Thresholds[kk];
+                std::cout<<ToComputeEffi[i]<<sommeNombreHits[ToComputeEffi[i]][kk]<<red<<this->GetNombreHits(kk,ToComputeEffi[i])<<normal<<std::endl;
+                sommeNombreHitsShort[ToComputeEffi[i]][kk]+=Thresholds[kk];
+  
+              }
+            }
         }
         totreee.ChiXZ=kxz;
         totreee.ChiYZ=kyz;
@@ -330,57 +399,70 @@ void testedPlan::testYou(std::map<int,plan>& mapDIFplan,bool IsScinti)
     }
     delete myfityz;
     delete myfitxz;
+    }
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////
 }
 
-void testedPlan::print(bool IsScinti)
+void testedPlan::print(std::string name)
 {
-    static std::vector<std::string>Mess{"List of counters : ","List of counters scintillator"};
-    std::cout<<blue<<"Plane Number (in geometry file): "<<Nbr+1<<" Z = "<<Z0<<" : "<<normal<<std::endl;
-    std::cout<<blue<<"Number of Test : "<<Counts[IsScinti][0]<<"; with >="<<_NbrPlaneUseForTracking<<" planes for tracking : "<<Counts[IsScinti][1]<<"; with ChiXZ <"<<_Chi2<<" : "<<Counts[IsScinti][2]<<"; with ChiYZ <"<<_Chi2<<" : "<<Counts[IsScinti][3]<<" ; with track in the Delimiters "<<nombreTests[IsScinti]<<"; with hits in it : "<<Counts[IsScinti][4]<<" ; with hits in dlim : "<<nombreTestsOK[IsScinti][5]<<normal<<std::endl;
-    std::cout<<blue<<"Sum of hits in dlim : "<<sommeNombreHits[IsScinti][5]<<normal<<std::endl;
+    std::cout<<red<<"Plane Number (in geometry file): "<<Nbr+1<<" Z = "<<Z0<<" : "<<normal<<std::endl;
+    std::cout<<blue<<"Number of Test : "<<Counts[name][0]<<"; with >="<<_NbrPlaneUseForTracking<<" planes for tracking : "<<Counts[name][1]<<"; with ChiXZ <"<<_Chi2<<" : "<<Counts[name][2]<<"; with ChiYZ <"<<_Chi2<<" : "<<Counts[name][3]<<" ; with track in the Delimiters "<<nombreTests[name]<<"; with hits in it : "<<Counts[name][4]<<" ; "<<std::endl;
+    std::cout<<red<<"with hits in dlim : "<<normal<<std::endl;
+    for(unsigned int i=0;i!=Thresholds_name.size();++i)
+    {
+    std::cout<<Thresholds_name[i]<<" : "<<GetNumberOK(i,name)<<" "<<normal;
+    }
+    std::cout<<std::endl;
+    std::cout<<red<<"Sum of hits in dlim : "<<normal<<std::endl;
+    for(unsigned int i=0;i!=Thresholds_name.size();++i)
+    {
+    std::cout<<Thresholds_name[i]<<" : "<<GetNombreHits(i,name)<<" "<<normal;
+    }
     std::cout<<std::endl;
 }
 
-void AnalysisProcessor::PrintStat(bool IsScinti)
+void AnalysisProcessor::PrintStat(std::string name)
 {
+    static std::map<std::string,std::string>Mess;
+    for(unsigned int i=0;i!=_hcalCollections.size();++i)Mess[_hcalCollections[i]]="List of counters "+ _hcalCollections[i]+" : ";
     ofstream fichier;
     for(unsigned int hhh=0;hhh!=Thresholds_name.size();++hhh)
     {
       std::string namme ="Results";
-      if(IsScinti==true) namme+="Scinti";
+      namme+="_"+name+"_";
       namme+=Thresholds_name[hhh];
       namme+=".txt";
       fichier.open(namme, ios::out | ios::app);  //déclaration du flux et ouverture du fichier
-      if(fichier) 
+      if(fichier)
       { // si l'ouverture a réussi
         fichier<<_NbrRun<<";#;";
-          for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
+          for(unsigned int i=0; i!=testedPlanList.size(); ++i)
           {
-            fichier<<testedPlanList[i].efficiency(hhh,IsScinti)<<";"<<sqrt(testedPlanList[i].GetNumberOK(hhh,IsScinti)*testedPlanList[i].efficiency(hhh,IsScinti)*(1-testedPlanList[i].efficiency(hhh,IsScinti)))*1.0/testedPlanList[i].GetNumberOK(hhh,IsScinti)<<";"<<testedPlanList[i].multiplicity(hhh,IsScinti)<<";0;";
+            fichier<<testedPlanList[i].efficiency(hhh,name)<<";"<<sqrt(testedPlanList[i].GetNumberOK(hhh,name)*testedPlanList[i].efficiency(hhh,name)*(1-testedPlanList[i].efficiency(hhh,name)))*1.0/testedPlanList[i].GetNumberOK(hhh,name)<<";"<<testedPlanList[i].multiplicity(hhh,name)<<";0;";
           }
         fichier<<std::endl;
           // on referme le fichier
       }
       fichier.close();
     }
+    
     for(unsigned int hhh=0;hhh!=Thresholds_name.size();++hhh)
     {
     std::cout<<"Run Number : "<<_NbrRun<<" Thresholds "<<Thresholds_name[hhh]<<std::endl;
-      for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
+      for(unsigned int i=0; i!=testedPlanList.size(); ++i)
       {
-        // testedPlanList[i].print();
-        std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanList[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanList[i].efficiency(hhh,IsScinti)<<" Error : "<<setw(6)<<sqrt(testedPlanList[i].GetNumberOK(hhh,IsScinti)*testedPlanList[i].efficiency(hhh,IsScinti)*(1-testedPlanList[i].efficiency(hhh,IsScinti)))*1.0/testedPlanList[i].GetNumberOK(hhh,IsScinti)<<" Multiplicity : "<<setw(6)<<testedPlanList[i].multiplicity(hhh,IsScinti)<<normal<<std::endl;
+        std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanList[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanList[i].efficiency(hhh,name)<<" Error : "<<setw(6)<<sqrt(testedPlanList[i].GetNumberOK(hhh,name)*testedPlanList[i].efficiency(hhh,name)*(1-testedPlanList[i].efficiency(hhh,name)))*1.0/testedPlanList[i].GetNumberOK(hhh,name)<<" Multiplicity : "<<setw(6)<<testedPlanList[i].multiplicity(hhh,name)<<normal<<std::endl;
       }
     }
-    
+
 }
 
 using namespace marlin;
 AnalysisProcessor aAnalysisProcessor;
 AnalysisProcessor::AnalysisProcessor() : Processor("AnalysisProcessorType")
 {
-    std::vector<std::string> hcalCollections(1,"SDHCAL_HIT");
+    std::vector<std::string> hcalCollections{"SDHCAL_HIT","SDHCAL_HIT_SC","NOISE_ESTIMATION_BEFORE","NOISE_ESTIMATION_AFTER"};
     registerInputCollections( LCIO::RAWCALORIMETERHIT,"HCALCollections","HCAL Collection Names",_hcalCollections,hcalCollections);
     _FileNameGeometry="";
     registerProcessorParameter("FileNameGeometry","Name of the Geometry File",_FileNameGeometry,_FileNameGeometry);
@@ -400,17 +482,25 @@ AnalysisProcessor::AnalysisProcessor() : Processor("AnalysisProcessorType")
     registerProcessorParameter("Delimiters" ,"Delimiters",_Delimiters,_Delimiters);
     _ShortEfficiency=0;
     registerProcessorParameter("ShortEfficiency" ,"ShortEfficiency",_ShortEfficiency,_ShortEfficiency);
+    _Config_xml="";
+    registerProcessorParameter("Config_xml" ,"Config_xml",_Config_xml,_Config_xml);
 }
 
 AnalysisProcessor::~AnalysisProcessor() {}
 void AnalysisProcessor::init()
-{ 
+{
+    Intro();
+    bool Noise=true;
     _maxRecord= Global::parameters->getIntVal("MaxRecordNumber")-1;
     _skip= Global::parameters->getIntVal("SkipNEvents");
-
+    if(Noise==true)
+    {
+      names.push_back("NOISE_ESTIMATION_BEFORE");
+      names.push_back("NOISE_ESTIMATION_AFTER");
+    }
     std::vector<std::string>LCIOFiles;
    Global::parameters->getStringVals("LCIOInputFiles" ,LCIOFiles );
-  
+
    for(unsigned int i=0;i!=LCIOFiles.size();++i)
    {
     LCReader* lcReader = LCFactory::getInstance()->createLCReader() ;
@@ -423,27 +513,23 @@ void AnalysisProcessor::init()
     printParameters();
     ReaderFactory readerFactory;
     Reader* myReader = readerFactory.CreateReader(_ReaderType);
-    
-    
-    
-    
-    
-    if(myReader) 
+
+    if(myReader)
     {
       myReader->Read(_FileNameGeometry,geom);
       geom.PrintGeom();
       std::map<int, Dif > Difs=geom.GetDifs();
       std::map<int,int> PlansType;
-      for(std::map<int, Dif >::iterator it=Difs.begin(); it!=Difs.end(); ++it) 
+      for(std::map<int, Dif >::iterator it=Difs.begin(); it!=Difs.end(); ++it)
       {
-        if(geom.GetDifType(it->first)==scintillator) names.push_back("SCINTILLATOR");
-        if(geom.GetDifType(it->first)!=temporal&&geom.GetDifType(it->first)!=scintillator&&geom.GetDifType(it->first)!=tcherenkov) 
+        if(geom.GetDifType(it->first)==scintillator) names.push_back("SDHCAL_HIT_SC");
+        if(geom.GetDifType(it->first)!=temporal&&geom.GetDifType(it->first)!=scintillator&&geom.GetDifType(it->first)!=tcherenkov)
         {
           PlansType.insert(std::pair<int,int>(geom.GetDifNbrPlate(it->first)-1,geom.GetDifType(it->first)));
         }
       }
       FillDelimiter(_Delimiters,PlansType.size(),Delimiter);
-      for(std::map<int, int >::iterator it=PlansType.begin(); it!=PlansType.end(); ++it) 
+      for(std::map<int, int >::iterator it=PlansType.begin(); it!=PlansType.end(); ++it)
 	    {
 	      if(Delimiter.size()!=0) testedPlanList.push_back(testedPlan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second,Delimiter[it->first+1][1],Delimiter[it->first+1][0],Delimiter[it->first+1][3],Delimiter[it->first+1][2]));
         else testedPlanList.push_back(testedPlan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second,0,0,0,0));
@@ -456,20 +542,29 @@ void AnalysisProcessor::init()
         std::string g="Multiplicity of the voisinage of the pad "+ std::to_string( (long long int) it->first +1 );
         std::string h="Threshold "+ std::to_string( (long long int) it->first +1 );
         std::string hh="gain "+ std::to_string( (long long int) it->first +1 );
+        std::string ddd="Real_Rate_passing_the_selected_zone"+std::to_string( (long long int) it->first +1 );
+        std::string dddd="Real_Rate"+std::to_string( (long long int) it->first +1 );
         int Taille_X=geom.GetSizeX(it->first)+1;
         int Taille_Y=geom.GetSizeY(it->first)+1;
+        std::string ndifxy="difxy"+std::to_string( (long long int) it->first +1 );
+        std::string ndifr="difr"+std::to_string( (long long int) it->first +1 );
+        RealRateWithSelectedZone[it->first]=new TH2F(ddd.c_str(),ddd.c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y);
         Gain[names[0]].push_back(new TH2F(hh.c_str(),hh.c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
-        for(int j=0;j<ThresholdMap.size();++j)
+        if(_Config_xml!="")
         {
-           std::cout<<j<<"  "<<names[0]<<std::endl;
-           ThresholdMap[j]["NORMAL"].push_back(new TH2F((h+"_"+Thresholds_name[j]).c_str(),(h+"_"+Thresholds_name[j]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
+          for(int j=0;j<ThresholdMap.size();++j)
+          {
+            ThresholdMap[j]["SDHCAL_HIT"].push_back(new TH2F((h+"_"+Thresholds_name[j]).c_str(),(h+"_"+Thresholds_name[j]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
+          }
         }
         for(unsigned int i=0;i<names.size();++i)
         {
-          
-          if(it->second==positional) 
+          Distribution_exp_tgraph[names[i]]=new TGraph2D();
+          Distribution_hits_tgraph[names[i]]=new TGraph2D();
+          if(it->second==positional)
           {
-            
+            difxy[names[i]].push_back(new TH2D((ndifxy+names[i]).c_str(),(ndifxy+names[i]).c_str(),346,-50,50,1000,-50,50));
+            difr[names[i]].push_back(new TH1D((ndifr+names[i]).c_str(),(ndifr+names[i]).c_str(),346,-50,50));
             Distribution_hits[names[i]].push_back(new TH2F((a+names[i]).c_str(),(a+names[i]).c_str(),100,0,100,100,0,100));
             Distribution_exp[names[i]].push_back(new TH2F((b+names[i]).c_str(),(b+names[i]).c_str(),100,0,100,100,0,100));
             for(int j=0;j<Efficiency_pads.size();++j)
@@ -478,12 +573,14 @@ void AnalysisProcessor::init()
               Efficiency_asics[j][names[i]].push_back(new TH2F((d+names[i]+Thresholds_name[j]).c_str(),(d+names[i]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
               Multiplicity_pads[j][names[i]].push_back(new TH2F((g+names[i]+Thresholds_name[j]).c_str(),(g+names[i]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
             }
-            
+
 		        HowLongFromExpectedX[names[i]].push_back(new TH1F((e+names[i]).c_str(),(e+names[i]).c_str(),2*(_dlimforStrip),-_dlimforStrip,_dlimforStrip));
             HowLongFromExpectedY[names[i]].push_back(new TH1F((f+names[i]).c_str(),(f+names[i]).c_str(),2*(_dlimforStrip),-_dlimforStrip,_dlimforStrip));
-          } 
-          else 
+          }
+          else
           {
+            difxy[names[i]].push_back(new TH2D((ndifxy+names[i]).c_str(),(ndifxy+names[i]).c_str(),346,-50,50,1000,-50,50));
+            difr[names[i]].push_back(new TH1D((ndifr+names[i]).c_str(),(ndifr+names[i]).c_str(),346,-50,50));
             Distribution_hits[names[i]].push_back(new TH2F((a+names[i]).c_str(),(a+names[i]).c_str(),100,0,100,100,0,100));
             Distribution_exp[names[i]].push_back(new TH2F((b+names[i]).c_str(),(b+names[i]).c_str(),100,0,100,100,0,100));
             for(int j=0;j<Efficiency_pads.size();++j)
@@ -494,7 +591,7 @@ void AnalysisProcessor::init()
             }
             HowLongFromExpectedX[names[i]].push_back(new TH1F((e+names[i]).c_str(),(e+names[i]).c_str(),2*(_dlimforPad),-_dlimforPad,_dlimforPad));
             HowLongFromExpectedY[names[i]].push_back(new TH1F((f+names[i]).c_str(),(f+names[i]).c_str(),2*(_dlimforPad),-_dlimforPad,_dlimforPad));
-            
+
           }
         }
       }
@@ -520,20 +617,25 @@ void AnalysisProcessor::init()
 			    }
 		    }
 	    }
-	  } 
-	  else 
+	  }
+	  else
 	  {
         std::cout << "Reader type n'existe pas !!" << std::endl;
         std::exit(1);
     }
     delete myReader;
-    Reader* Conf =readerFactory.CreateReader("XMLReaderConfig");
-    if(Conf)
+    std::map<unsigned int,DifInfo>ggg;
+    if(_Config_xml!="")
     {
-      std::string name="/home/lagarde/Bureau/EventBuilder/GIFSPS_60.xml";
-      Conf->Read(name,conf);
+      Reader* Conf =readerFactory.CreateReader("XMLReaderConfig");
+      if(Conf)
+      {
+        Conf->Read(_Config_xml,conf);
+      }
+      ggg=conf.ReturnMe();
+      delete Conf;
     }
-    std::map<unsigned int,DifInfo>ggg=conf.ReturnMe();
+
     for(std::map<unsigned int,DifInfo>::iterator it=ggg.begin();it!=ggg.end();++it)
     {
       int dif_id=it->first;
@@ -545,39 +647,103 @@ void AnalysisProcessor::init()
          std::array<unsigned int,64>ooo=(itt->second).ReturnMe();
          for(unsigned int i=0;i!=ooo.size();++i)
          {
-           if(geom.GetDifNbrPlate(it->first)-1>=0)std::cout<<names[0]<<"  "<<geom.GetDifNbrPlate(it->first)-1<<"  "<<(1+MapILargeHR2[i]+AsicShiftI[asic_id])+geom.GetDifPositionX(dif_id)<<"  "<<(32-(MapJLargeHR2[i]+AsicShiftJ[asic_id]))+geom.GetDifPositionY(dif_id)<<"  "<<ooo[i]<<std::endl;
            if(geom.GetDifNbrPlate(it->first)-1>=0)Gain[names[0]][geom.GetDifNbrPlate(it->first)-1]->Fill((1+MapILargeHR2[i]+AsicShiftI[asic_id])+geom.GetDifPositionX(dif_id),(32-(MapJLargeHR2[i]+AsicShiftJ[asic_id]))+geom.GetDifPositionY(dif_id),ooo[i]);
            for(unsigned int hh=0;hh!=thee.size();++hh)
            if(geom.GetDifNbrPlate(it->first)-1>=0)ThresholdMap[hh][names[0]][geom.GetDifNbrPlate(it->first)-1]->Fill((1+MapILargeHR2[i]+AsicShiftI[asic_id])+geom.GetDifPositionX(dif_id),(32-(MapJLargeHR2[i]+AsicShiftJ[asic_id]))+geom.GetDifPositionY(dif_id),thee[hh]);
          }
       }
-      std::cout<<std::endl;
     }
     //testedPlanListScinti=testedPlanList;
 }
 
 void AnalysisProcessor::processEvent( LCEvent * evtP )
-{ 
+{
+     
     _NbrRun=evtP->getRunNumber();
-    Plans.clear();
-    PlansScintillator.clear();
-    if (evtP != nullptr) {
-        
-        std::vector<std::string>names=*evtP->getCollectionNames();
-        for(unsigned int i=0; i< _hcalCollections.size(); i++) 
+   if(isFirstEvent()==true)
+    { 
+      DBInit::init();
+      RunInfo* r = RunInfo::getRunInfo(int(_NbrRun));
+      cout<<r->getStartTime()<<endl;  
+      cout<<r->getStopTime()<<endl;
+      cout<<r->getDescription()<<endl;
+      Daq* d = r->getDaq();
+      cout<<red<<"ggfgfggfgfgfgfgfgfgfgfg "<<d->getConfigName()<<"   "<<d->getConfigName()<<normal<<endl;
+      cout<<d->getXML()<<endl;
+      std::string str (d->getXML());
+      std::string str2 ("<DBState xsi:type=\"xsd:string\">");
+      std::string str3 ("</DBState>");
+      std::size_t found = str.find(str2)+str2.size();
+      std::size_t found2 = str.find(str3);
+      std::string str4=str.substr(found,found2-found);
+      std::cout<<red<<"gdggdhgfgigtiogtigtgtuio "<<str4<<"     "<<normal<<std::endl;
+      delete(d);
+      delete(r);
+    State* s = State::download("GIFSPS_60"); // download the state with name 'MyState'
+    LdaConfiguration *lda_conf = s->getLdaConfiguration();
+    DccConfiguration *dcc_conf = s->getDccConfiguration();
+    DifConfiguration *dif_conf = s->getDifConfiguration();
+    AsicConfiguration *asic_conf = s->getAsicConfiguration();
+
+    vector<ConfigObject*> ldas = lda_conf->getVector();
+    vector<ConfigObject*> dccs = dcc_conf->getVector();
+    vector<ConfigObject*> difs = dif_conf->getVector();
+    vector<ConfigObject*> asics = asic_conf->getVector();
+
+    cout<<"Found :"<<endl;
+    cout<<"  "<<ldas.size()<<" LDA"<<endl;
+    cout<<"  "<<dccs.size()<<" DCC"<<endl;
+    cout<<"  "<<difs.size()<<" DIF"<<endl;
+    cout<<"  "<<asics.size()<<" ASIC"<<endl;
+    s->saveToXML("./xmlFile.xml");
+    delete(s); // this will delete the state object along with the configurations objects
+      DBInit::terminate();
+    }
+    Planss.clear();
+    //Plans.clear();
+    //PlansScintillator.clear();
+    if (evtP != nullptr) 
+    {
+        std::map<std::string,LCCollection*>Collections;
+        Collections.clear();
+        std::vector<std::string>namesss=*evtP->getCollectionNames();
+        for(unsigned int i=0; i!=_hcalCollections.size(); i++)
+        {
+          for(unsigned int j=0; j!=namesss.size(); j++)
+          {
+            if(namesss[j]==_hcalCollections[i])
+            {
+              if(evtP ->getCollection(namesss[j].c_str())!=nullptr)
+              {
+                
+                Collections[namesss[j]]=evtP ->getCollection(namesss[j].c_str());
+                Numbers[namesss[j]]++;
+                Progress(_skip,_GlobalEvents,_maxRecord,Numbers[namesss[j]]);
+                //std::cout<<namesss[j]<<"  "<<Numbers[namesss[j]]<<std::endl;
+              }
+              else
+              {
+                std::cout<<red<<namesss[j]<< "not found"<<std::endl;
+              }
+            }
+          }
+        }
+      
+        /*std::vector<std::string>names=*evtP->getCollectionNames();
+        for(unsigned int i=0; i< _hcalCollections.size(); i++)
         {
             IsScinti=false;
             LCCollection* col=nullptr;
-            for(unsigned int i=0;i<names.size();++i) 
+            for(unsigned int i=0;i<names.size();++i)
             {
-              if(names[i]=="SDHCAL_HIT") 
+              if(names[i]=="SDHCAL_HIT")
               {
                 col = evtP ->getCollection(names[i].c_str());
                 _eventNr=evtP->getEventNumber();
                 //eventnbrr=_eventNr;
                 Progress(_skip,_GlobalEvents,_maxRecord,_eventNr);
               }
-              else if(names[i]=="SDHCAL_HIT_SC") 
+              else if(names[i]=="SDHCAL_HIT_SC")
               {
                 //std::cout<<"SC one"<<std::endl;
                 col = evtP ->getCollection(names[i].c_str());
@@ -586,23 +752,29 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
                 IsScinti=true;
               }
             }
-            if(col == nullptr) 
+            if(col == nullptr)
             {
                 if(IsScinti==true) std::cout<< red << "TRIGGER WITH SCINTILLATOR SKIPED ..."<< normal <<std::endl;
                 else  std::cout<< red << "TRIGGER WITH SKIPED ..."<< normal <<std::endl;
                 break;
-            }
-            CellIDDecoder<CalorimeterHit> cd(col);
-            int numElements = col->getNumberOfElements();
-            for (int ihit=0; ihit < numElements; ++ihit) 
+            }*/
+            for(std::map<std::string,LCCollection*>::iterator it=Collections.begin(); it!=Collections.end(); ++it)
             {
-                CalorimeterHit *raw_hit = dynamic_cast<CalorimeterHit*>( col->getElementAt(ihit)) ;
-                if (raw_hit != nullptr) 
+              CellIDDecoder<CalorimeterHit> cd(it->second);
+              int numElements = (it->second)->getNumberOfElements();
+              for (int ihit=0; ihit < numElements; ++ihit)
+              {
+                CalorimeterHit *raw_hit = dynamic_cast<CalorimeterHit*>( (it->second)->getElementAt(ihit)) ;
+                if (raw_hit != nullptr)
                 {
                     int dif_id=cd(raw_hit)["Dif_id"];
-                    int I=cd(raw_hit)["I"];
-                    int J=cd(raw_hit)["J"];
-                    if(IsScinti==true)
+                    //int I=cd(raw_hit)["I"];
+                    //int J=cd(raw_hit)["J"];
+                    RealNumberPlane[dif_id]++;
+                    Planss[it->first][geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit,it->first);
+                    Planss[it->first][geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
+                    //std::cout<<red<<"ttttt"<<normal<<std::endl;
+                    /*if(IsScinti==true)
                     {
                       PlansScintillator[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
                       PlansScintillator[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
@@ -611,135 +783,230 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
                     {
                       Plans[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
                       Plans[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
-                    }
+                    }*/
                 }
             }
+           }
         }
-        if(IsScinti==true)
+        //if(IsScinti==true)
+        //{
+          // for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(PlansScintillator,true,testedPlanList);
+        //}
+        //else for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans,false,testedPlanList);
+        for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Planss,testedPlanList);
+        for(unsigned f=0;f!=_hcalCollections.size();++f)
         {
-           for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(PlansScintillator,true);
-        }
-        else for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans,false);
-        if(_ShortEfficiency!=0) 
-        {
-        	if(_eventNr%_ShortEfficiency==0&&_eventNr!=0)
-        	{
-        	  PrintStatShort(0);
-        	  for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
-		        {
-              testedPlanList[i].ClearShort(0);
+          if(_ShortEfficiency!=0)
+          {
+        	  if(Numbers[_hcalCollections[f]]%_ShortEfficiency==0&&Numbers[_hcalCollections[f]]!=0)
+        	  {
+        	    PrintStatShort(_hcalCollections[f]);
+        	    for(unsigned int i=0; i!=testedPlanList.size(); ++i)
+		          {
+                testedPlanList[i].ClearShort(_hcalCollections[f]);
+              }
             }
-          }
-        	if(_eventNrSC%_ShortEfficiency==0&&_eventNrSC!=0)
-        	{
-        	  PrintStatShort(1);
-            for(unsigned int i=0; i!=testedPlanList.size(); ++i) 
-		        {
-              testedPlanList[i].ClearShort(1);
-            }
-          }
+    	    }
     	  }
-      }
+      
 }
-
+void AnalysisProcessor::processRunHeader( LCRunHeader* run)
+{
+    LCTOOLS::dumpRunHeader(run);
+}
 void AnalysisProcessor::end()
 {
-    for(int i =0;i<Efficiency_per_pad.size();++i)
+
+    for(std::map<std::string,std::array<std::map<std::vector<int>,std::vector<int>>,6>>::iterator itt=Efficiency_per_pad.begin();itt!=Efficiency_per_pad.end();++itt)
     {
-    for(std::map<std::vector<int>,std::vector<int>>::iterator it=Efficiency_per_pad[i].begin();it!=Efficiency_per_pad[i].end();++it)
-    {
-        unsigned int was_at_least_a_hit=0;
-        unsigned int number_of_hits=0;
-        for(unsigned int j =0;j!=(it->second).size();++j)
-	      {
-                
-		      if(it->second[j]>0)
-          {
-			      was_at_least_a_hit++;
-			      number_of_hits+=it->second[j];
-		      }
-	      }
-        Efficiency_pads[i]["NORMAL"][it->first[2]-1]->Fill(it->first[0],it->first[1],was_at_least_a_hit*1.0/(it->second).size());
-        if(was_at_least_a_hit!=0)Multiplicity_pads[i]["NORMAL"][it->first[2]-1]->Fill(it->first[0],it->first[1],number_of_hits*1.0/was_at_least_a_hit);
-    }
-    }
-    for(int i =0;i<Efficiency_per_padScinti.size();++i)
-    {
-    for(std::map<std::vector<int>,std::vector<int>>::iterator it=Efficiency_per_padScinti[i].begin();it!=Efficiency_per_padScinti[i].end();++it)
-    {
-        unsigned int was_at_least_a_hit=0;
-        unsigned int number_of_hits=0;
-        for(unsigned int j =0;j!=(it->second).size();++j)
-	      {
-                
-		      if(it->second[j]>0)
-          {
-			      was_at_least_a_hit++;
-			      number_of_hits+=it->second[j];
-		      }
-	      }
-        Efficiency_pads[i]["SCINTILLATOR"][it->first[2]-1]->Fill(it->first[0],it->first[1],was_at_least_a_hit*1.0/(it->second).size());
-        if(was_at_least_a_hit!=0)Multiplicity_pads[i]["SCINTILLATOR"][it->first[2]-1]->Fill(it->first[0],it->first[1],number_of_hits*1.0/was_at_least_a_hit);
-    }
-    }
-    
-    
-    std::cout<<"List of counters : "<<std::endl;
-    IsScinti=0;
-    for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->print(IsScinti);
-    std::cout<<"List of counters with Scintillator: "<<std::endl;
-    IsScinti=1;
-    for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->print(IsScinti);
-    std::string b="Results_"+std::to_string( (long long int) _NbrRun)+".root";
-    TFile *hfile = new TFile(b.c_str(),"UPDATE");
-    tt->Write();
-    std::string plate="";
-    std::string SlowControl="";
-    for(unsigned int o=0;o!=Gain[names[0]].size();++o)
-    {
-      SlowControl="SlowControl_"+patch::to_string(o+1);
-      hfile->mkdir(SlowControl.c_str(),SlowControl.c_str());
-      hfile->cd(SlowControl.c_str());
-      Gain[names[0]][o]->Write();
-      for(int j=0;j<ThresholdMap.size();++j)
+      for(unsigned int i=0;i!=(itt->second).size();++i)
       {
-       ThresholdMap[j][names[0]][o]->Write();
+        for(std::map<std::vector<int>,std::vector<int>>::iterator it=Efficiency_per_pad[itt->first][i].begin();it!=Efficiency_per_pad[itt->first][i].end();++it)
+        {
+          unsigned int was_at_least_a_hit=0;
+          unsigned int number_of_hits=0;
+          for(unsigned int j =0;j!=(it->second).size();++j)
+	        {
+            if(it->second[j]>0)
+            {
+			        was_at_least_a_hit++;
+			        number_of_hits+=it->second[j];
+		        }
+	        }
+          Efficiency_pads[i][itt->first][it->first[2]-1]->Fill(it->first[0],it->first[1],was_at_least_a_hit*1.0/(it->second).size());
+          if(was_at_least_a_hit!=0)Multiplicity_pads[i][itt->first][it->first[2]-1]->Fill(it->first[0],it->first[1],number_of_hits*1.0/was_at_least_a_hit);
+      }
+      }
+    }
+    
+    
+    
+    for(unsigned int i=0;i!=_hcalCollections.size();++i)
+    {
+      std::cout<<magenta<<_hcalCollections[i]<<normal<<std::endl;
+      static std::map<std::string,std::string>Mess;
+      for(unsigned int i=0;i!=_hcalCollections.size();++i)Mess[_hcalCollections[i]]="List of counters "+ _hcalCollections[i]+" : ";
+      std::cout<<white<<Mess[_hcalCollections[i]]<<normal<<std::endl;
+      for (std::vector<testedPlan>::iterator it=testedPlanList.begin(); it != testedPlanList.end(); ++it) it->print(_hcalCollections[i]);
+    }
+    std::string b="Results_"+std::to_string( (long long int) _NbrRun)+".root";
+    std::string c="Results_Analysis"+std::to_string( (long long int) _NbrRun)+".root";
+    TFile *hfile = new TFile(c.c_str(),"RECREATE");
+    TFile *hfile2 = new TFile(b.c_str(),"UPDATE");
+    TH1F* ugly = (TH1F*) hfile2->Get("ugly");
+    double total_time;
+    if(ugly!=nullptr)total_time=ugly->GetBinContent(1);
+    else total_time=1;
+    std::cout<<red<<"hhhfhfhdhdhdhdh "<<total_time<<" kjjffjfj"<<normal<<std::endl; 
+    hfile2->Close();
+    
+ 
+    hfile->cd("../");
+    
+     for(unsigned int i=0;i!=useforrealrate.size();++i)
+     {
+      double inbin=1.0;
+      static string namee="SDHCAL_HIT";
+      int II=0;
+      int JJ=0;
+      int ZZ=0;
+      for(unsigned int j=0;j!=useforrealrate[i].size();++j)
+      {
+        if(useforrealrate[i][j][3]==1)
+        {
+          II=useforrealrate[i][j][0];
+          JJ=useforrealrate[i][j][1];
+          ZZ=useforrealrate[i][j][2];
+          int xmax=Efficiency_pads[5][namee][ZZ]->GetNbinsX();
+          int ymax=Efficiency_pads[5][namee][ZZ]->GetNbinsY();
+          if(II>0&&II<xmax&&JJ>0&&JJ<ymax)
+          {
+            if(Efficiency_pads[5][namee][ZZ]->GetBinContent(II,JJ)>0)inbin*=Efficiency_pads[5][namee][ZZ]->GetBinContent(II,JJ);
+          }
+        }
+      }
+      for(unsigned int j=0;j!=useforrealrate[i].size();++j)
+      {      
+        II=useforrealrate[i][j][0];
+        JJ=useforrealrate[i][j][1];
+        ZZ=useforrealrate[i][j][2];
+        RealRateWithSelectedZone[ZZ]->Fill(II,JJ,1.0/inbin);
+      }
+     }
+
+
+      for(std::map<int,TH2F*>::iterator it=RealRateWithSelectedZone.begin();it!=RealRateWithSelectedZone.end();++it)
+      {
+        std::string dddd="Efficiency_Vs_Rate"+std::to_string( (long long int) it->first +1 );
+        std::string name="SDHCAL_HIT";
+        unsigned long int min_rate=(it->second)->GetMinimum();
+        unsigned long int max_rate=(it->second)->GetMaximum();
+        EfficacityVsRate[it->first]=new TH2F(dddd.c_str(),dddd.c_str(),100,0,1000,10,0,1.0);
+        unsigned long int size= (it->second)->GetSize()-2;
+        for(unsigned long j=0;j<size;++j)EfficacityVsRate[it->first]->Fill((it->second)->GetBinContent(j),Efficiency_pads[5][name][it->first]->GetBinContent(j));
+        
+        
+      }
+
+    
+    tt->Write();
+    std::string traces="Traces";
+      hfile->mkdir(traces.c_str());
+      hfile->cd(traces.c_str());
+      
+      for(unsigned int i=0;i!=xzaxis.size();++i)
+      {
+        xzaxis[i].Write((traces+"_xz_"+patch::to_string(i)).c_str());
+        yzaxis[i].Write((traces+"_yz_"+patch::to_string(i)).c_str());
       }
       hfile->cd("../");
-    }
+    
+    
     for(unsigned int naa=0;naa<names.size();++naa)
     {
-      Distribution_exp_tgraph[names[naa]]->Write();
-      Distribution_hits_tgraph[names[naa]]->Write();
       
-      for(unsigned int i =0 ;i!=HowLongFromExpectedX["NORMAL"].size();++i)
+      Distribution_exp_tgraph[names[naa]]->Write(("Distribution_exp"+names[naa]).c_str());
+      Distribution_hits_tgraph[names[naa]]->Write(("Distribution_hits"+names[naa]).c_str());
+      
+      std::string plate="";
+      std::string SlowControl="";
+      if(_Config_xml!="")
+     {
+      for(unsigned int o=0;o!=Gain[names[0]].size();++o)
       {
-        
-        plate="Plate "+ patch::to_string(i+1);
-        
-        if(naa==0)hfile->mkdir(plate.c_str(),plate.c_str());
-        
-    	  hfile->cd(plate.c_str());
-	      HowLongFromExpectedX[names[naa]][i]->Write();
-    	  HowLongFromExpectedY[names[naa]][i]->Write();
-        Distribution_hits[names[naa]][i]->Write();
-        
-        if(_ShortEfficiency!=0) for(unsigned j=0;j!=Thresholds_name.size();++j)
+        SlowControl="SlowControl_"+patch::to_string(o+1);
+        hfile->mkdir(SlowControl.c_str(),SlowControl.c_str());
+        hfile->cd(SlowControl.c_str());
+        Gain[names[0]][o]->Write();
+        for(int j=0;j<ThresholdMap.size();++j)
         {
-          Short_Efficiency[names[naa]][i][j]->Write();
-          Short_Multiplicity[names[naa]][i][j]->Write();
-        }
-        Distribution_exp[names[naa]][i]->Write();
-        for(int j=0;j<Efficiency_pads.size();++j)
-          {
-        
-        Efficiency_pads[j][names[naa]][i]->Write();
-        Multiplicity_pads[j][names[naa]][i]->Write();
+          ThresholdMap[j][names[0]][o]->Write();
         }
         hfile->cd("../");
       }
-    
-        for(unsigned int i=0; i<Distribution_hits.size(); ++i) 
+    }
+      for(unsigned int i =0 ;i!=HowLongFromExpectedX["SDHCAL_HIT"].size();++i)
+      {
+
+        plate="Plate "+ patch::to_string(i+1);
+
+       
+        if(naa==0)hfile->mkdir(plate.c_str(),plate.c_str());
+    	  hfile->cd(plate.c_str());
+    	  if(naa==0)hfile->mkdir((plate+"/Alignement").c_str());
+        hfile->cd((plate+"/Alignement").c_str());
+        difr[names[naa]][i]->Write();
+    	  difxy[names[naa]][i]->Write();
+    	  difxy[names[naa]][i]->ProjectionY()->Write();
+    	  difxy[names[naa]][i]->ProjectionX()->Write();
+        hfile->cd(plate.c_str());   	
+    	  if(naa==0)
+        {
+        
+       
+        
+        hfile->mkdir((plate+"/Rate_Estimation").c_str());
+        hfile->cd((plate+"/Rate_Estimation").c_str());
+        std::string name="Rate_Selected_Zone_scale";
+        EfficacityVsRate[i]->Write();
+        RealRateWithSelectedZone[i]->Write();
+        RealRateWithSelectedZone[i]->Scale(total_time*(1.0/SumCombinaison(RealNumberPlane.size(),_NbrPlaneUseForTracking)));
+        RealRateWithSelectedZone[i]->Write(name.c_str());
+  
+        //EfficacityVsRate[i]->Write();
+        }
+        hfile->cd(plate.c_str());
+	      HowLongFromExpectedX[names[naa]][i]->Write();
+    	  HowLongFromExpectedY[names[naa]][i]->Write();
+        Distribution_hits[names[naa]][i]->Write();
+
+        if(_ShortEfficiency!=0) 
+        { 
+          if(naa==0)hfile->mkdir((plate+"/Short_Efficiency").c_str());
+          hfile->cd((plate+"/Short_Efficiency").c_str());
+          for(unsigned j=0;j!=Thresholds_name.size();++j)
+          {
+            Short_Efficiency[names[naa]][i][j]->Write();
+            Short_Multiplicity[names[naa]][i][j]->Write();
+          }
+          hfile->cd(plate.c_str());
+        }
+        Distribution_exp[names[naa]][i]->Write();
+        if(naa==0)hfile->mkdir((plate+"/Efficiency_Multiplicity_Maps").c_str());
+        hfile->cd((plate+"/Efficiency_Multiplicity_Maps").c_str());
+        for(int j=0;j<Efficiency_pads.size();++j)
+        {
+        
+        Efficiency_pads[j][names[naa]][i]->Write();
+        Multiplicity_pads[j][names[naa]][i]->Write();
+        
+        }
+        hfile->cd(plate.c_str());
+        hfile->cd(plate.c_str());
+      }
+
+      
+        for(unsigned int i=0; i<Distribution_hits.size(); ++i)
         {
           delete Distribution_hits[names[naa]][i];
           delete Distribution_exp[names[naa]][i];
@@ -750,11 +1017,14 @@ void AnalysisProcessor::end()
             delete Efficiency_pads[j][names[naa]][i];
             delete Multiplicity_pads[j][names[naa]][i];
           }
-          if(_ShortEfficiency!=0) for(unsigned j=0;j!=Thresholds_name.size();++j)
+          if(_ShortEfficiency!=0) 
           {
-            delete Short_Efficiency[names[naa]][i][j];
-            delete Short_Multiplicity[names[naa]][i][j];
-          }
+            for(unsigned j=0;j!=Thresholds_name.size();++j)
+            {
+              delete Short_Efficiency[names[naa]][i][j];
+              delete Short_Multiplicity[names[naa]][i][j];
+            }
+          } 
         }
         delete Distribution_hits_tgraph[names[naa]];
       delete Distribution_exp_tgraph[names[naa]];
@@ -767,8 +1037,8 @@ void AnalysisProcessor::end()
     delete Branch4;
     delete Branch5;
     delete Branch6;
-    std::cout<<"Results"<<std::endl;
-    PrintStat(0);
-    std::cout<<"Results with scintillators"<<std::endl;
-    PrintStat(1);
+    for(unsigned f=0;f!=_hcalCollections.size();++f)
+    {
+      PrintStat(_hcalCollections[f]);    
+   }
 }

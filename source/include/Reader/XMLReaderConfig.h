@@ -5,8 +5,6 @@
 #include<string>
 #include "marlin/tinyxml.h"
 
-
-
 class XMLReaderConfig: public Reader
 {
   public:

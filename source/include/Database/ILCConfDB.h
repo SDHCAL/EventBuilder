@@ -1,0 +1,10 @@
+#include <ILCConfDB/db/DBInit.h>
+#include <ILCConfDB/configObjects/LdaConfiguration.h>
+#include <ILCConfDB/configObjects/DccConfiguration.h>
+#include <ILCConfDB/configObjects/DifConfiguration.h>
+#include <ILCConfDB/configObjects/AsicConfiguration.h>
+#include <ILCConfDB/configObjects/State.h>
+#include <ILCConfDB/configObjects/Setup.h>
+#include <ILCConfDB/daq/Daq.h>
+#include <ILCConfDB/daq/RunInfo.h>
+#include <ILCConfDB/daq/Job.h>

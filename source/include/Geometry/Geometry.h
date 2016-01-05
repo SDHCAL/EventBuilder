@@ -17,17 +17,40 @@ class Geometry
   {
     Difs[DifId]=Dif(x,y,DifId,xy,xz,yz,nbr,up_down,DifType);
   }
-  void AddPlate(const double& x,const double& y,const double& z,const double& xy ,const double& xz ,const double& yz , std::vector<int>&DifInPlate,const double& sizeX, const double& sizeY)
+  void AddPlate(const double& x,const double& y,const double& z,const double& xy ,const double& xz ,const double& yz , std::vector<int>&DifInPlate,const double& sizeX, const double& sizeY,const double& glass_type, const double& Gaz_number,const std::string& HV_channel,const std::string& Gaz_channel)
   {
-    Plates.push_back(Plate(x,y,z,xy,xz,yz,DifInPlate,sizeX,sizeY));
+    Plates.push_back(Plate(x,y,z,xy,xz,yz,DifInPlate,sizeX,sizeY,glass_type,Gaz_number,HV_channel,Gaz_channel));
+    
   }
   inline const double GetDifPositionX( int& i){ return ((Difs.find(i))->second).GetPositionX();};
   inline const double GetDifPositionY( int& i){ return ((Difs.find(i))->second).GetPositionY();};
   inline const double GetDifAlpha( const int& i){ return ((Difs.find(i))->second).GetAngleXY();};
   inline const double GetDifBeta( const int& i){ return ((Difs.find(i))->second).GetAngleXZ();};
   inline const double GetDifGamma( const int& i){ return ((Difs.find(i))->second).GetAngleYZ();};
-  inline const double GetDifPositionXMax(const int& i ){unsigned currentMax = 0;for(std::map<int, Dif >::iterator it = Difs.begin(); it != Difs.end(); ++it ) {if ((it->second).GetNbrPlate()==i && (it ->second).GetPositionX() > currentMax) {currentMax = (it ->second).GetPositionX();}} return currentMax;};
-  inline const double GetDifPositionYMax(const int& i ){unsigned currentMax = 0;for(std::map<int, Dif >::iterator it = Difs.begin(); it != Difs.end(); ++it ) {if ((it->second).GetNbrPlate()==i && (it ->second).GetPositionY() > currentMax) {currentMax = (it ->second).GetPositionY();}} return currentMax;};
+  inline const double GetDifPositionXMax(const int& i )
+  {
+    unsigned currentMax = 0;
+    for(std::map<int, Dif >::iterator it = Difs.begin(); it != Difs.end(); ++it ) 
+    {
+      if ((it->second).GetNbrPlate()==i && (it ->second).GetPositionX() > currentMax) 
+      {
+        currentMax = (it ->second).GetPositionX();
+      }
+    } 
+    return currentMax;
+  };
+  inline const double GetDifPositionYMax(const int& i )
+  {
+    unsigned currentMax = 0;
+    for(std::map<int, Dif >::iterator it = Difs.begin(); it != Difs.end(); ++it ) 
+    {
+      if ((it->second).GetNbrPlate()==i && (it ->second).GetPositionY() > currentMax) 
+      {
+        currentMax = (it ->second).GetPositionY();
+      }
+    } 
+    return currentMax;
+  };
   inline const double GetDifPlateAlpha( const int& i){ return Plates[i].GetAngleXY();};
   inline const double GetDifPlateBeta( const int& i){ return Plates[i].GetAngleXZ();};
   inline const double GetDifPlateGamma( const int& i){ return Plates[i].GetAngleYZ();};
@@ -48,6 +71,10 @@ class Geometry
   inline const Plate GetPlate(const int& i){return Plates[i];};
   inline const std::map<int,Dif> GetDifs(){return Difs;};
   inline const std::vector<int> GetDifsInPlane(unsigned int& i){return Plates[i].GetDifInPlate();};
+  inline double GetGlassType(const unsigned int& i){return Plates[i].GetGlassType();};
+  inline double GetGazNumber(const unsigned int& i){return Plates[i].GetGazNumber();};
+  inline std::string GetHVChannel(const unsigned int& i){return Plates[i].GetHVChannel();};
+  inline std::string GetGazChannel(const unsigned int& i){return Plates[i].GetGazChannel();};
   void PrintGeom(); 
  private:
   std::vector<Plate> Plates;
