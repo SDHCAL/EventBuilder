@@ -5,9 +5,13 @@
 #include <iomanip>
 #include "Progress.h"
 #include "marlin/Processor.h"
+
+#ifdef OCCI_SUPPORT
 #include "Database/db/DBInit.h"
 #include "Database/configObjects/Setup.h"
 #include "Database/daq/RunInfo.h"
+#endif
+
 #include "UTIL/LCTOOLS.h"
 #include "UTIL/CellIDDecoder.h"
 #include "IMPL/CalorimeterHitImpl.h"
@@ -46,7 +50,9 @@
 #define size_strip 2.5
 #define degtorad 0.0174532925
 using namespace std;
+#ifdef OCCI_SUPPORT
 using namespace oracle::occi;
+#endif
 
 std::vector<std::vector<std::array<int,4>>>useforrealrate;
 std::map<std::string,std::vector<std::vector<TH1F*>>>Short_Efficiency;

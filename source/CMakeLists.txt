@@ -3,18 +3,20 @@
 # @author Eté Rémi,Lagarde François IPNL
 # Copyright (c) CNRS / IPNL
 #######################################################
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-locci" LOCCI_SUPPORT)
-if(LOCCI_SUPPORT)
-  SET(HaveOCCI 1)
-else()
-  SET(HaveOCCI 0)
-endif()
+#find_library(LOCCI_SUPPORT NAMES occi)
+#if(LOCCI_SUPPORT)
+#  message("LOCCI XXXXXXXXXXXXXXXXXXXXXX")
+#  SET(HaveOCCI 1)
+#else()
+#  message("LOCCI NOOOOOOOOOOOOOOOOOOOOO")
+#  SET(HaveOCCI 0)
+#endif()
 
 # configure a header file to pass some of the CMake settings
 # to the source code
 configure_file ("${PROJECT_SOURCE_DIR}/source/include/Version.h.in" "${PROJECT_BINARY_DIR}/Version.h")
-configure_file ("${PROJECT_SOURCE_DIR}/source/include/HaveOCCI.h.in" "${PROJECT_BINARY_DIR}/HaveOCCI.h") 
+#configure_file ("${PROJECT_SOURCE_DIR}/source/include/HaveOCCI.h.in" "${PROJECT_BINARY_DIR}/HaveOCCI.h") 
+#add_definitions(-DOCCI_SUPPORT )
 # add the binary tree to the search path for include files
 include_directories("${PROJECT_BINARY_DIR}")
 

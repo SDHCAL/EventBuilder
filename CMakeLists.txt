@@ -32,10 +32,13 @@ if(LOCCI_SUPPORT)
   message("LOCCI found")
   SET(HaveOCCI 1)
   SET(GCC_COVERAGE_LINK_FLAGS "-locci -lclntsh -lnnz12 -g0")
+  add_definitions(-DOCCI_SUPPORT)
 else()
   message("No LOCCI support")
   SET(HaveOCCI 0)
 endif()
+
+
 
 SET (CMAKE_SHARED_LINKER_FLAGS "${GCC_COVERAGE_LINK_FLAGS}")
 SET(CMAKE_EXE_LINKER_FLAGS  "${GCC_COVERAGE_LINK_FLAGS}" )
