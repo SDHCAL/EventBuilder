@@ -1,7 +1,5 @@
 /build
 /lib
-/foo
 *.slcio
 *.root
-/NoSplit
-/Split
+/bin
