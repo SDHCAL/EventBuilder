@@ -172,7 +172,7 @@ void HistoPlane::WriteAll(int NbrPlatee,std::string namepdf)
 void HistoPlane::Save(TFile* file,std::string namepdf)
 {
     TH1F* ugly=new TH1F("ugly","ugly",1,0,1);
-    ugly->Fill(0.5,1/(global_total_time*2e-7));
+    ugly->Fill(0.5,global_total_time*200e-9);
     ugly->Write();
     delete ugly;
     std::string plate="Plate "+ patch::to_string(NbrPlatee+1);

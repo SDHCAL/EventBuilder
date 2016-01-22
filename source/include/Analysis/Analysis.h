@@ -16,6 +16,119 @@
 
 enum Threshold{Threshold_2=1,Threshold_1,Threshold_3};
 class plan;
+
+
+class geometryplan
+{
+  public:
+  geometryplan(){};
+  ~geometryplan(){};
+  geometryplan(int numeroPlan,float x ,float y,float z,float xy, float xz, float yz, int type,double _Ip,double _Im, double _Jp, double _Jm) : Nbr(numeroPlan),X0(x),Y0(y),Z0(z),XY(xy),XZ(xz),YZ(yz),Type(type),Ip(_Ip),Im(_Im),Jp(_Jp),Jm(_Jm)
+  {
+        ca=cos(xy*degtorad);
+        sa=sin(xy*degtorad);
+        cb=cos(xz*degtorad);
+        sb=sin(xz*degtorad);
+        cg=cos(yz*degtorad);
+        sg=sin(yz*degtorad);
+          /*****************************/
+        /* Xexp=pxz0+pxz1*Zexp
+           Yexp = pyz0+pyz1*Zexp
+           Zexp=Zexp
+           (xnorm,ynorm,znorm).(Xexp-X0,Yexp-Y0,Zexp-z0)=0
+        */
+        xnorm=sg*sa+cg*sb*ca;
+        ynorm=-cg*sa+sg*sb*ca;
+        znorm=cb*ca;
+        xi=cg*cb;
+        yi=sg*cb;
+        zi=-sb;
+        xj=-sg*ca+cg*sb*sa;
+        yj=cg*ca+sg*sb*sa;
+        zj=cb*sa;
+    }
+    inline float GetZexp(const double & pxz0,const double & pyz0,const double & pxz1,const double& pyz1)
+    {
+        return (xnorm*(pxz0-X0)+ynorm*(pyz0-Y0)+znorm*Z0)/(xnorm*pxz1+ynorm*pyz1+znorm);
+    }
+    inline float GetProjectioni(const double & Xexp,const double & Yexp,const double & Zexp)
+    {
+        return (Xexp-X0)*xi+(Yexp-Y0)*yi+(Zexp-Z0)*zi;
+    }
+    inline float GetProjectionj(const double & Xexp,const double & Yexp,const double & Zexp)
+    {
+        return (Xexp-X0)*xj+(Yexp-Y0)*yj+(Zexp-Z0)*zj;
+    }
+       inline float get_ca(){return ca;};
+    inline float get_sa(){return sa;};
+    inline float get_cb(){return cb;};
+    inline float get_sb(){return sb;};
+    inline float get_cg(){return cg;};
+    inline float get_sg(){return sg;};
+    inline float get_X0(){return X0;};
+    inline float get_Y0(){return Y0;};
+    inline float get_Z0(){return Z0;};
+     inline int NbrPlate()
+    {
+        return Nbr;
+    }
+    inline float GetXY()
+    {
+        return XY;
+    }
+    inline float GetXZ()
+    {
+        return XZ;
+    }
+    inline float GetYZ()
+    {
+        return YZ;
+    }
+    inline float GetX0()
+    {
+        return X0;
+    }
+    inline float GetY0()
+    {
+        return Y0;
+    }
+    inline float GetZ0()
+    {
+        return Z0;
+    }
+    inline int GetType()
+    {
+        return Type;
+    }
+    inline double GetIp()
+    {
+        return Ip;
+    }
+    inline double GetIm()
+    {
+        return Im;
+    }
+    inline double GetJp()
+    {
+        return Jp;
+    }
+    inline double GetJm()
+    {
+        return Jm;
+    }
+    private:
+    int  Nbr;
+    float X0,Y0,Z0,XY,XZ,YZ,xnorm,ynorm,znorm,xi,yi,zi,xj,yj,zj,ca,sa,cb,sb,cg,sg;
+    int Type;
+    double Ip;
+    double Im;
+    double Jp;
+    double Jm;
+
+};
+
+
+
 class testedPlan
 {
 public:
@@ -372,9 +485,11 @@ std::map<std::string,std::array<std::map<std::vector<int>,std::vector<int>>,6>>E
 //std::array<std::map<std::vector<int>,std::vector<int>>,6>Efficiency_per_padScinti;
 //std::array<std::map<std::vector<int>,std::vector<int>>,6>Efficiency_per_pad;
 double _Chi2;
+double _Chi2Rate;
 int _ShortEfficiency;
 int _NbrHitPerPlaneMax ;
 int _NbrPlaneUseForTracking ;
+int _NbrPlaneUseForTrackingRate ;
 double _dlimforPad;
 int _NbrRun;
 double _dlimforStrip;
@@ -407,6 +522,7 @@ protected:
     Geometry geom;
     std::string _ReaderType;
     std::map<std::string,std::map<int,plan>>Planss;
+    std::map<int,geometryplan> geometryplans;
     //std::map<int,plan>Plans;
     //std::map<int,plan>PlansScintillator;
     std::vector<testedPlan> testedPlanList;

@@ -45,6 +45,9 @@
 #define size_pad 10.4125
 #define size_strip 2.5
 #define degtorad 0.0174532925
+using namespace std;
+using namespace oracle::occi;
+
 std::vector<std::vector<std::array<int,4>>>useforrealrate;
 std::map<std::string,std::vector<std::vector<TH1F*>>>Short_Efficiency;
 std::map<std::string,std::vector<std::vector<TH1F*>>>Short_Multiplicity;
@@ -52,17 +55,16 @@ std::map<std::string,unsigned int>Numbers;
 unsigned int SumCombinaison(int n,int kmin)
 {
   unsigned int sumcomb=0;
-  for(unsigned int i=kmin;i<=n;++i) sumcomb=TMath::Binomial(n,i);
+  for(unsigned int i=kmin;i<=n;++i) sumcomb+=TMath::Binomial(n,i);
   return sumcomb;
 }
 
-using namespace oracle::occi;
-
 class ToTreee
 {
-public:
-double ChiXZ, ChiYZ, CDXZ, CDYZ, OrdXZ, OrdYZ;
+  public:
+  double ChiXZ, ChiYZ, CDXZ, CDYZ, OrdXZ, OrdYZ;
 };
+
 ToTreee totreee;
 TTree* tt= new TTree("Tree", "Tree");
 TBranch* Branch1 =  tt->Branch("ChiXZ",&(totreee.ChiXZ));
@@ -73,7 +75,6 @@ TBranch* Branch5 =  tt->Branch("OrdXZ",&(totreee.OrdXZ));
 TBranch* Branch6 =  tt->Branch("OrdYZ",&(totreee.OrdYZ));
 
 
-using namespace std;
 std::vector<TGraphErrors>xzaxis;
 std::map<int,int long>RealNumberPlane;
 std::vector<TGraphErrors>yzaxis;
@@ -87,142 +88,252 @@ std::array<std::map<std::string,std::vector<TH2F*>>,6>Efficiency_asics;
 std::map<std::string,std::vector<TH1F*>>HowLongFromExpectedX;
 std::map<std::string,std::vector<TH1F*>>HowLongFromExpectedY;
 std::map<std::string,std::vector<TH2D*>>difxy;
+std::map<int,TH1D*> estimateur;
+std::map<int,TH1D*> estimateur2;
+std::map<int,std::map<int,TH2F*>> Nbrviewedtracks;
+std::map<int,std::map<int,TH2F*>> eff;
+std::map<int,std::map<int,TH2F*>> effsquared;
+std::map<int,std::map<int,TH2F*>> estimatedrate;
+std::map<int,TH1D*> estimateurmax;
+std::map<int,TH1D*> rate;
 std::map<std::string,std::vector<TH1D*>>difr;
 std::array<std::map<std::string,std::vector<TH2F*>>,3>ThresholdMap;
 std::map<std::string,std::vector<TH2F*>>Gain;
-std::map<int,TH2F*>RealRateWithSelectedZone;
+std::map<int,std::map<int,TH2F*>>RealRateWithSelectedZone;
+std::map<int,std::map<int,TH2F*>>RealRateWithSelectedZonemin;
 std::map<int,TH2F*>EfficacityVsRate;
 std::map<std::string,TGraph2D*> Distribution_exp_tgraph;
 std::map<std::string,std::vector<TH2F*>>Distribution_exp;
 std::map<std::string,TGraph2D*> Distribution_hits_tgraph;
 std::vector<std::string>Maketracks{"SDHCAL_HIT","SDHCAL_HIT_SC"};
 std::vector<std::string>Makeeffi{"NOISE_ESTIMATION_BEFORE","NOISE_ESTIMATION_AFTER"};
+
 void AnalysisProcessor::PrintStatShort(std::string name)
 {
-    static std::map<std::string,std::string>Mess;
-    for(unsigned int i=0;i!=_hcalCollections.size();++i)Mess[_hcalCollections[i]]="List of counters "+ _hcalCollections[i]+" : ";
-    ofstream fichier;
-    for(unsigned int hhh=0;hhh!=Thresholds_name.size();++hhh)
-    {
+  static std::map<std::string,std::string>Mess;
+  for(unsigned int i=0;i!=_hcalCollections.size();++i)Mess[_hcalCollections[i]]="List of counters "+ _hcalCollections[i]+" : ";
+  ofstream fichier;
+  for(unsigned int hhh=0;hhh!=Thresholds_name.size();++hhh)
+  {
     std::string namee="ResultsShorts"+std::to_string((long long int)_NbrRun);
     namee+="_"+name+"_";
     namee+=Thresholds_name[hhh];
     namee+=".txt";
     fichier.open(namee.c_str(), ios::out | ios::app);  //déclaration du flux et ouverture du fichier
-    if(fichier) { // si l'ouverture a réussi
-        fichier<<_NbrRun<<"   ";
-        for(unsigned int i=0; i!=testedPlanList.size(); ++i)
-        {
-          
-              if(isfinite(testedPlanList[i].efficiencyShort(hhh,name)))Short_Efficiency[name][i][hhh]->Fill(Numbers[name],testedPlanList[i].efficiencyShort(hhh,name));
-
-              if(isfinite(testedPlanList[i].multiplicityShort(hhh,name)))Short_Multiplicity[name][i][hhh]->Fill(Numbers[name],testedPlanList[i].multiplicityShort(hhh,name));
-          
-           
-            fichier<<testedPlanList[i].efficiencyShort(hhh,name)<<" "<<sqrt(testedPlanList[i].GetNumberOKShort(hhh,name)*testedPlanList[i].efficiencyShort(hhh,name)*(1-testedPlanList[i].efficiencyShort(hhh,name)))*1.0/testedPlanList[i].GetNumberOKShort(hhh,name)<<" "<<testedPlanList[i].multiplicityShort(hhh,name)<<" 0 "<<"  ";
-        }
-        fichier<<std::endl;
-          // on referme le fichier
-    }
-    fichier.close();
-    }
-    for(unsigned int hhh=0;hhh!=Thresholds_name.size();++hhh)
-    {
-
-      if(hhh==0)std::cout<<Mess[name]<<std::endl;
-      std::cout<<"Run Number : "<<_NbrRun<<" Thresholds "<<Thresholds_name[hhh]<<std::endl;
+    if(fichier) 
+    { // si l'ouverture a réussi
+      fichier<<_NbrRun<<"   ";
       for(unsigned int i=0; i!=testedPlanList.size(); ++i)
       {
-      std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanList[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanList[i].efficiency(hhh,name)<<" Error : "<<setw(6)<<sqrt(testedPlanList[i].GetNumberOK(hhh,name)*testedPlanList[i].efficiency(hhh,name)*(1-testedPlanList[i].efficiency(hhh,name)))*1.0/testedPlanList[i].GetNumberOK(hhh,name)<<" Multiplicity : "<<setw(6)<<testedPlanList[i].multiplicity(hhh,name)<<normal<<std::endl;
+        if(isfinite(testedPlanList[i].efficiencyShort(hhh,name)))Short_Efficiency[name][i][hhh]->Fill(Numbers[name],testedPlanList[i].efficiencyShort(hhh,name));
+        if(isfinite(testedPlanList[i].multiplicityShort(hhh,name)))Short_Multiplicity[name][i][hhh]->Fill(Numbers[name],testedPlanList[i].multiplicityShort(hhh,name));
+        fichier<<testedPlanList[i].efficiencyShort(hhh,name)<<" "<<sqrt(testedPlanList[i].GetNumberOKShort(hhh,name)*testedPlanList[i].efficiencyShort(hhh,name)*(1-testedPlanList[i].efficiencyShort(hhh,name)))*1.0/testedPlanList[i].GetNumberOKShort(hhh,name)<<" "<<testedPlanList[i].multiplicityShort(hhh,name)<<" 0 "<<"  ";
       }
+      fichier<<std::endl;
+    }
+    fichier.close();
+  }
+  for(unsigned int hhh=0;hhh!=Thresholds_name.size();++hhh)
+  {
+    if(hhh==0)std::cout<<Mess[name]<<std::endl;
+    std::cout<<"Run Number : "<<_NbrRun<<" Thresholds "<<Thresholds_name[hhh]<<std::endl;
+    for(unsigned int i=0; i!=testedPlanList.size(); ++i)
+    {
+      std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanList[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanList[i].efficiency(hhh,name)<<" Error : "<<setw(6)<<sqrt(testedPlanList[i].GetNumberOK(hhh,name)*testedPlanList[i].efficiency(hhh,name)*(1-testedPlanList[i].efficiency(hhh,name)))*1.0/testedPlanList[i].GetNumberOK(hhh,name)<<" Multiplicity : "<<setw(6)<<testedPlanList[i].multiplicity(hhh,name)<<normal<<std::endl;
+    }
   }
 }
 
 std::array<double,6> plan::countHitAt(double& x, double& y, double dlim,int Iexpected,int Jexpected,int Kexpected,double Imax,double Imin,double Jmax,double Jmin,std::string type)
 {
-    static std::map<std::string,unsigned int>Number_hits;
-    std::array<double,6>Threshold_Counters;
-    for(unsigned int i=0;i!=Threshold_Counters.size();++i)Threshold_Counters[i]=0;
-    std::vector<int>IJKexpected={Iexpected,Jexpected,Kexpected};
-    std::vector<CalorimeterHit*>Hits=GetHits(type);
-      for (std::vector<CalorimeterHit*>::iterator it=Hits.begin(); it!=Hits.end(); ++it)
+  static std::map<std::string,unsigned int>Number_hits;
+  std::array<double,6>Threshold_Counters;
+  for(unsigned int i=0;i!=Threshold_Counters.size();++i)Threshold_Counters[i]=0;
+  std::vector<int>IJKexpected={Iexpected,Jexpected,Kexpected};
+  std::vector<CalorimeterHit*>Hits=GetHits(type);
+  for (std::vector<CalorimeterHit*>::iterator it=Hits.begin(); it!=Hits.end(); ++it)
+  {
+    CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
+    difxy[type][cd(*it)["K"]-1]->Fill(x-(*it)->getPosition()[0],y-(*it)->getPosition()[1]);
+    difr[type][cd(*it)["K"]-1]->Fill(sqrt((x-(*it)->getPosition()[0])*(x-(*it)->getPosition()[0])+(y-(*it)->getPosition()[1])*(y-(*it)->getPosition()[1])));
+    if(fabs(x-(*it)->getPosition()[0])<dlim&&fabs(y-(*it)->getPosition()[1])<dlim)
+    {
+      Number_hits[type]++;
+      int Threshold_Hit=(*it)->getEnergy();
+      if(Threshold_Hit==Threshold_3)
       {
-        CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
-        difxy[type][cd(*it)["K"]-1]->Fill(x-(*it)->getPosition()[0],y-(*it)->getPosition()[1]);
-        difr[type][cd(*it)["K"]-1]->Fill(sqrt((x-(*it)->getPosition()[0])*(x-(*it)->getPosition()[0])+(y-(*it)->getPosition()[1])*(y-(*it)->getPosition()[1])));
-        if(fabs(x-(*it)->getPosition()[0])<dlim&&fabs(y-(*it)->getPosition()[1])<dlim)
-        {
-          Number_hits[type]++;
-          int Threshold_Hit=(*it)->getEnergy();
-          if(Threshold_Hit==Threshold_3)
-          {
-            Threshold_Counters[Threshold3]++;
-            Threshold_Counters[Threshold23]++;
-            Threshold_Counters[Thresholdall]++;
-          }
-          else if(Threshold_Hit==Threshold_2)
-          {
-            Threshold_Counters[Threshold2]++;
-            Threshold_Counters[Threshold12]++;
-            Threshold_Counters[Threshold23]++;
-            Threshold_Counters[Thresholdall]++;
-          }
-          else if(Threshold_Hit==Threshold_1)
-          {
-            Threshold_Counters[Threshold1]++;
-            Threshold_Counters[Threshold12]++;
-            Threshold_Counters[Thresholdall]++;
-          }
-          Distribution_hits[type][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
-          Distribution_hits_tgraph[type]->SetPoint(Number_hits[type],(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
-          HowLongFromExpectedX[type][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
-          HowLongFromExpectedY[type][cd(*it)["K"]-1]->Fill((*it)->getPosition()[1]-y);
-        }
-    }
-   
-      for(int i=0;i!=Threshold_Counters.size();++i)
-      {
-        Efficiency_per_pad[type][i][IJKexpected].push_back(Threshold_Counters[i]);
+        Threshold_Counters[Threshold3]++;
+        Threshold_Counters[Threshold23]++;
+        Threshold_Counters[Thresholdall]++;
       }
-    
-    return Threshold_Counters;
+      else if(Threshold_Hit==Threshold_2)
+      {
+        Threshold_Counters[Threshold2]++;
+        Threshold_Counters[Threshold12]++;
+        Threshold_Counters[Threshold23]++;
+        Threshold_Counters[Thresholdall]++;
+      }
+      else if(Threshold_Hit==Threshold_1)
+      {
+        Threshold_Counters[Threshold1]++;
+        Threshold_Counters[Threshold12]++;
+        Threshold_Counters[Thresholdall]++;
+      }
+      Distribution_hits[type][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
+      Distribution_hits_tgraph[type]->SetPoint(Number_hits[type],(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
+      HowLongFromExpectedX[type][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
+      HowLongFromExpectedY[type][cd(*it)["K"]-1]->Fill((*it)->getPosition()[1]-y);
+    }
+  }
+  for(int i=0;i!=Threshold_Counters.size();++i)
+  {
+    Efficiency_per_pad[type][i][IJKexpected].push_back(Threshold_Counters[i]);
+  }
+  return Threshold_Counters;
 }
+
 std::map<std::string,int> plan::countHitAtStrip(double& x, double dlim,std::string type)
 {
-    std::array<double,6>Threshold_Counters;
-    for(unsigned int i=0;i!=Threshold_Counters.size();++i)Threshold_Counters[i]=0;
-    //std::vector<int>IJKexpected={Iexpected,Jexpected,Kexpected};
-    std::vector<CalorimeterHit*>Hits=GetHits(type);
-    std::map<std::string,int>N;
-    N.clear();
-    static std::map<std::string,unsigned int>Number_hits;
-   
-      CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
-      for (std::vector<CalorimeterHit*>::iterator it=Hits.begin(); it!= Hits.end(); ++it) 
+  std::array<double,6>Threshold_Counters;
+  for(unsigned int i=0;i!=Threshold_Counters.size();++i)Threshold_Counters[i]=0;
+  //std::vector<int>IJKexpected={Iexpected,Jexpected,Kexpected};
+  std::vector<CalorimeterHit*>Hits=GetHits(type);
+  std::map<std::string,int>N;
+  N.clear();
+  static std::map<std::string,unsigned int>Number_hits;
+  CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
+  for (std::vector<CalorimeterHit*>::iterator it=Hits.begin(); it!= Hits.end(); ++it) 
+  {
+    if(fabs(x-(*it)->getPosition()[0])<dlim) 
+    {
+      N[type]++;
+      Number_hits[type]++;
+      Distribution_hits[type][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
+      Distribution_hits_tgraph[type]->SetPoint(Number_hits[type],(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
+      HowLongFromExpectedX[type][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
+      HowLongFromExpectedY[type][cd(*it)["K"]-1]->Fill(0);
+    }
+  }
+  return N;  
+}
+
+void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,std::map<int,geometryplan> geometryplans,std::vector<std::vector<std::array<int,4>>>& useforrealrate)
+{
+  double NbrPlateTotal=geom.GetNumberPlates();
+  for(std::map<std::string,std::map<int,plan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
+  {
+    std::vector<std::array<int,4>>XYZExpected;
+    bool Doit=false;
+    for(unsigned int mm=0;mm!=Maketracks.size();++mm)
+    {
+      if(itt->first!=Maketracks[mm]) continue;
+      else Doit=true;
+    }
+    if(Doit==true)
+    {
+      std::vector<plan*> plansUsedForTrackMaking;
+      std::vector<int>PlaneNbr;
+      std::vector<int>othersNbr;
+      for (std::map<int,plan>::iterator it=mapDIFplan[itt->first].begin(); it!=mapDIFplan[itt->first].end(); ++it)
       {
-        if(fabs(x-(*it)->getPosition()[0])<dlim) 
+        plansUsedForTrackMaking.push_back(&(it->second));
+        PlaneNbr.push_back(it->first);
+      }
+      for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((*it)->nHits(itt->first)>=_NbrHitPerPlaneMax ) return;
+      if(plansUsedForTrackMaking.size()<_NbrPlaneUseForTrackingRate) return;
+      for(unsigned int i=0;i!=NbrPlateTotal-1;++i)
+      {
+        int notinPlanNbr=1;
+        for(unsigned int j=0;j!=PlaneNbr.size();++j)
         {
-            N[type]++;
-            Number_hits[type]++;
-            Distribution_hits[type][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
-            Distribution_hits_tgraph[type]->SetPoint(Number_hits[type],(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
-            HowLongFromExpectedX[type][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
-            HowLongFromExpectedY[type][cd(*it)["K"]-1]->Fill(0);
+          if(PlaneNbr[j]==i) 
+          {
+            notinPlanNbr=0;
+          }
+        }
+        if(notinPlanNbr==1)
+        {
+          othersNbr.push_back(i);
+          //std::cout<<yellow<<i<<normal<<std::endl;
         }
       }
-    return N;  
+      TGraphErrors grxz(plansUsedForTrackMaking.size());
+      TGraphErrors gryz(plansUsedForTrackMaking.size());
+      for (unsigned int i=0; i < plansUsedForTrackMaking.size(); ++i)
+      {
+        plan &p=*(plansUsedForTrackMaking[i]);
+        p.computeBarycentre(itt->first);
+        double ca=geometryplans[PlaneNbr[i]].get_ca();
+        double sa=geometryplans[PlaneNbr[i]].get_sa();
+        double cb=geometryplans[PlaneNbr[i]].get_cb();
+        double sb=geometryplans[PlaneNbr[i]].get_sb();
+        double cg=geometryplans[PlaneNbr[i]].get_cg();
+        double sg=geometryplans[PlaneNbr[i]].get_sg();
+        int istouched=1;
+        double I=cg*cb*1.0/size_pad*(p.barycentreX(itt->first)-geometryplans[PlaneNbr[i]].get_X0())+sg*cb*1.0/size_pad*(p.barycentreY(itt->first)-geometryplans[PlaneNbr[i]].get_Y0())+-sb*geometryplans[PlaneNbr[i]].get_Z0();
+        double J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(p.barycentreX(itt->first)-geometryplans[PlaneNbr[i]].get_X0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(p.barycentreY(itt->first)-geometryplans[PlaneNbr[i]].get_Y0())+cb*sa*geometryplans[PlaneNbr[i]].get_Z0();
+        int K=geometryplans[PlaneNbr[i]].NbrPlate();
+       //std::cout<<green<<"  "<<"  "<<"  "<<I<<"  "<<J<<"  "<<K<<"  "<<int(ceil(I))<<"  "<<int(ceil(J))<<"  "<<istouched<<normal<<std::endl;
+        XYZExpected.push_back({int(ceil(I)),int(ceil(J)),K,istouched});
+        p.computeMaxima(itt->first);
+        grxz.SetPoint(i,p.barycentreZ(itt->first),p.barycentreX(itt->first));
+        if(p.GetType()==pad)
+        {
+            gryz.SetPoint(i,p.barycentreZ(itt->first),p.barycentreY(itt->first));
+            gryz.SetPointError(i,p.ErrorZ(),p.ErrorY());
+        }
+        grxz.SetPointError(i,p.ErrorZ(),p.ErrorX());
+      }
+      grxz.Fit("pol1","QRO","",-50000.0,50000.0);
+      TF1 *myfitxz = (TF1*) grxz.GetFunction("pol1");
+      double  kxz = myfitxz->GetChisquare();
+      if (kxz>= _Chi2Rate) return;
+      double pxz0 = myfitxz->GetParameter(0);
+      double  pxz1 = myfitxz->GetParameter(1);
+      gryz.Fit("pol1","QRO","",-50000.0,50000.0);
+      TF1 *myfityz = (TF1*) gryz.GetFunction("pol1");
+      double  kyz = myfityz->GetChisquare();
+      if (kyz>= _Chi2Rate) return;
+      double pyz0 = myfityz->GetParameter(0);
+      double  pyz1 = myfityz->GetParameter(1);
+      
+      for (unsigned int i=0; i < othersNbr.size(); ++i)
+      {
+        int istouched=0;
+        double ca=geometryplans[othersNbr[i]].get_ca();
+        double sa=geometryplans[othersNbr[i]].get_sa();
+        double cb=geometryplans[othersNbr[i]].get_cb();
+        double sb=geometryplans[othersNbr[i]].get_sb();
+        double cg=geometryplans[othersNbr[i]].get_cg();
+        double sg=geometryplans[othersNbr[i]].get_sg();
+        double Zexpp=geometryplans[othersNbr[i]].GetZexp(pxz0,pyz0,pxz1,pyz1);
+        double iexp=geometryplans[othersNbr[i]].GetProjectioni(pxz0+pxz1*Zexpp,pyz0+pyz1*Zexpp,Zexpp);
+        double jexp=geometryplans[othersNbr[i]].GetProjectionj(pxz0+pxz1*Zexpp,pyz0+pyz1*Zexpp,Zexpp);
+        double I=cg*cb*1.0/size_pad*(iexp-geometryplans[othersNbr[i]].get_X0())+sg*cb*1.0/size_pad*(jexp-geometryplans[othersNbr[i]].get_Y0())+-sb*geometryplans[othersNbr[i]].get_Z0();
+        double J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(iexp-geometryplans[othersNbr[i]].get_X0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(jexp-geometryplans[othersNbr[i]].get_Y0())+cb*sa*geometryplans[othersNbr[i]].get_Z0();
+        int K=geometryplans[othersNbr[i]].NbrPlate();
+       //std::cout<<red<<Zexpp<<"  "<<"  "<<"  "<<I<<"  "<<J<<"  "<<K<<"  "<<int(ceil(I))<<"  "<<int(ceil(J))<<"  "<<istouched<<normal<<std::endl;
+        XYZExpected.push_back({int(ceil(I)),int(ceil(J)),K,istouched});
+      }
+    delete myfityz;
+    delete myfitxz;
+    }
+    if(itt->first=="SDHCAL_HIT")useforrealrate.push_back(XYZExpected);
+    //std::cout<<magenta<<useforrealrate.size()<<normal<<std::endl;
+  }
 }
 
 void plan::computeBarycentre(std::string name)
 {
     for (int i=0; i<3; i++) barycentre[name][i]=0;
-    for (std::vector<CalorimeterHit*>::iterator it=hits[name].begin(); it!=hits[name].end(); ++it) {
-        for (int i=0; i<3; i++) {
+    for (std::vector<CalorimeterHit*>::iterator it=hits[name].begin(); it!=hits[name].end(); ++it) 
+    {
+        for (int i=0; i<3; i++) 
+        {
             barycentre[name][i]+=(*it)->getPosition()[i];
         }
     }
-    if (nHits(name) != 0)
-        for (int i=0; i<3; i++) barycentre[name][i]/=nHits(name);
+    if (nHits(name) != 0) for (int i=0; i<3; i++) barycentre[name][i]/=nHits(name);
 }
 
 void plan::computeMaxima(std::string name)
@@ -232,26 +343,28 @@ void plan::computeMaxima(std::string name)
         min[name][i]=10000000;
         max[name][i]=-10000000;
     }
-    for (std::vector<CalorimeterHit*>::iterator it=hits[name].begin(); it!=hits[name].end(); ++it) {
-        for (int i=0; i<3; i++) {
-            if((*it)->getPosition()[i]<min[name][i])min[name][i]=(*it)->getPosition()[i];
-            if((*it)->getPosition()[i]>max[name][i])max[name][i]=(*it)->getPosition()[i];
-        }
+    for(std::vector<CalorimeterHit*>::iterator it=hits[name].begin(); it!=hits[name].end(); ++it) 
+    {
+      for (int i=0; i<3; i++) 
+      {
+        if((*it)->getPosition()[i]<min[name][i])min[name][i]=(*it)->getPosition()[i];
+        if((*it)->getPosition()[i]>max[name][i])max[name][i]=(*it)->getPosition()[i];
+      }
     }
 }
 
 void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,std::vector<testedPlan>& tested)
 {
-    for(std::map<std::string,std::map<int,plan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
+  for(std::map<std::string,std::map<int,plan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
+  {
+    bool Doit=false;
+    for(unsigned int mm=0;mm!=Maketracks.size();++mm)
     {
-      bool Doit=false;
-      for(unsigned int mm=0;mm!=Maketracks.size();++mm)
-      {
-        if(itt->first!=Maketracks[mm]) continue;
-        else Doit=true;
-      }
-      if(Doit==true)
-      {
+      if(itt->first!=Maketracks[mm]) continue;
+      else Doit=true;
+    }
+    if(Doit==true)
+    {
       std::vector<std::string>ToComputeEffi=Makeeffi;
       ToComputeEffi.push_back(itt->first);
       //std::cout<<itt->first<<std::endl;
@@ -263,8 +376,11 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
       {
         if (Nbr!=it->first) 
         {
+          if((it->second).nHits(itt->first)>0)//Verify is hits are present
+          {
             plansUsedForTrackMaking.push_back(&(it->second));
             PlaneNbr.push_back(it->first);
+          }
         }
         else thisPlan=&(it->second);
       }
@@ -283,8 +399,8 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
         grxz.SetPoint(i,p.barycentreZ(itt->first),p.barycentreX(itt->first));
         if(p.GetType()==pad)
         {
-            gryz.SetPoint(i,p.barycentreZ(itt->first),p.barycentreY(itt->first));
-            gryz.SetPointError(i,p.ErrorZ(),p.ErrorY());
+          gryz.SetPoint(i,p.barycentreZ(itt->first),p.barycentreY(itt->first));
+          gryz.SetPointError(i,p.ErrorZ(),p.ErrorY());
         }
         grxz.SetPointError(i,p.ErrorZ(),p.ErrorX());
       }
@@ -304,36 +420,19 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
       double  pyz1 = myfityz->GetParameter(1);
       for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][YZTRACKFITPASSED]++;
       double Zexp=this->GetZexp(pxz0,pyz0,pxz1,pyz1);
-      xzaxis.push_back(grxz);
-      yzaxis.push_back(gryz);
+      //xzaxis.push_back(grxz);
+      //yzaxis.push_back(gryz);
       ///////////////////////////////
       //double Xexp = pxz0+pxz1*Zexp;
       //double Yexp = pyz0+pyz1*Zexp;
       ///////////////////////////////
       double Projectioni=GetProjectioni(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
       double Projectionj=GetProjectionj(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
-   
-    
-    bool Pass;
-    if(Delimiter.size()==0)Pass=1;
-    else Pass=Projectioni<=this->GetIp()&&Projectioni>=this->GetIm()&&Projectionj<=this->GetJp()&&Projectionj>=this->GetJm();
-    if(Pass)
-    {
-        std::vector<std::array<int,4>>XYZExpected;
-        for (unsigned int i=0; i < tested.size(); ++i)
-        {
-            int istouched=0;
-            for(unsigned int j=0; j < PlaneNbr.size(); ++j) if(PlaneNbr[j]==tested[i].NbrPlate()) istouched=1;             
-            double Zexpp=tested[i].GetZexp(pxz0,pyz0,pxz1,pyz1);
-            double iexp=tested[i].GetProjectioni(pxz0+pxz1*Zexpp,pyz0+pyz1*Zexpp,Zexpp);
-            double jexp=tested[i].GetProjectionj(pxz0+pxz1*Zexpp,pyz0+pyz1*Zexpp,Zexpp);
-            double I=cg*cb*1.0/size_pad*(iexp-tested[i].get_X0())+sg*cb*1.0/size_pad*(jexp-tested[i].get_Y0())+-sb*tested[i].get_Z0();
-        	double J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(iexp-tested[i].get_X0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(jexp-tested[i].get_Y0())+cb*sa*tested[i].get_Z0();
-        	int K=tested[i].NbrPlate();
-          //  std::cout<<green<<Zexpp<<"  "<<iexp<<"  "<<jexp<<"  "<<I<<"  "<<J<<"  "<<K<<"  "<<int(ceil(I))<<"  "<<int(ceil(J))<<"  "<<istouched<<normal<<std::endl;
-            XYZExpected.push_back({int(ceil(I)),int(ceil(J)),K,istouched});
-        }
-        useforrealrate.push_back(XYZExpected);
+      bool Pass;
+      if(Delimiter.size()==0)Pass=1;
+      else Pass=Projectioni<=this->GetIp()&&Projectioni>=this->GetIm()&&Projectionj<=this->GetJp()&&Projectionj>=this->GetJm();
+      if(Pass)
+      {
         //std::cout<<std::endl;
         for(unsigned int i=0;i!=ToComputeEffi.size();++i) nombreTests[ToComputeEffi[i]]++;
         //std::cout<<nombreTests[itt->first]<<"  "<<itt->first<<std::endl;
@@ -379,11 +478,11 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
               if (Thresholds[kk]>0)
 	            {
 		            nombreTestsOK[ToComputeEffi[i]][kk]++;
-		            std::cout<<ToComputeEffi[i]<<nombreTestsOK[ToComputeEffi[i]][kk]<<red<<this->GetNumberOK(kk,ToComputeEffi[i])<<normal<<std::endl;
+		            //std::cout<<ToComputeEffi[i]<<nombreTestsOK[ToComputeEffi[i]][kk]<<red<<this->GetNumberOK(kk,ToComputeEffi[i])<<normal<<std::endl;
 		            nombreTestsOKShort[ToComputeEffi[i]][kk]++;
 
                 sommeNombreHits[ToComputeEffi[i]][kk]+=Thresholds[kk];
-                std::cout<<ToComputeEffi[i]<<sommeNombreHits[ToComputeEffi[i]][kk]<<red<<this->GetNombreHits(kk,ToComputeEffi[i])<<normal<<std::endl;
+                //std::cout<<ToComputeEffi[i]<<sommeNombreHits[ToComputeEffi[i]][kk]<<red<<this->GetNombreHits(kk,ToComputeEffi[i])<<normal<<std::endl;
                 sommeNombreHitsShort[ToComputeEffi[i]][kk]+=Thresholds[kk];
   
               }
@@ -470,10 +569,14 @@ AnalysisProcessor::AnalysisProcessor() : Processor("AnalysisProcessorType")
     registerProcessorParameter("ReaderType","Type of the Reader needed to read InFileName",_ReaderType ,_ReaderType);
     _Chi2 = 1.0;
     registerProcessorParameter("Chi2" ,"Value of the Chi2  ",_Chi2 ,_Chi2);
+    _Chi2Rate = 1.0;
+    registerProcessorParameter("Chi2Rate" ,"Value of the Chi2 for Rate estimation  ",_Chi2Rate ,_Chi2Rate);
     _NbrHitPerPlaneMax = 6;
     registerProcessorParameter("NbrHitPerPlaneMax" ,"Maximal number of Hit in each Plane (<=6 by default)  ",_NbrHitPerPlaneMax ,_NbrHitPerPlaneMax);
     _NbrPlaneUseForTracking = 3;
     registerProcessorParameter("NbrPlaneUseForTracking" ,"Number minimal of PLanes used for tracking (>=3 by default)",_NbrPlaneUseForTracking,_NbrPlaneUseForTracking);
+    _NbrPlaneUseForTrackingRate = 3;
+    registerProcessorParameter("NbrPlaneUseForTrackingRate" ,"Number minimal of PLanes used for rate estimation (>=3 by default)",_NbrPlaneUseForTrackingRate,_NbrPlaneUseForTrackingRate);
     _dlimforPad=40;
     registerProcessorParameter("dlimforPad" ,"dlim for Pad ",_dlimforPad,_dlimforPad);
     _dlimforStrip=40;
@@ -531,30 +634,55 @@ void AnalysisProcessor::init()
       FillDelimiter(_Delimiters,PlansType.size(),Delimiter);
       for(std::map<int, int >::iterator it=PlansType.begin(); it!=PlansType.end(); ++it)
 	    {
+	      if(Delimiter.size()!=0)geometryplans[it->first]=geometryplan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second,Delimiter[it->first+1][1],Delimiter[it->first+1][0],Delimiter[it->first+1][3],Delimiter[it->first+1][2]);
+	      else geometryplans[it->first]=geometryplan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second,0,0,0,0);
 	      if(Delimiter.size()!=0) testedPlanList.push_back(testedPlan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second,Delimiter[it->first+1][1],Delimiter[it->first+1][0],Delimiter[it->first+1][3],Delimiter[it->first+1][2]));
         else testedPlanList.push_back(testedPlan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second,0,0,0,0));
-        std::string a="Distribution hit selectionner par analysis"+ std::to_string( (long long int) it->first +1 );
-        std::string b="Hit expected"+ std::to_string( (long long int) it->first +1 );
-        std::string c="Efficiency of the voisinage of the pad"+ std::to_string( (long long int) it->first +1 );
-        std::string d="Efficiency of the Asic"+ std::to_string( (long long int) it->first +1 );
-        std::string e="Distance to the expected hit in X "+ std::to_string( (long long int) it->first +1 );
-        std::string f="Distance to the expected hit in Y "+ std::to_string( (long long int) it->first +1 );
-        std::string g="Multiplicity of the voisinage of the pad "+ std::to_string( (long long int) it->first +1 );
-        std::string h="Threshold "+ std::to_string( (long long int) it->first +1 );
-        std::string hh="gain "+ std::to_string( (long long int) it->first +1 );
-        std::string ddd="Real_Rate_passing_the_selected_zone"+std::to_string( (long long int) it->first +1 );
-        std::string dddd="Real_Rate"+std::to_string( (long long int) it->first +1 );
-        int Taille_X=geom.GetSizeX(it->first)+1;
-        int Taille_Y=geom.GetSizeY(it->first)+1;
-        std::string ndifxy="difxy"+std::to_string( (long long int) it->first +1 );
-        std::string ndifr="difr"+std::to_string( (long long int) it->first +1 );
-        RealRateWithSelectedZone[it->first]=new TH2F(ddd.c_str(),ddd.c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y);
-        Gain[names[0]].push_back(new TH2F(hh.c_str(),hh.c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
+        std::string a="Distribution_hit_selectionner_par_analysis"+ std::to_string(it->first +1 );
+        std::string b="Hit_expected_"+ std::to_string(it->first +1 );
+        std::string c="Efficiency_of_the_voisinage_of_the_pad"+ std::to_string(it->first +1 );
+        std::string d="Efficiency_of_the Asic_"+ std::to_string(it->first +1 );
+        std::string e="Distance_to_the_expected_hit_in_X_"+ std::to_string(it->first +1 );
+        std::string f="Distance_to_the_expected_hit_in_Y_"+ std::to_string(it->first +1 );
+        std::string g="Multiplicity_of_the_voisinage_of_the_pad_"+ std::to_string(it->first +1 );
+        std::string h="Threshold_"+ std::to_string(it->first +1 );
+        std::string hh="gain_"+ std::to_string(it->first +1 );
+        
+        std::string estrate="Estimate_Rate_"+std::to_string(it->first +1 )+"_nbrplanetouched_";
+        std::string estrate2="Estimate_Rate_"+std::to_string(it->first +1 )+"_nbrplanetouched_min";
+        std::string nbrviewedd="Number_tracks_viewed_"+std::to_string(it->first +1 );
+        std::string efff="sum_effi_"+std::to_string(it->first +1 );
+        std::string effsq="sum_effi_squarred_"+std::to_string(it->first +1 );
+        std::string estimateurrmin="estimateur_min_"+std::to_string(it->first +1 );
+        std::string estimateurr="estimateur_"+std::to_string(it->first +1 );
+        std::string estimateurrr="estimateur_suposed_more_robust_"+std::to_string(it->first +1 );
+        int X=geom.GetSizeX(it->first)+1;
+        int Y=geom.GetSizeY(it->first)+1;
+        std::string ndifxy="difxy_"+std::to_string(it->first +1 );
+        std::string ndifr="difr_"+std::to_string( it->first +1 );
+        estimateurmax[it->first]=new TH1D(estimateurrmin.c_str(),estimateurrmin.c_str(),PlansType.size()+1-_NbrPlaneUseForTrackingRate,double(_NbrPlaneUseForTrackingRate),double(PlansType.size()+1));
+        estimateur[it->first]=new TH1D(estimateurr.c_str(),estimateurr.c_str(),PlansType.size()+1-_NbrPlaneUseForTrackingRate,double(_NbrPlaneUseForTrackingRate),double(PlansType.size()+1));
+        estimateur2[it->first]=new TH1D(estimateurrr.c_str(),estimateurrr.c_str(),PlansType.size()+1-_NbrPlaneUseForTrackingRate,double(_NbrPlaneUseForTrackingRate),double(PlansType.size()+1));
+        for(unsigned int Nbrplatetouched=_NbrPlaneUseForTrackingRate;Nbrplatetouched<=PlansType.size();++Nbrplatetouched)
+        {
+          std::string nbrplan=std::to_string(Nbrplatetouched);
+          std::string name1=estrate+"_"+nbrplan;
+          std::string name2=estrate2+"_"+nbrplan;
+          std::string name3=nbrviewedd+"_"+nbrplan;
+          std::string name4=efff+"_"+nbrplan;
+          std::string name5=effsq+"_"+nbrplan;
+          RealRateWithSelectedZone[it->first][Nbrplatetouched]=new TH2F(name1.c_str(),name1.c_str(),X,0,X,Y,0,Y);
+          RealRateWithSelectedZonemin[it->first][Nbrplatetouched]=new TH2F(name2.c_str(),name2.c_str(),X,0,X,Y,0,Y);
+          Nbrviewedtracks[it->first][Nbrplatetouched]=new TH2F(name3.c_str(),name3.c_str(),X,0,X,Y,0,Y);
+          eff[it->first][Nbrplatetouched]=new TH2F(name4.c_str(),name4.c_str(),X,0,X,Y,0,Y);
+          effsquared[it->first][Nbrplatetouched]=new TH2F(name5.c_str(),name5.c_str(),X,0,X,Y,0,Y);
+        }
+        Gain[names[0]].push_back(new TH2F(hh.c_str(),hh.c_str(),X,0,X,Y,0,Y));
         if(_Config_xml!="")
         {
           for(int j=0;j<ThresholdMap.size();++j)
           {
-            ThresholdMap[j]["SDHCAL_HIT"].push_back(new TH2F((h+"_"+Thresholds_name[j]).c_str(),(h+"_"+Thresholds_name[j]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
+            ThresholdMap[j]["SDHCAL_HIT"].push_back(new TH2F((h+"_"+Thresholds_name[j]).c_str(),(h+"_"+Thresholds_name[j]).c_str(),X,0,X,Y,0,Y));
           }
         }
         for(unsigned int i=0;i<names.size();++i)
@@ -569,9 +697,9 @@ void AnalysisProcessor::init()
             Distribution_exp[names[i]].push_back(new TH2F((b+names[i]).c_str(),(b+names[i]).c_str(),100,0,100,100,0,100));
             for(int j=0;j<Efficiency_pads.size();++j)
             {
-              Efficiency_pads[j][names[i]].push_back(new TH2F((c+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(c+names[i]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
-              Efficiency_asics[j][names[i]].push_back(new TH2F((d+names[i]+Thresholds_name[j]).c_str(),(d+names[i]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
-              Multiplicity_pads[j][names[i]].push_back(new TH2F((g+names[i]+Thresholds_name[j]).c_str(),(g+names[i]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
+              Efficiency_pads[j][names[i]].push_back(new TH2F((c+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(c+names[i]).c_str(),X,0,X,Y,0,Y));
+              Efficiency_asics[j][names[i]].push_back(new TH2F((d+names[i]+Thresholds_name[j]).c_str(),(d+names[i]).c_str(),X,0,X,Y,0,Y));
+              Multiplicity_pads[j][names[i]].push_back(new TH2F((g+names[i]+Thresholds_name[j]).c_str(),(g+names[i]).c_str(),X,0,X,Y,0,Y));
             }
 
 		        HowLongFromExpectedX[names[i]].push_back(new TH1F((e+names[i]).c_str(),(e+names[i]).c_str(),2*(_dlimforStrip),-_dlimforStrip,_dlimforStrip));
@@ -585,9 +713,9 @@ void AnalysisProcessor::init()
             Distribution_exp[names[i]].push_back(new TH2F((b+names[i]).c_str(),(b+names[i]).c_str(),100,0,100,100,0,100));
             for(int j=0;j<Efficiency_pads.size();++j)
             {
-            Efficiency_pads[j][names[i]].push_back(new TH2F((c+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(c+names[i]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
-            Efficiency_asics[j][names[i]].push_back(new TH2F((d+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(d+names[i]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
-            Multiplicity_pads[j][names[i]].push_back(new TH2F((g+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(g+names[i]).c_str(),Taille_X,0,Taille_X,Taille_Y,0,Taille_Y));
+            Efficiency_pads[j][names[i]].push_back(new TH2F((c+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(c+names[i]).c_str(),X,0,X,Y,0,Y));
+            Efficiency_asics[j][names[i]].push_back(new TH2F((d+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(d+names[i]).c_str(),X,0,X,Y,0,Y));
+            Multiplicity_pads[j][names[i]].push_back(new TH2F((g+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(g+names[i]).c_str(),X,0,X,Y,0,Y));
             }
             HowLongFromExpectedX[names[i]].push_back(new TH1F((e+names[i]).c_str(),(e+names[i]).c_str(),2*(_dlimforPad),-_dlimforPad,_dlimforPad));
             HowLongFromExpectedY[names[i]].push_back(new TH1F((f+names[i]).c_str(),(f+names[i]).c_str(),2*(_dlimforPad),-_dlimforPad,_dlimforPad));
@@ -660,10 +788,10 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 {
      
     _NbrRun=evtP->getRunNumber();
-   if(isFirstEvent()==true)
+ /*if(isFirstEvent()==true)
     { 
       DBInit::init();
-      RunInfo* r = RunInfo::getRunInfo(int(_NbrRun));
+    RunInfo* r = RunInfo::getRunInfo(int(_NbrRun));
       cout<<r->getStartTime()<<endl;  
       cout<<r->getStopTime()<<endl;
       cout<<r->getDescription()<<endl;
@@ -678,8 +806,8 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
       std::string str4=str.substr(found,found2-found);
       std::cout<<red<<"gdggdhgfgigtiogtigtgtuio "<<str4<<"     "<<normal<<std::endl;
       delete(d);
-      delete(r);
-    State* s = State::download("GIFSPS_60"); // download the state with name 'MyState'
+      delete(r);*/
+    /*State* s = State::download("GIFSPS_60"); // download the state with name 'MyState'
     LdaConfiguration *lda_conf = s->getLdaConfiguration();
     DccConfiguration *dcc_conf = s->getDccConfiguration();
     DifConfiguration *dif_conf = s->getDifConfiguration();
@@ -698,12 +826,13 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
     s->saveToXML("./xmlFile.xml");
     delete(s); // this will delete the state object along with the configurations objects
       DBInit::terminate();
-    }
+    }*/
     Planss.clear();
     //Plans.clear();
     //PlansScintillator.clear();
     if (evtP != nullptr) 
     {
+        double rate0=0.0;
         std::map<std::string,LCCollection*>Collections;
         Collections.clear();
         std::vector<std::string>namesss=*evtP->getCollectionNames();
@@ -767,6 +896,11 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
                 CalorimeterHit *raw_hit = dynamic_cast<CalorimeterHit*>( (it->second)->getElementAt(ihit)) ;
                 if (raw_hit != nullptr)
                 {
+                    /*if(it->first=="SDHCAL_HIT_SC")
+                    {
+                      rate->Fill(raw_hit->getTime()*200-rate0);
+                      rate0=raw_hit->getTime()*200;
+                    }*/
                     int dif_id=cd(raw_hit)["Dif_id"];
                     //int I=cd(raw_hit)["I"];
                     //int J=cd(raw_hit)["J"];
@@ -793,6 +927,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
           // for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(PlansScintillator,true,testedPlanList);
         //}
         //else for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans,false,testedPlanList);
+        Tracks(Planss,geom,geometryplans,useforrealrate);
         for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Planss,testedPlanList);
         for(unsigned f=0;f!=_hcalCollections.size();++f)
         {
@@ -862,40 +997,77 @@ void AnalysisProcessor::end()
     
  
     hfile->cd("../");
-    
-     for(unsigned int i=0;i!=useforrealrate.size();++i)
+    /*for(std::map<std::string,std::vector<std::vector<std::array<int,4>>>>::iterator it=useforrealrate.begin();it!=useforrealrate.end();++it)
+    {*/
+     for(unsigned int i=0;i!=useforrealrate/*[it->first]*/.size();++i)
      {
       double inbin=1.0;
-      static string namee="SDHCAL_HIT";
       int II=0;
       int JJ=0;
       int ZZ=0;
-      for(unsigned int j=0;j!=useforrealrate[i].size();++j)
+      unsigned int number_touched=0;
+      for(unsigned int j=0;j!=useforrealrate/*[it->first]*/[i].size();++j)
       {
-        if(useforrealrate[i][j][3]==1)
+        
+        II=useforrealrate/*[it->first]*/[i][j][0];
+        JJ=useforrealrate/*[it->first]*/[i][j][1];
+        ZZ=useforrealrate/*[it->first]*/[i][j][2];
+        int xmax=Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetNbinsX();
+        int ymax=Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetNbinsY();
+        if(useforrealrate/*[it->first]*/[i][j][3]==1)
         {
-          II=useforrealrate[i][j][0];
-          JJ=useforrealrate[i][j][1];
-          ZZ=useforrealrate[i][j][2];
-          int xmax=Efficiency_pads[5][namee][ZZ]->GetNbinsX();
-          int ymax=Efficiency_pads[5][namee][ZZ]->GetNbinsY();
+          number_touched++;
+          
+          std::cout<<II<<"  "<<JJ<<"  "<<ZZ<<std::endl;
+         
           if(II>0&&II<xmax&&JJ>0&&JJ<ymax)
           {
-            if(Efficiency_pads[5][namee][ZZ]->GetBinContent(II,JJ)>0)inbin*=Efficiency_pads[5][namee][ZZ]->GetBinContent(II,JJ);
+            if(Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetBinContent(II,JJ)>0)inbin*=Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetBinContent(II,JJ);
           }
         }
+        else
+        {
+          if(II>0&&II<xmax&&JJ>0&&JJ<ymax)
+          {
+            if(Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetBinContent(II,JJ)>0&&Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetBinContent(II,JJ)!=1)inbin*=1-Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetBinContent(II,JJ);
+          }
+        }
+        
       }
-      for(unsigned int j=0;j!=useforrealrate[i].size();++j)
+      std::cout<<red<<inbin<<normal<<std::endl;
+      for(unsigned int j=0;j!=useforrealrate/*[it->first]*/[i].size();++j)
       {      
-        II=useforrealrate[i][j][0];
-        JJ=useforrealrate[i][j][1];
-        ZZ=useforrealrate[i][j][2];
-        RealRateWithSelectedZone[ZZ]->Fill(II,JJ,1.0/inbin);
+        II=useforrealrate/*[it->first]*/[i][j][0];
+        JJ=useforrealrate/*[it->first]*/[i][j][1];
+        ZZ=useforrealrate/*[it->first]*/[i][j][2];
+        for(std::map<int,TH2F*>::iterator it=RealRateWithSelectedZonemin[ZZ].begin();it!=RealRateWithSelectedZonemin[ZZ].end();++it)
+        {
+          if(number_touched>=it->first)RealRateWithSelectedZonemin[ZZ][it->first]->Fill(II,JJ,1.0/inbin);
+        }
+        if(number_touched>=_NbrPlaneUseForTrackingRate)
+        {
+          RealRateWithSelectedZone[ZZ][number_touched]->Fill(II,JJ,1.0/inbin);
+          Nbrviewedtracks[ZZ][number_touched]->Fill(II,JJ,1);
+          eff[ZZ][number_touched]->Fill(II,JJ,inbin);
+          effsquared[ZZ][number_touched]->Fill(II,JJ,inbin*inbin);
+        }
       }
      }
+    /*}*/
+    std::string namei="";
+    for(std::map<int,std::map<int,TH2F*>>::iterator it=Nbrviewedtracks.begin();it!=Nbrviewedtracks.end();++it)
+    {
+      for(std::map<int,TH2F*>::iterator itt=Nbrviewedtracks[it->first].begin();itt!=Nbrviewedtracks[it->first].end();++itt)
+      {
+         namei="rate_estimated_"+std::to_string(it->first)+"_"+std::to_string(itt->first)+"_planes_touched";
+         std::cout<<blue<<namei<<normal<<std::endl;
+         estimatedrate[it->first][itt->first]=dynamic_cast<TH2F*>( (itt->second)->Clone(namei.c_str()) ) 		;
+         estimatedrate[it->first][itt->first]->Multiply(eff[it->first][itt->first]);
+         estimatedrate[it->first][itt->first]->Divide(effsquared[it->first][itt->first]);
+      }
+    }
 
-
-      for(std::map<int,TH2F*>::iterator it=RealRateWithSelectedZone.begin();it!=RealRateWithSelectedZone.end();++it)
+      /*for(std::map<int,TH2F*>::iterator it=RealRateWithSelectedZone.begin();it!=RealRateWithSelectedZone.end();++it)
       {
         std::string dddd="Efficiency_Vs_Rate"+std::to_string( (long long int) it->first +1 );
         std::string name="SDHCAL_HIT";
@@ -906,7 +1078,7 @@ void AnalysisProcessor::end()
         for(unsigned long j=0;j<size;++j)EfficacityVsRate[it->first]->Fill((it->second)->GetBinContent(j),Efficiency_pads[5][name][it->first]->GetBinContent(j));
         
         
-      }
+      }*/
 
     
     tt->Write();
@@ -921,7 +1093,7 @@ void AnalysisProcessor::end()
       }
       hfile->cd("../");
     
-    
+   
     for(unsigned int naa=0;naa<names.size();++naa)
     {
       
@@ -967,12 +1139,35 @@ void AnalysisProcessor::end()
         
         hfile->mkdir((plate+"/Rate_Estimation").c_str());
         hfile->cd((plate+"/Rate_Estimation").c_str());
-        std::string name="Rate_Selected_Zone_scale";
-        EfficacityVsRate[i]->Write();
-        RealRateWithSelectedZone[i]->Write();
-        RealRateWithSelectedZone[i]->Scale(total_time*(1.0/SumCombinaison(RealNumberPlane.size(),_NbrPlaneUseForTracking)));
-        RealRateWithSelectedZone[i]->Write(name.c_str());
-  
+        std::string name="Rate_estimated_nbr_plane_used_";
+        std::string name2="Rate_estimated_nbr_plane_used_min_";
+        //EfficacityVsRate[i]->Write();
+        for(std::map<int,TH2F*>::iterator it=RealRateWithSelectedZonemin[i].begin();it!=RealRateWithSelectedZonemin[i].end();++it)
+        {
+            RealRateWithSelectedZonemin[i][it->first]->Write();
+            RealRateWithSelectedZonemin[i][it->first]->Scale(1.0/(total_time*SumCombinaison(RealNumberPlane.size(),it->first)));
+            estimateur[i]->Fill(it->first,RealRateWithSelectedZonemin[i][it->first]->Integral());
+            RealRateWithSelectedZonemin[i][it->first]->Write((name2+std::to_string(it->first)).c_str());
+            
+        }
+          for(std::map<int,TH2F*>::iterator it=RealRateWithSelectedZone[i].begin();it!=RealRateWithSelectedZone[i].end();++it)
+        {
+            RealRateWithSelectedZone[i][it->first]->Write();
+            RealRateWithSelectedZone[i][it->first]->Scale(1.0/(total_time*TMath::Binomial(RealNumberPlane.size(),it->first)));
+            RealRateWithSelectedZone[i][it->first]->Write((name+std::to_string(it->first)).c_str());
+            estimateurmax[i]->Fill(it->first,RealRateWithSelectedZone[i][it->first]->Integral());
+            Nbrviewedtracks[i][it->first]->Write();
+            eff[i][it->first]->Write();
+            effsquared[i][it->first]->Write();
+            
+            estimatedrate[i][it->first]->Scale(1.0/(total_time*TMath::Binomial(RealNumberPlane.size(),it->first)));
+            estimatedrate[i][it->first]->Write();
+            estimateur2[i]->Fill(it->first,estimatedrate[i][it->first]->Integral());
+        }
+        estimateur[i]->Write();
+        estimateur2[i]->Write();
+        estimateurmax[i]->Write();
+       // rate->Write();
         //EfficacityVsRate[i]->Write();
         }
         hfile->cd(plate.c_str());

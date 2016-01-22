@@ -337,7 +337,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
         {
           ScintillatorCoincidence.push_back(raw_scin->getIntVal(3));
           total_coincidence+=ScintillatorCoincidence.size();
-          std::cout<<total_coincidence<<std::endl;
+          //std::cout<<total_coincidence<<std::endl;
         }
         
       }
@@ -385,7 +385,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
         to_skip=true;
       }
     }
-    if(to_skip==false)  processCollection(evtP,col);
+    if(to_skip!=true)  processCollection(evtP,col);
   }
 } 
 unsigned long int debut_RamFull;
@@ -550,7 +550,7 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
     if(HistoPlanes[i]->Get_local_max()>global_max) global_max=HistoPlanes[i]->Get_local_max();
 	  if(HistoPlanes[i]->Get_local_min()<global_min) global_min=HistoPlanes[i]->Get_local_min();
   }
-  UsefullTime->Fill(((fin_RamFull-debut_RamFull)-global_max-global_min)*200e-9);
+  UsefullTime->Fill(((fin_RamFull-debut_RamFull)-(global_max-global_min))*200e-9);
   HistoPlanes[0]->Set_Global_Total_Time(global_max-global_min);
   if(_LayerCut!=-1)
   {
@@ -605,7 +605,7 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	        FillIJK(EventsGroupedScin, col_eventt,cdt,0);
 	        evtt->addCollection(col_eventt, "SDHCAL_HIT_SC");
 	        evtt->setEventNumber(EventsSelectedt);
-	        evtt->setTimeStamp(evtP->getTimeStamp());
+	        //evtt->setTime(evtP->getTimeStamp());
 	        evtt->setRunNumber(evtP->getRunNumber());
 	        _EventWriter->writeEvent( evtt ) ;
 	        delete evtt;
@@ -679,7 +679,7 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	        
 	        evt->addCollection(col_event3, "SDHCAL_HIT");
 	        evt->setEventNumber(EventsSelected);
-	        evt->setTimeStamp(evtP->getTimeStamp());
+	        //evt->setTime(evtP->getTimeStamp());
 	        evt->setRunNumber(evtP->getRunNumber());
 	        _EventWriter->writeEvent( evt ) ;
 	        //delete evt;

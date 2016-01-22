@@ -29,6 +29,7 @@ class Streamout : public Processor
     }
   
     Streamout() ;
+    ~Streamout(){};
 
     /** Called at the begin of the job before anything is read.
     * Use to initialize the processor, e.g. book histograms.
