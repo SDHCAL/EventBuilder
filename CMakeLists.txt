@@ -26,13 +26,14 @@ if(COMPILER_SUPPORTS_CXX14)
   endif()
 endif()
 
-SET(CMAKE_REQUIRED_FLAGS "-locci")
-CHECK_CXX_COMPILER_FLAG("" LOCCI_SUPPORT)
+
+find_library(LOCCI_SUPPORT NAMES occi)
 if(LOCCI_SUPPORT)
   message("LOCCI found")
   SET(HaveOCCI 1)
   SET(GCC_COVERAGE_LINK_FLAGS "-locci -lclntsh -lnnz12 -g0")
 else()
+  message("No LOCCI support")
   SET(HaveOCCI 0)
 endif()
 
