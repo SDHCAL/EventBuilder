@@ -6,7 +6,7 @@
 #include <sstream>
 #include <utility>
 #include <map>
-
+#include <array>
 
 
 class AsicInfo
