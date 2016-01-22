@@ -94,13 +94,13 @@ INSTALL(TARGETS Trivent LIBRARY DESTINATION lib)
 
 
 # ----- Marlin executable ----------------------------------------------------
-ADD_EXECUTABLE( bin_Marlin 
-${PROJECT_SOURCE_DIR}/source/src/VirerMarlin/Marlin.cc 
-${PROJECT_SOURCE_DIR}/source/src/VirerMarlin/ProcessorLoader.cc 
-)
+#ADD_EXECUTABLE( bin_Marlin 
+#${PROJECT_SOURCE_DIR}/source/src/VirerMarlin/Marlin.cc 
+#${PROJECT_SOURCE_DIR}/source/src/VirerMarlin/ProcessorLoader.cc 
+#)
 # avoid name conflict between Marlin library and Marlin application
-SET_TARGET_PROPERTIES( bin_Marlin PROPERTIES OUTPUT_NAME Marlin )
-INSTALL( TARGETS bin_Marlin DESTINATION bin )
+#SET_TARGET_PROPERTIES( bin_Marlin PROPERTIES OUTPUT_NAME Marlin )
+#INSTALL( TARGETS bin_Marlin DESTINATION bin )
 # ----------------------------------------------------------------------------
 
 
