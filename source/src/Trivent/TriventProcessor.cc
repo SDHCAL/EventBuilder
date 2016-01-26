@@ -360,12 +360,9 @@ void TriventProcessor::processEvent( LCEvent * evtP )
   _NbrRun=evtP->getRunNumber();
   _eventNr=evtP->getEventNumber()+1;
   Progress(_skip,_GlobalEvents,_maxRecord,_eventNr);
-  std::vector<std::string>names=*evtP->getCollectionNames();
-  for(unsigned int i=0;i<names.size();++i)
-  {
-    if(names[i]=="DHCALRawTimes") processEvent_ProcessName_DHCALRawTimes(evtP);
-    if(names[i]=="Scintillator")  processEvent_ProcessName_Scintillator (evtP);
-  } 
+
+  processEvent_ProcessName_DHCALRawTimes(evtP);
+  processEvent_ProcessName_Scintillator (evtP);
 
   for(unsigned int i=0; i< _hcalCollections.size(); i++) 
     {
