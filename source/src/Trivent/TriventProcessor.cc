@@ -320,6 +320,26 @@ void TriventProcessor::Loop_On_Scintillator_Collection_unused(LCCollection *col3
     }
 }
 
+void TriventProcessor::Loop_On_Scintillator_Collection(LCCollection *col3)
+{
+  for (int ihit=0; ihit < col3->getNumberOfElements(); ++ihit) 
+    {
+      EVENT::LCGenericObject* raw_scin = dynamic_cast<EVENT::LCGenericObject* >( col3->getElementAt(ihit)) ;
+      _Front_scintillator+=raw_scin->getIntVal(0);
+      _Back_scintillator+=raw_scin->getIntVal(1);
+      _Both_scintillator+=raw_scin->getIntVal(2);
+      //std::cout<<_Front_scintillator<<"  "<<_Back_scintillator<<"  "<<raw_scin->getIntVal(0)<<"  "<<raw_scin->getIntVal(1)<<"  "<<raw_scin->getIntVal(2)<<raw_scin->getIntVal(3)<<normal<<std::endl;
+      //if(_Both_scintillator==1)ScintillatorCoincidence.push_back(raw_scin->getIntVal(3));
+      if(raw_scin->getIntVal(0)==1||raw_scin->getIntVal(1)==1)
+	{
+	  ScintillatorCoincidence.push_back(raw_scin->getIntVal(3));
+	  total_coincidence+=ScintillatorCoincidence.size();
+	  //std::cout<<total_coincidence<<std::endl;
+	}    
+    } // end for (int ihit=0; ihit < col3->getNumberOfElements(); ++ihit) 
+}
+
+
 void TriventProcessor::processEvent( LCEvent * evtP )
 {
   
@@ -343,24 +363,8 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	ScintillatorCoincidence.clear();
 	col3 = evtP ->getCollection("Scintillator");
 	//Loop_On_Scintillator_Collection_unused(col3);
-  		
-	for (int ihit=0; ihit < col3->getNumberOfElements(); ++ihit) 
-	  {
-		    
-	    EVENT::LCGenericObject* raw_scin = dynamic_cast<EVENT::LCGenericObject* >( col3->getElementAt(ihit)) ;
-	    _Front_scintillator+=raw_scin->getIntVal(0);
-	    _Back_scintillator+=raw_scin->getIntVal(1);
-	    _Both_scintillator+=raw_scin->getIntVal(2);
-	    //std::cout<<_Front_scintillator<<"  "<<_Back_scintillator<<"  "<<raw_scin->getIntVal(0)<<"  "<<raw_scin->getIntVal(1)<<"  "<<raw_scin->getIntVal(2)<<raw_scin->getIntVal(3)<<normal<<std::endl;
-	    //if(_Both_scintillator==1)ScintillatorCoincidence.push_back(raw_scin->getIntVal(3));
-	    if(raw_scin->getIntVal(0)==1||raw_scin->getIntVal(1)==1)
-	      {
-		ScintillatorCoincidence.push_back(raw_scin->getIntVal(3));
-		total_coincidence+=ScintillatorCoincidence.size();
-		//std::cout<<total_coincidence<<std::endl;
-	      }
-	    
-	  } // end for (int ihit=0; ihit < col3->getNumberOfElements(); ++ihit) 
+	Loop_On_Scintillator_Collection(col3);
+
       } //end  if(names[i]=="Scintillator")
   } //end for(unsigned int i=0;i<names.size();++i)
 
