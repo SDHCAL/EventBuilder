@@ -366,47 +366,50 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 
   for(unsigned int i=0; i< _hcalCollections.size(); i++) 
     {
-      LCCollection* col = evtP ->getCollection(_hcalCollections[i].c_str());
-      if(col==nullptr) 
+      try 
+	{
+	  LCCollection* col = evtP ->getCollection(_hcalCollections[i].c_str());
+	  RawCalorimeterHit * hittt = dynamic_cast<RawCalorimeterHit*>(col->getElementAt(/*hit*/0)) ;
+	  //std::cout<<blue<<myhit->getCellID0()<<"  "<<std::endl;
+	  unsigned int dif_id=hittt->getCellID0()&0xFF;
+	  if (dif_id==0) return;
+	  std::string name="DIF"+patch::to_string(dif_id)+"_Triggers";
+	  //std::cout<<name<<std::endl;
+	  lcio::IntVec vTrigger;
+	  col->getParameters().getIntVals(name,vTrigger);
+	  static unsigned long long _bcid=0;
+	  if (vTrigger.size()>=5)
+	    {
+	      static unsigned long long Shift=16777216ULL;
+	      
+	      _bcid=vTrigger[4]*Shift+vTrigger[3];
+	      
+	    }
+	  bool to_skip=false;
+      
+	  for(unsigned int i=0;i<Types["Spill"].size();++i)
+	    if(Types["Spill"][i]==_bcid)
+	      {
+		bcid_spill=_bcid;
+	      }
+	  //if(_bcid-bcid_spill<=2500000)std::cout<<green<<_bcid<<"  "<<bcid_spill<<"  "<<_bcid-bcid_spill<<normal<<std::endl;
+	  //else std::cout<<red<<_bcid<<"  "<<bcid_spill<<"  "<<_bcid-bcid_spill<<normal<<std::endl;
+	  if(_IgnorebeginningSpill>0)
+	    {
+	      if(_bcid-bcid_spill<=_IgnorebeginningSpill)
+		{
+		  std::cout<<"ignoring : "<<_bcid*200e-9<<std::endl;
+		  to_skip=true;
+		}
+	    }
+	  if(to_skip!=true)  processCollection(evtP,col);
+	}// end try block
+      catch (DataNotAvailableException &e)
 	{
 	  std::cout << "TRIGGER SKIPED ..."<<std::endl;
 	  _trig_count++;
 	  break;
 	}
-      RawCalorimeterHit * hittt = dynamic_cast<RawCalorimeterHit*>(col->getElementAt(/*hit*/0)) ;
-      //std::cout<<blue<<myhit->getCellID0()<<"  "<<std::endl;
-      unsigned int dif_id=hittt->getCellID0()&0xFF;
-      if (dif_id==0) return;
-      std::string name="DIF"+patch::to_string(dif_id)+"_Triggers";
-      //std::cout<<name<<std::endl;
-      lcio::IntVec vTrigger;
-      col->getParameters().getIntVals(name,vTrigger);
-      static unsigned long long _bcid=0;
-      if (vTrigger.size()>=5)
-	{
-	  static unsigned long long Shift=16777216ULL;
-	  
-  	  _bcid=vTrigger[4]*Shift+vTrigger[3];
-	  
-	}
-      bool to_skip=false;
-      
-      for(unsigned int i=0;i<Types["Spill"].size();++i)
-	if(Types["Spill"][i]==_bcid)
-	  {
-	    bcid_spill=_bcid;
-	  }
-      //if(_bcid-bcid_spill<=2500000)std::cout<<green<<_bcid<<"  "<<bcid_spill<<"  "<<_bcid-bcid_spill<<normal<<std::endl;
-      //else std::cout<<red<<_bcid<<"  "<<bcid_spill<<"  "<<_bcid-bcid_spill<<normal<<std::endl;
-      if(_IgnorebeginningSpill>0)
-	{
-	  if(_bcid-bcid_spill<=_IgnorebeginningSpill)
-	    {
-	      std::cout<<"ignoring : "<<_bcid*200e-9<<std::endl;
-	      to_skip=true;
-	    }
-	}
-      if(to_skip!=true)  processCollection(evtP,col);
     } //end  for(unsigned int i=0; i< _hcalCollections.size(); i++) 
 } //end processEvent
 
