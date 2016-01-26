@@ -266,7 +266,8 @@ unsigned long long bcid_spill=0;
 void TriventProcessor::processEvent_ProcessName_DHCALRawTimes(LCEvent *evtP)
 {
   LCCollection* col2=nullptr;
-  col2 = evtP ->getCollection("DHCALRawTimes");
+  try { col2 = evtP ->getCollection("DHCALRawTimes"); }
+  catch (DataNotAvailableException &e){return; }
   lcio::IntVec vTrigger;
   for(unsigned int i=0; i!=bcidnames.size();++i)
     {
@@ -346,7 +347,8 @@ void TriventProcessor::processEvent_ProcessName_Scintillator(LCEvent *evtP)
   HasScintiSignal=true;
   ScintillatorCoincidence.clear();
   LCCollection* col3=nullptr;
-  col3 = evtP ->getCollection("Scintillator");
+  try { col3 = evtP ->getCollection("Scintillator");}
+  catch (DataNotAvailableException &e) {return;}
   //Loop_On_Scintillator_Collection_unused(col3);
   Loop_On_Scintillator_Collection(col3);
 }
