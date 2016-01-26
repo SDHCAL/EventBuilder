@@ -340,6 +340,15 @@ void TriventProcessor::Loop_On_Scintillator_Collection(LCCollection *col3)
 }
 
 
+void TriventProcessor::processEvent_ProcessName_Scintillator(LCEvent *evtP, LCCollection*& col3)
+{
+  HasScintiSignal=true;
+  ScintillatorCoincidence.clear();
+  col3 = evtP ->getCollection("Scintillator");
+  //Loop_On_Scintillator_Collection_unused(col3);
+  Loop_On_Scintillator_Collection(col3);
+}
+
 void TriventProcessor::processEvent( LCEvent * evtP )
 {
   
@@ -359,12 +368,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 
     if(names[i]=="Scintillator")
       {
-	HasScintiSignal=true;
-	ScintillatorCoincidence.clear();
-	col3 = evtP ->getCollection("Scintillator");
-	//Loop_On_Scintillator_Collection_unused(col3);
-	Loop_On_Scintillator_Collection(col3);
-
+	processEvent_ProcessName_Scintillator(evtP, col3);
       } //end  if(names[i]=="Scintillator")
   } //end for(unsigned int i=0;i<names.size();++i)
 
