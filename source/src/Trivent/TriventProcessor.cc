@@ -290,6 +290,36 @@ void TriventProcessor::processEvent_ProcessName_DHCALRawTimes(LCEvent *evtP, LCC
     }
 }
 
+
+void TriventProcessor::Loop_On_Scintillator_Collection_unused(LCCollection *col3)
+{
+  EVENT::LCGenericObject* raw_scin3=nullptr;
+  EVENT::LCGenericObject* raw_scin2=nullptr;
+  for (int ihit=0; ihit < col3->getNumberOfElements(); ++ihit) 
+    {
+      raw_scin3 = dynamic_cast<EVENT::LCGenericObject* >( col3->getElementAt(ihit)) ;
+      for (int ihitt=ihit; ihitt < col3->getNumberOfElements(); ++ihitt) 
+	{
+	  raw_scin2 = dynamic_cast<EVENT::LCGenericObject* >( col3->getElementAt(ihitt)) ;
+	  if(raw_scin3->getIntVal(0)==1&&raw_scin2->getIntVal(1)==1&&raw_scin3->getIntVal(2)!=1&&raw_scin2->getIntVal(2)!=1)
+	    {
+	      delay->Fill(raw_scin3->getIntVal(3)-raw_scin2->getIntVal(3));
+	      
+	      if(raw_scin3->getIntVal(3)-raw_scin2->getIntVal(3)<=3)
+		{
+		  static int ggg=0;
+		  ScintillatorCoincidence.push_back(raw_scin2->getIntVal(3)+1);
+		  ggg++;
+		  std::cout<<ggg<<std::endl;
+		  _Front_scintillator--;
+		  _Back_scintillator--;
+		  _Both_scintillator++;
+		}
+	    }
+	}
+    }
+}
+
 void TriventProcessor::processEvent( LCEvent * evtP )
 {
   
@@ -312,36 +342,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	HasScintiSignal=true;
 	ScintillatorCoincidence.clear();
 	col3 = evtP ->getCollection("Scintillator");
-	EVENT::LCGenericObject* raw_scin3=nullptr;
-	EVENT::LCGenericObject* raw_scin2=nullptr;
-	/*for (int ihit=0; ihit < col3->getNumberOfElements(); ++ihit) 
-		  {
-		    raw_scin3 = dynamic_cast<EVENT::LCGenericObject* >( col3->getElementAt(ihit)) ;
-		    for (int ihitt=ihit; ihitt < col3->getNumberOfElements(); ++ihitt) 
-		    {
-		      raw_scin2 = dynamic_cast<EVENT::LCGenericObject* >( col3->getElementAt(ihitt)) ;
-		      if(raw_scin3->getIntVal(0)==1&&raw_scin2->getIntVal(1)==1&&raw_scin3->getIntVal(2)!=1&&raw_scin2->getIntVal(2)!=1)
-		      {
-		        
-		        
-		        delay->Fill(raw_scin3->getIntVal(3)-raw_scin2->getIntVal(3));
-		        
-		        if(raw_scin3->getIntVal(3)-raw_scin2->getIntVal(3)<=3)
-		        {
-		           static int ggg=0;
-		           ScintillatorCoincidence.push_back(raw_scin2->getIntVal(3)+1);
-		           ggg++;
-		           std::cout<<ggg<<std::endl;
-		          _Front_scintillator--;
-		          
-		        _Back_scintillator--;
-        _Both_scintillator++;
-		      }
-		      
-		    }
-		   
-		  }
-		  }*/
+	//Loop_On_Scintillator_Collection_unused(col3);
   		
 	for (int ihit=0; ihit < col3->getNumberOfElements(); ++ihit) 
 	  {
