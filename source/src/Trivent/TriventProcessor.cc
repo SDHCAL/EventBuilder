@@ -263,8 +263,9 @@ void TriventProcessor::init()
 unsigned long long bcid_spill=0;
 //END GLOBAL VARIABLES
 
-void TriventProcessor::processEvent_ProcessName_DHCALRawTimes(LCEvent *evtP, LCCollection*& col2)
+void TriventProcessor::processEvent_ProcessName_DHCALRawTimes(LCEvent *evtP)
 {
+  LCCollection* col2=nullptr;
   col2 = evtP ->getCollection("DHCALRawTimes");
   lcio::IntVec vTrigger;
   for(unsigned int i=0; i!=bcidnames.size();++i)
@@ -340,10 +341,11 @@ void TriventProcessor::Loop_On_Scintillator_Collection(LCCollection *col3)
 }
 
 
-void TriventProcessor::processEvent_ProcessName_Scintillator(LCEvent *evtP, LCCollection*& col3)
+void TriventProcessor::processEvent_ProcessName_Scintillator(LCEvent *evtP)
 {
   HasScintiSignal=true;
   ScintillatorCoincidence.clear();
+  LCCollection* col3=nullptr;
   col3 = evtP ->getCollection("Scintillator");
   //Loop_On_Scintillator_Collection_unused(col3);
   Loop_On_Scintillator_Collection(col3);
@@ -356,21 +358,12 @@ void TriventProcessor::processEvent( LCEvent * evtP )
   _NbrRun=evtP->getRunNumber();
   _eventNr=evtP->getEventNumber()+1;
   Progress(_skip,_GlobalEvents,_maxRecord,_eventNr);
-  LCCollection* col2=nullptr;
-  LCCollection* col3=nullptr;
   std::vector<std::string>names=*evtP->getCollectionNames();
   for(unsigned int i=0;i<names.size();++i)
   {
-    if(names[i]=="DHCALRawTimes")
-      {
-	processEvent_ProcessName_DHCALRawTimes(evtP, col2);
-      } // end if(names[i]=="DHCALRawTimes")
-
-    if(names[i]=="Scintillator")
-      {
-	processEvent_ProcessName_Scintillator(evtP, col3);
-      } //end  if(names[i]=="Scintillator")
-  } //end for(unsigned int i=0;i<names.size();++i)
+    if(names[i]=="DHCALRawTimes") processEvent_ProcessName_DHCALRawTimes(evtP);
+    if(names[i]=="Scintillator")  processEvent_ProcessName_Scintillator (evtP);
+  } 
 
   for(unsigned int i=0; i< _hcalCollections.size(); i++) 
     {
