@@ -112,8 +112,8 @@ protected:
 
  private:
     //helper methods
-    void processEvent_ProcessName_DHCALRawTimes(LCEvent *evtP);
-    void processEvent_ProcessName_Scintillator(LCEvent *evtP);
+    void processEvent_ProcessCollectionNamed_DHCALRawTimes(LCEvent *evtP);
+    void processEvent_ProcessCollectionNamed_Scintillator(LCEvent *evtP);
     void Loop_On_Scintillator_Collection_unused(LCCollection *col3);
     void Loop_On_Scintillator_Collection(LCCollection *col3);
 };

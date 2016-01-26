@@ -263,7 +263,7 @@ void TriventProcessor::init()
 unsigned long long bcid_spill=0;
 //END GLOBAL VARIABLES
 
-void TriventProcessor::processEvent_ProcessName_DHCALRawTimes(LCEvent *evtP)
+void TriventProcessor::processEvent_ProcessCollectionNamed_DHCALRawTimes(LCEvent *evtP)
 {
   LCCollection* col2=nullptr;
   try { col2 = evtP ->getCollection("DHCALRawTimes"); }
@@ -342,7 +342,7 @@ void TriventProcessor::Loop_On_Scintillator_Collection(LCCollection *col3)
 }
 
 
-void TriventProcessor::processEvent_ProcessName_Scintillator(LCEvent *evtP)
+void TriventProcessor::processEvent_ProcessCollectionNamed_Scintillator(LCEvent *evtP)
 {
   HasScintiSignal=true;
   ScintillatorCoincidence.clear();
@@ -361,8 +361,8 @@ void TriventProcessor::processEvent( LCEvent * evtP )
   _eventNr=evtP->getEventNumber()+1;
   Progress(_skip,_GlobalEvents,_maxRecord,_eventNr);
 
-  processEvent_ProcessName_DHCALRawTimes(evtP);
-  processEvent_ProcessName_Scintillator (evtP);
+  processEvent_ProcessCollectionNamed_DHCALRawTimes(evtP);
+  processEvent_ProcessCollectionNamed_Scintillator (evtP);
 
   for(unsigned int i=0; i< _hcalCollections.size(); i++) 
     {
