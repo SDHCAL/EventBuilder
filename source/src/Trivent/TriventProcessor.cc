@@ -59,10 +59,10 @@
 #include "EVENT/CalorimeterHit.h" 
 #include "EVENT/RawCalorimeterHit.h" 
 //#include "THClass.h"
+
+//GLOBAL VARIABLES
 bool pdf=false;
 bool HasScintiSignal=false;
-
-
 TH1F* delay=new TH1F("delay","delay",2000,-1000,1000);
 
 
@@ -122,6 +122,7 @@ std::vector<std::string> th2 {
 std::vector<std::string>th2_Asic{"Flux_Noise_Asic","Flux_Events_Asic"};
 int _NbrRun=0;
 
+//END GLOBAL VARIABLES
 
 
 TriventProcessor aTriventProcessor;
@@ -167,13 +168,14 @@ TriventProcessor::TriventProcessor() : Processor("TriventProcessorType")
   registerProcessorParameter("Time windows for exstimated noise" ,"Time windows for exstimated noise",_TimeWin_Noise,_TimeWin_Noise);
   _Time_from_Track=4;
   registerProcessorParameter("Time from track" ,"Time from track",_Time_from_Track,_Time_from_Track);
-}
+} // end constructor
 
 
 
-
+//GLOBAL VARIABLES
 int counttt=0;
 TriventProcessor::~TriventProcessor() {}
+//END GLOBAL VARIABLES
 
 void TriventProcessor::processRunHeader( LCRunHeader* run)
 {
@@ -181,7 +183,14 @@ void TriventProcessor::processRunHeader( LCRunHeader* run)
     //run->parameters().setValue("EventBuilderVersion",EventBuilderVersion);
     //std::cout<<red<<run->parameters().getNString("EventBuilderVersion")<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<normal<<std::endl;
 }
+
+
+//GLOBAL VARIABLES
 std::vector<std::string>bcidnames;
+//END GLOBAL VARIABLES
+
+
+
 void TriventProcessor::init()
 { 
   Intro();
@@ -211,7 +220,7 @@ void TriventProcessor::init()
 	    }
 	}
       FillDelimiter(_Delimiters,HistoPlanes.size(),Delimiter);
-    } 
+    } // end  if(myReader) 
   else 
     {
       std::cout << "Reader type n'existe pas !!" << std::endl;
@@ -248,8 +257,12 @@ void TriventProcessor::init()
       _NoiseWriter->setCompressionLevel( 2 ) ;
       _NoiseWriter->open(_noiseFileName.c_str(),LCIO::WRITE_NEW) ;
     }
-}
+} // end init method
+
+//GLOBAL VARIABLES
 unsigned long long bcid_spill=0;
+//END GLOBAL VARIABLES
+
 void TriventProcessor::processEvent( LCEvent * evtP )
 {
   
@@ -278,7 +291,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 		LCTime evtTime(_bcid) ;
 		//std::cout << " date:      "      << evtTime.getDateString() << std::endl ; 
 	      }
-	  }
+	  } //End loop with i
           
 	RawTimeDifs.clear();
 	for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) 
@@ -287,7 +300,8 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	    // std::cout<<raw_time->getTime()<<"  "<<raw_time->getEnergyError()<<std::endl;
 	    //RawTimeDifs[raw_time->getTimeStamp()].push_back(raw_time);
 	  }
-      }
+      } // end if(names[i]=="DHCALRawTimes")
+
     if(names[i]=="Scintillator")
       {
 	HasScintiSignal=true;
@@ -340,9 +354,10 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 		//std::cout<<total_coincidence<<std::endl;
 	      }
 	    
-	  }
-      }
-  }
+	  } // end for (int ihit=0; ihit < col3->getNumberOfElements(); ++ihit) 
+      } //end  if(names[i]=="Scintillator")
+  } //end for(unsigned int i=0;i<names.size();++i)
+
   for(unsigned int i=0; i< _hcalCollections.size(); i++) 
     {
       LCCollection* col = evtP ->getCollection(_hcalCollections[i].c_str());
@@ -386,15 +401,17 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	    }
 	}
       if(to_skip!=true)  processCollection(evtP,col);
-    }
-} 
+    } //end  for(unsigned int i=0; i< _hcalCollections.size(); i++) 
+} //end processEvent
 
-
+//GLOBAL VARIABLES
 unsigned long int debut_RamFull;
 unsigned long int fin_RamFull;
 unsigned long int debut_spill;
 unsigned long int fin_spill;
 bool NeverStarted = true;
+//end GLOBAL VARIABLES
+
 void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 {
   if(NeverStarted==true)
@@ -495,7 +512,7 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 		  //std::cout<<red<<_bcid<<"  "<<debut_spill<<"  "<<fin_spill<<"  "<<(fin_spill-debut_spill)*200e-9<<"  "<<debut_RamFull<<"  "<<fin_RamFull<<"  "<<(fin_RamFull-debut_RamFull)*200e-9<<normal<<std::endl;
 		  TimeSpill->Fill((fin_spill-debut_spill)*200e-9);
 		  TimeRamFull->Fill((fin_RamFull-debut_RamFull)*200e-9);
-		}
+		} // end  if(ihit==0)
 	      /////////////////////////////////////////
 	      /////supress this in case of emergency
 	      //int a,b,c,d;
@@ -519,7 +536,7 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	      //}
 	      /////////////////////////////////////////
 	      //if(raw_hit->getTimeStamp()<0)std::cout<<yellow<<raw_hit->getTimeStamp()<<"  "<<((raw_hit)->getCellID0() & 0xFF)<<normal<<std::endl;
-	    }
+	    } //end if(_TriggerTime==0 || raw_hit->getTimeStamp()<=_TriggerTime)
 	  else
 	    {
 	      //if(geom.GetDifType(dif_id)!=scintillator)
@@ -540,8 +557,8 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	  HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_Time_Plates(raw_hit->getTimeStamp());
 	  HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_Time_Plates_perRun(raw_hit->getTimeStamp());
 	  //}
-	}
-    }
+	} //end  if (raw_hit != nullptr) 
+    } //end for (int ihit=0; ihit < numElements; ++ihit) 
   if(Times.size()==0) std::cout<<red<<" 0 hits within the the TriggerTime given... You should verify your TriggerTime or your run is triggerless "<<normal<<std::endl;
   unsigned int  long long global_min=HistoPlanes[0]->Get_local_min();
   unsigned int long long  global_max=HistoPlanes[0]->Get_local_max();
@@ -613,7 +630,7 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 		  delete evtt;
 		}
 	      EventsGroupedScin.clear();
-	    }
+	    } //end if(Scintillatorseeittoo)
 	  
 	  ////////NoiseEstimation///////////////////////
 	  //////////////////////////////////////////////
@@ -686,10 +703,10 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	      _EventWriter->writeEvent( evt ) ;
 	      //delete evt;
 	      delete evt;
-	    }
+	    }//end if(nbrPlanestouched.size()>=(unsigned int)(_LayerCut)) 
 	  
-	}
-    }
+	}//end for(std::map< int,int>::iterator itt=Times.begin(); itt!=Times.end(); ++itt) 
+    } //end if(_LayerCut!=-1)
   else
     {
       EventsSelected++;
@@ -707,7 +724,7 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
       Writer(_NoiseWriter,"SDHCAL_HIT_NOISE",BehondTrigger, evtP,EventsNoise,1);
     }
   if(_WantDistribution==true) for(unsigned int i=0;i<HistoPlanes.size();++i)HistoPlanes[i]->Fill_TH1_Hit_In_Pad_Per_RamFull();
-}
+}//end processCollection
 
 void TriventProcessor::end()
 {  
@@ -770,35 +787,35 @@ void TriventProcessor::end()
       if(pdf){timestamp->Draw();
 	canvas->Print(namepdf.c_str());}
       delete timestamp;
-  timestamps->Write();
-  
-  //timestamps->GetXaxis()->SetTimeDisplay(1);
-  //timestamp->GetXaxis()->SetTimeOffset(d.Convert());
-  //timestamps->GetXaxis()->SetTimeFormat("%d\/%m\/%H\/%M\/%S");
-  if(pdf){timestamps->Draw();
-    canvas->Print(namepdf.c_str());}
-  delete timestamps;
-  time2read->Write();
-  if(pdf){time2read->Draw();
-    canvas->Print(namepdf.c_str());}
-  delete time2read;
-  time2readtime->Write();
-  if(pdf){time2readtime->Draw();
-    canvas->Print(namepdf.c_str());}
-  delete time2readtime;
-  TimeSpill->Write();
-  if(pdf){TimeSpill->Draw();
-    canvas->Print(namepdf.c_str());}
-  delete TimeSpill;
-  TimeRamFull->Write();
-  if(pdf){TimeRamFull->Draw();
-    canvas->Print(namepdf.c_str());}
-  delete TimeRamFull;
-  UsefullTime->Write();
-  if(pdf){UsefullTime->Draw();
-    canvas->Print(namepdf.c_str());}
-  delete UsefullTime;
-    }
+      timestamps->Write();
+      
+      //timestamps->GetXaxis()->SetTimeDisplay(1);
+      //timestamp->GetXaxis()->SetTimeOffset(d.Convert());
+      //timestamps->GetXaxis()->SetTimeFormat("%d\/%m\/%H\/%M\/%S");
+      if(pdf){timestamps->Draw();
+	canvas->Print(namepdf.c_str());}
+      delete timestamps;
+      time2read->Write();
+      if(pdf){time2read->Draw();
+	canvas->Print(namepdf.c_str());}
+      delete time2read;
+      time2readtime->Write();
+      if(pdf){time2readtime->Draw();
+	canvas->Print(namepdf.c_str());}
+      delete time2readtime;
+      TimeSpill->Write();
+      if(pdf){TimeSpill->Draw();
+	canvas->Print(namepdf.c_str());}
+      delete TimeSpill;
+      TimeRamFull->Write();
+      if(pdf){TimeRamFull->Draw();
+	canvas->Print(namepdf.c_str());}
+      delete TimeRamFull;
+      UsefullTime->Write();
+      if(pdf){UsefullTime->Draw();
+	canvas->Print(namepdf.c_str());}
+      delete UsefullTime;
+    } //end if(_Spill_Study)
   for(unsigned int i=0; i<HistoPlanes.size(); ++i) 
     {
       HistoPlanes[i]->Save(hfile,namepdf);
@@ -862,8 +879,8 @@ void TriventProcessor::end()
 	  }
         fichier<<std::endl;
         fichier.close();  // on referme le fichier
-      }
-    }
+      } //end if(fichier) 
+    }//end if(EffiwithDiscri.size()!=0)
   
    
   
@@ -897,7 +914,7 @@ void TriventProcessor::end()
       file<<"s.uploadChanges()"<<std::endl;
       file.close();
       save_calibration("Calib.txt");
-    }
+    }//end if(_WantCalibration==true)
   if(Negative.size()!=0)
     {
       std::cout<<red<<"WARNING !!! : Negative Value(s) of timeStamp found. They are written in Negative_Values.txt"<<normal<<std::endl;
@@ -915,6 +932,6 @@ void TriventProcessor::end()
       delete(it->second);
     }
   delete canvas;
-}
+}//end end()
 
 
