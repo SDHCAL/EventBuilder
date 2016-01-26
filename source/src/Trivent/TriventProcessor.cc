@@ -263,6 +263,33 @@ void TriventProcessor::init()
 unsigned long long bcid_spill=0;
 //END GLOBAL VARIABLES
 
+void TriventProcessor::processEvent_ProcessName_DHCALRawTimes(LCEvent *evtP, LCCollection*& col2)
+{
+  col2 = evtP ->getCollection("DHCALRawTimes");
+  lcio::IntVec vTrigger;
+  for(unsigned int i=0; i!=bcidnames.size();++i)
+    {
+      //std::cout<<bcidnames[i]<<std::endl;
+      col2->getParameters().getIntVals(bcidnames[i],vTrigger);
+      EVENT::long64 _bcid=0;
+      if (vTrigger.size()>=5)
+	{
+	  static EVENT::long64 Shift=16777216ULL;
+	  _bcid=(vTrigger[4]*Shift+vTrigger[3]*1000000000000);
+	  LCTime evtTime(_bcid) ;
+	  //std::cout << " date:      "      << evtTime.getDateString() << std::endl ; 
+	}
+    } //End loop with i
+  
+  RawTimeDifs.clear();
+  for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) 
+    {
+      EVENT::CalorimeterHit* raw_time = dynamic_cast<EVENT::CalorimeterHit* >( col2->getElementAt(ihit)) ;
+      // std::cout<<raw_time->getTime()<<"  "<<raw_time->getEnergyError()<<std::endl;
+      //RawTimeDifs[raw_time->getTimeStamp()].push_back(raw_time);
+    }
+}
+
 void TriventProcessor::processEvent( LCEvent * evtP )
 {
   
@@ -277,29 +304,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
   {
     if(names[i]=="DHCALRawTimes")
       {
-	col2 = evtP ->getCollection("DHCALRawTimes");
-	lcio::IntVec vTrigger;
-	for(unsigned int i=0; i!=bcidnames.size();++i)
-	  {
-	    //std::cout<<bcidnames[i]<<std::endl;
-	    col2->getParameters().getIntVals(bcidnames[i],vTrigger);
-	    EVENT::long64 _bcid=0;
-	    if (vTrigger.size()>=5)
-	      {
-		static EVENT::long64 Shift=16777216ULL;
-		_bcid=(vTrigger[4]*Shift+vTrigger[3]*1000000000000);
-		LCTime evtTime(_bcid) ;
-		//std::cout << " date:      "      << evtTime.getDateString() << std::endl ; 
-	      }
-	  } //End loop with i
-          
-	RawTimeDifs.clear();
-	for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) 
-	  {
-	    EVENT::CalorimeterHit* raw_time = dynamic_cast<EVENT::CalorimeterHit* >( col2->getElementAt(ihit)) ;
-	    // std::cout<<raw_time->getTime()<<"  "<<raw_time->getEnergyError()<<std::endl;
-	    //RawTimeDifs[raw_time->getTimeStamp()].push_back(raw_time);
-	  }
+	processEvent_ProcessName_DHCALRawTimes(evtP, col2);
       } // end if(names[i]=="DHCALRawTimes")
 
     if(names[i]=="Scintillator")
