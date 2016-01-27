@@ -60,6 +60,10 @@
 #include "EVENT/RawCalorimeterHit.h" 
 //#include "THClass.h"
 
+
+unsigned long long TriventProcessor::Shift_by_one_long=16777216ULL;
+
+
 //GLOBAL VARIABLES
 bool pdf=false;
 bool HasScintiSignal=false;
@@ -372,10 +376,7 @@ bool TriventProcessor::skip_data(LCCollection* col, unsigned int dif_id)
   static unsigned long long _bcid=0;
   if (vTrigger.size()>=5)
     {
-      static unsigned long long Shift=16777216ULL;
-      
-      _bcid=vTrigger[4]*Shift+vTrigger[3];
-      
+      _bcid=vTrigger[4]*Shift_by_one_long+vTrigger[3]; 
     }
   bool to_skip=false;
   

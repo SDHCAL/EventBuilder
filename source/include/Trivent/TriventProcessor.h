@@ -118,6 +118,10 @@ protected:
     void Loop_On_Scintillator_Collection(LCCollection *col3);
     unsigned int getDifId_of_first_hit_in_collection(LCCollection* col);
     bool skip_data(LCCollection* col, unsigned int dif_id);
+
+
+    static unsigned long long Shift_by_one_long;
+
 };
 
 
