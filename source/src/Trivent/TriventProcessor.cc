@@ -363,9 +363,6 @@ unsigned int TriventProcessor::getDifId_of_first_hit_in_collection(LCCollection*
   return hittt->getCellID0()&0xFF;
 }
 
-//GLOBAL VARIABLES
-unsigned long long bcid_spill=0;
-//END GLOBAL VARIABLES
 
 bool TriventProcessor::skip_data(LCCollection* col, unsigned int dif_id)
 {
