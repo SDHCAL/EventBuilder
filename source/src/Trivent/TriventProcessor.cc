@@ -363,7 +363,15 @@ unsigned int TriventProcessor::getDifId_of_first_hit_in_collection(LCCollection*
   return hittt->getCellID0()&0xFF;
 }
 
-
+////////////////////////////////////////////////////////////
+//
+//  QUESTIONS POUR FRANCOIS
+//
+// Types["Spill"][i] est un double et _bcid est un unsigned long long, ça donne quoi le test d'égalité ?
+// 
+// _bcid est static : si vTrigger a moins de 5 éléments, _bcid garde sa valeur du précédent event/readout : bug or feature ?
+//
+//////////////////////////////////////////////////////////// 
 bool TriventProcessor::skip_data(LCCollection* col, unsigned int dif_id)
 {
   std::string name="DIF"+patch::to_string(dif_id)+"_Triggers";
@@ -395,6 +403,13 @@ bool TriventProcessor::skip_data(LCCollection* col, unsigned int dif_id)
 }
 
 
+////////////////////////////////////////////////////////////
+//
+//  QUESTIONS POUR FRANCOIS
+//
+//  Pourquoi on quitte la fonction processEvent si on trouve dif_id=0 et on ne se contente pas de faire un continue ou break dans la boucle ?
+//
+//////////////////////////////////////////////////////////// 
 void TriventProcessor::processEvent( LCEvent * evtP )
 {
   
