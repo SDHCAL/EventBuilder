@@ -372,7 +372,7 @@ unsigned int TriventProcessor::getDifId_of_first_hit_in_collection(LCCollection*
 // _bcid est static : si vTrigger a moins de 5 éléments, _bcid garde sa valeur du précédent event/readout : bug or feature ?
 //
 //////////////////////////////////////////////////////////// 
-bool TriventProcessor::skip_data(LCCollection* col, unsigned int dif_id)
+bool TriventProcessor::data_is_at_beginning_of_spill(LCCollection* col, unsigned int dif_id)
 {
   std::string name="DIF"+patch::to_string(dif_id)+"_Triggers";
   //std::cout<<name<<std::endl;
@@ -429,7 +429,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	  unsigned int dif_id=getDifId_of_first_hit_in_collection(col);
 	  if (dif_id==0) return;
   
-	  if(!skip_data(col, dif_id))  processCollection(evtP,col);
+	  if( ! data_is_at_beginning_of_spill(col, dif_id) )  processCollection(evtP,col);
 	}// end try block
       catch (DataNotAvailableException &e)
 	{

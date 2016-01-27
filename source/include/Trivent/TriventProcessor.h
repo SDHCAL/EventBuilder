@@ -117,7 +117,7 @@ protected:
     void Loop_On_Scintillator_Collection_unused(LCCollection *col3);
     void Loop_On_Scintillator_Collection(LCCollection *col3);
     unsigned int getDifId_of_first_hit_in_collection(LCCollection* col);
-    bool skip_data(LCCollection* col, unsigned int dif_id);
+    bool data_is_at_beginning_of_spill(LCCollection* col, unsigned int dif_id);
     unsigned long long bcid_of_current_spill=0;
     
     static unsigned long long Shift_by_one_long;
