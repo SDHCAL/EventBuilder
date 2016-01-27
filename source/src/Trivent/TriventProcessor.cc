@@ -259,9 +259,6 @@ void TriventProcessor::init()
     }
 } // end init method
 
-//GLOBAL VARIABLES
-unsigned long long bcid_spill=0;
-//END GLOBAL VARIABLES
 
 void TriventProcessor::processEvent_ProcessCollectionNamed_DHCALRawTimes(LCEvent *evtP)
 {
@@ -353,6 +350,20 @@ void TriventProcessor::processEvent_ProcessCollectionNamed_Scintillator(LCEvent 
   Loop_On_Scintillator_Collection(col3);
 }
 
+
+unsigned int TriventProcessor::getDifId_of_first_hit_in_collection(LCCollection* col)
+{
+  RawCalorimeterHit * hittt = dynamic_cast<RawCalorimeterHit*>(col->getElementAt(/*hit*/0)) ;
+  if (hittt==nullptr) return 0;
+  //std::cout<<blue<<myhit->getCellID0()<<"  "<<std::endl;
+  return hittt->getCellID0()&0xFF;
+}
+
+//GLOBAL VARIABLES
+unsigned long long bcid_spill=0;
+//END GLOBAL VARIABLES
+
+
 void TriventProcessor::processEvent( LCEvent * evtP )
 {
   
@@ -369,10 +380,9 @@ void TriventProcessor::processEvent( LCEvent * evtP )
       try 
 	{
 	  LCCollection* col = evtP ->getCollection(_hcalCollections[i].c_str());
-	  RawCalorimeterHit * hittt = dynamic_cast<RawCalorimeterHit*>(col->getElementAt(/*hit*/0)) ;
-	  //std::cout<<blue<<myhit->getCellID0()<<"  "<<std::endl;
-	  unsigned int dif_id=hittt->getCellID0()&0xFF;
+	  unsigned int dif_id=getDifId_of_first_hit_in_collection(col);
 	  if (dif_id==0) return;
+
 	  std::string name="DIF"+patch::to_string(dif_id)+"_Triggers";
 	  //std::cout<<name<<std::endl;
 	  lcio::IntVec vTrigger;
