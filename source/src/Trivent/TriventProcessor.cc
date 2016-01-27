@@ -387,13 +387,13 @@ bool TriventProcessor::skip_data(LCCollection* col, unsigned int dif_id)
   for(unsigned int i=0;i<Types["Spill"].size();++i)
     if(Types["Spill"][i]==_bcid)
       {
-	bcid_spill=_bcid;
+	bcid_of_current_spill=_bcid;
       }
-  //if(_bcid-bcid_spill<=2500000)std::cout<<green<<_bcid<<"  "<<bcid_spill<<"  "<<_bcid-bcid_spill<<normal<<std::endl;
-  //else std::cout<<red<<_bcid<<"  "<<bcid_spill<<"  "<<_bcid-bcid_spill<<normal<<std::endl;
+  //if(_bcid-bcid_of_current_spill<=2500000)std::cout<<green<<_bcid<<"  "<<bcid_of_current_spill<<"  "<<_bcid-bcid_of_current_spill<<normal<<std::endl;
+  //else std::cout<<red<<_bcid<<"  "<<bcid_of_current_spill<<"  "<<_bcid-bcid_of_current_spill<<normal<<std::endl;
   if(_IgnorebeginningSpill>0)
     {
-      if(_bcid-bcid_spill<=_IgnorebeginningSpill)
+      if(_bcid-bcid_of_current_spill<=_IgnorebeginningSpill)
 	{
 	  std::cout<<"ignoring : "<<_bcid*200e-9<<std::endl;
 	  return true;
