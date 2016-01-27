@@ -375,8 +375,7 @@ bool TriventProcessor::skip_data(LCCollection* col, unsigned int dif_id)
     {
       _bcid=vTrigger[4]*Shift_by_one_long+vTrigger[3]; 
     }
-  bool to_skip=false;
-  
+
   for(unsigned int i=0;i<Types["Spill"].size();++i)
     if(Types["Spill"][i]==_bcid)
       {
@@ -389,10 +388,10 @@ bool TriventProcessor::skip_data(LCCollection* col, unsigned int dif_id)
       if(_bcid-bcid_spill<=_IgnorebeginningSpill)
 	{
 	  std::cout<<"ignoring : "<<_bcid*200e-9<<std::endl;
-	  to_skip=true;
+	  return true;
 	}
     }
-  return to_skip;
+  return false;
 }
 
 
