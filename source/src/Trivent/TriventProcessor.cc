@@ -363,6 +363,40 @@ unsigned int TriventProcessor::getDifId_of_first_hit_in_collection(LCCollection*
 unsigned long long bcid_spill=0;
 //END GLOBAL VARIABLES
 
+bool TriventProcessor::skip_data(LCCollection* col, unsigned int dif_id)
+{
+  std::string name="DIF"+patch::to_string(dif_id)+"_Triggers";
+  //std::cout<<name<<std::endl;
+  lcio::IntVec vTrigger;
+  col->getParameters().getIntVals(name,vTrigger);
+  static unsigned long long _bcid=0;
+  if (vTrigger.size()>=5)
+    {
+      static unsigned long long Shift=16777216ULL;
+      
+      _bcid=vTrigger[4]*Shift+vTrigger[3];
+      
+    }
+  bool to_skip=false;
+  
+  for(unsigned int i=0;i<Types["Spill"].size();++i)
+    if(Types["Spill"][i]==_bcid)
+      {
+	bcid_spill=_bcid;
+      }
+  //if(_bcid-bcid_spill<=2500000)std::cout<<green<<_bcid<<"  "<<bcid_spill<<"  "<<_bcid-bcid_spill<<normal<<std::endl;
+  //else std::cout<<red<<_bcid<<"  "<<bcid_spill<<"  "<<_bcid-bcid_spill<<normal<<std::endl;
+  if(_IgnorebeginningSpill>0)
+    {
+      if(_bcid-bcid_spill<=_IgnorebeginningSpill)
+	{
+	  std::cout<<"ignoring : "<<_bcid*200e-9<<std::endl;
+	  to_skip=true;
+	}
+    }
+  return to_skip;
+}
+
 
 void TriventProcessor::processEvent( LCEvent * evtP )
 {
@@ -383,35 +417,7 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	  unsigned int dif_id=getDifId_of_first_hit_in_collection(col);
 	  if (dif_id==0) return;
 
-	  std::string name="DIF"+patch::to_string(dif_id)+"_Triggers";
-	  //std::cout<<name<<std::endl;
-	  lcio::IntVec vTrigger;
-	  col->getParameters().getIntVals(name,vTrigger);
-	  static unsigned long long _bcid=0;
-	  if (vTrigger.size()>=5)
-	    {
-	      static unsigned long long Shift=16777216ULL;
-	      
-	      _bcid=vTrigger[4]*Shift+vTrigger[3];
-	      
-	    }
-	  bool to_skip=false;
-      
-	  for(unsigned int i=0;i<Types["Spill"].size();++i)
-	    if(Types["Spill"][i]==_bcid)
-	      {
-		bcid_spill=_bcid;
-	      }
-	  //if(_bcid-bcid_spill<=2500000)std::cout<<green<<_bcid<<"  "<<bcid_spill<<"  "<<_bcid-bcid_spill<<normal<<std::endl;
-	  //else std::cout<<red<<_bcid<<"  "<<bcid_spill<<"  "<<_bcid-bcid_spill<<normal<<std::endl;
-	  if(_IgnorebeginningSpill>0)
-	    {
-	      if(_bcid-bcid_spill<=_IgnorebeginningSpill)
-		{
-		  std::cout<<"ignoring : "<<_bcid*200e-9<<std::endl;
-		  to_skip=true;
-		}
-	    }
+	  bool to_skip=skip_data(col, dif_id);      
 	  if(to_skip!=true)  processCollection(evtP,col);
 	}// end try block
       catch (DataNotAvailableException &e)
