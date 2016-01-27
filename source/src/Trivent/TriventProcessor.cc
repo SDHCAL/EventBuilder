@@ -416,9 +416,8 @@ void TriventProcessor::processEvent( LCEvent * evtP )
 	  LCCollection* col = evtP ->getCollection(_hcalCollections[i].c_str());
 	  unsigned int dif_id=getDifId_of_first_hit_in_collection(col);
 	  if (dif_id==0) return;
-
-	  bool to_skip=skip_data(col, dif_id);      
-	  if(to_skip!=true)  processCollection(evtP,col);
+  
+	  if(!skip_data(col, dif_id))  processCollection(evtP,col);
 	}// end try block
       catch (DataNotAvailableException &e)
 	{
