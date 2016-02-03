@@ -794,10 +794,10 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 {
      
     _NbrRun=evtP->getRunNumber();
- /*if(isFirstEvent()==true)
+ if(isFirstEvent()==true)
     { 
-      DBInit::init();
-    RunInfo* r = RunInfo::getRunInfo(int(_NbrRun));
+     // DBInit::init();
+    /*RunInfo* r = RunInfo::getRunInfo(int(_NbrRun));
       cout<<r->getStartTime()<<endl;  
       cout<<r->getStopTime()<<endl;
       cout<<r->getDescription()<<endl;
@@ -830,9 +830,9 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
     cout<<"  "<<difs.size()<<" DIF"<<endl;
     cout<<"  "<<asics.size()<<" ASIC"<<endl;
     s->saveToXML("./xmlFile.xml");
-    delete(s); // this will delete the state object along with the configurations objects
-      DBInit::terminate();
-    }*/
+    delete(s); // this will delete the state object along with the configurations objects*/
+      //DBInit::terminate();
+    }
     Planss.clear();
     //Plans.clear();
     //PlansScintillator.clear();

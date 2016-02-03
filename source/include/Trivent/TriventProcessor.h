@@ -20,7 +20,6 @@
 #include <iomanip>
 #include <fstream>
 #include <iostream>
-
 #define size_pad 10.4125
 #define size_strip 2.5
 
@@ -410,7 +409,7 @@ void TriventProcessor::CalculateEfficiencyScinti(std::vector<RawCalorimeterHit *
 	   
 	    roll++;
 	    if(roll==1)EffiwithDiscri[geom.GetDifNbrPlate(dif_id)-1]+=1;
-      if(roll==1)std::cout<<geom.GetDifNbrPlate(dif_id)-1<<"  "<<EffiwithDiscri[geom.GetDifNbrPlate(dif_id)-1]<<std::endl;
+     // if(roll==1)std::cout<<geom.GetDifNbrPlate(dif_id)-1<<"  "<<EffiwithDiscri[geom.GetDifNbrPlate(dif_id)-1]<<std::endl;
       
       }
     }

@@ -41,6 +41,7 @@
 #include "Reader/Reader.h"
 #include "Trivent/Mapping.h"
 #include "Trivent/HistoPlane.h"
+#include "Streamout/RunHeader.h"
 #include "TStyle.h"
 #include "TF1.h"
 #include "TList.h"
@@ -51,19 +52,16 @@
 #include "TNamed.h"
 #include "THnSparse.h"
 #include "IO/LCReader.h"
-#include "TTimeStamp.h"
 #include "IMPL/LCTOOLS.h"
 #include "EVENT/LCRunHeader.h" 
 #include <algorithm> 
 #include "EVENT/SimCalorimeterHit.h" 
 #include "EVENT/CalorimeterHit.h" 
 #include "EVENT/RawCalorimeterHit.h" 
-//#include "THClass.h"
-
 
 unsigned long long TriventProcessor::Shift_by_one_long=16777216ULL;
 
-
+TH1F* counterScinti=new TH1F("counterScinti","counterScinti",6,0,6);
 //GLOBAL VARIABLES
 bool pdf=false;
 bool HasScintiSignal=false;
@@ -183,9 +181,7 @@ TriventProcessor::~TriventProcessor() {}
 
 void TriventProcessor::processRunHeader( LCRunHeader* run)
 {
-    LCTOOLS::dumpRunHeader(run);
-    //run->parameters().setValue("EventBuilderVersion",EventBuilderVersion);
-    //std::cout<<red<<run->parameters().getNString("EventBuilderVersion")<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<normal<<std::endl;
+
 }
 
 
@@ -199,7 +195,6 @@ void TriventProcessor::init()
 { 
   Intro();
   TOTALNUMBERHITSCINTI=0;
-  
   ReaderFactory readerFactory;
   Reader* myReader = readerFactory.CreateReader(_ReaderType);
   if(myReader) 
@@ -248,7 +243,7 @@ void TriventProcessor::init()
       delete lcReader;
     }
   std::cout<<yellow<<_GlobalEvents<<normal<<std::endl;
-  SpillStudy(_skip,_GlobalEvents,_maxRecord,geom,HistoPlanes,LCIOFiles,_Spill_Study);
+  SpillStudy(_skip,_GlobalEvents,_maxRecord,geom,HistoPlanes,LCIOFiles,_Spill_Study,Types);
   printParameters();
   if(_WantCalibration==true&&_Database_name ==""){std::cout<<red<<"Name's Database is unknown from the xml file"<<normal<<std::endl;std::exit(1);}
   if(_LayerCut==-1){std::cout<<red<<"LayerCut set to -1, assuming that you want to use trigger to see events"<<normal<<std::endl;}
@@ -279,8 +274,7 @@ void TriventProcessor::processEvent_ProcessCollectionNamed_DHCALRawTimes(LCEvent
 	{
 	  static EVENT::long64 Shift=16777216ULL;
 	  _bcid=(vTrigger[4]*Shift+vTrigger[3]*1000000000000);
-	  LCTime evtTime(_bcid) ;
-	  //std::cout << " date:      "      << evtTime.getDateString() << std::endl ; 
+	
 	}
     } //End loop with i
   
@@ -288,7 +282,6 @@ void TriventProcessor::processEvent_ProcessCollectionNamed_DHCALRawTimes(LCEvent
   for (int ihit=0; ihit < col2->getNumberOfElements(); ++ihit) 
     {
       EVENT::CalorimeterHit* raw_time = dynamic_cast<EVENT::CalorimeterHit* >( col2->getElementAt(ihit)) ;
-      // std::cout<<raw_time->getTime()<<"  "<<raw_time->getEnergyError()<<std::endl;
       //RawTimeDifs[raw_time->getTimeStamp()].push_back(raw_time);
     }
 }
@@ -313,7 +306,7 @@ void TriventProcessor::Loop_On_Scintillator_Collection_unused(LCCollection *col3
 		  static int ggg=0;
 		  ScintillatorCoincidence.push_back(raw_scin2->getIntVal(3)+1);
 		  ggg++;
-		  std::cout<<ggg<<std::endl;
+		  //std::cout<<ggg<<std::endl;
 		  _Front_scintillator--;
 		  _Back_scintillator--;
 		  _Both_scintillator++;
@@ -378,24 +371,24 @@ bool TriventProcessor::data_is_at_beginning_of_spill(LCCollection* col, unsigned
   //std::cout<<name<<std::endl;
   lcio::IntVec vTrigger;
   col->getParameters().getIntVals(name,vTrigger);
-  static unsigned long long _bcid=0;
+  unsigned long long int _bcid=0;
   if (vTrigger.size()>=5)
-    {
+  {
       _bcid=vTrigger[4]*Shift_by_one_long+vTrigger[3]; 
-    }
+  }
 
   for(unsigned int i=0;i<Types["Spill"].size();++i)
-    if(Types["Spill"][i]==_bcid)
-      {
-	bcid_of_current_spill=_bcid;
-      }
+  if(Types["Spill"][i]==_bcid)
+  {
+	  bcid_of_current_spill=_bcid;
+  }
   //if(_bcid-bcid_of_current_spill<=2500000)std::cout<<green<<_bcid<<"  "<<bcid_of_current_spill<<"  "<<_bcid-bcid_of_current_spill<<normal<<std::endl;
   //else std::cout<<red<<_bcid<<"  "<<bcid_of_current_spill<<"  "<<_bcid-bcid_of_current_spill<<normal<<std::endl;
   if(_IgnorebeginningSpill>0)
     {
       if(_bcid-bcid_of_current_spill<=_IgnorebeginningSpill)
 	{
-	  std::cout<<"ignoring : "<<_bcid*200e-9<<std::endl;
+	  std::cout<<"ignoring : "<<_bcid<<std::endl;
 	  return true;
 	}
     }
@@ -412,7 +405,6 @@ bool TriventProcessor::data_is_at_beginning_of_spill(LCCollection* col, unsigned
 //////////////////////////////////////////////////////////// 
 void TriventProcessor::processEvent( LCEvent * evtP )
 {
-  
   if (evtP== nullptr ) return;
   _NbrRun=evtP->getRunNumber();
   _eventNr=evtP->getEventNumber()+1;
@@ -614,10 +606,10 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	{
 	  bool Scintillatorseeittoo=false;
 	  for(unsigned int i=0;i!=ScintillatorCoincidence.size();++i)
-	    {
+	  {
 	      diff.Fill(ScintillatorCoincidence[i]-itt->first);
 	      if(ScintillatorCoincidence[i]-itt->first>=-6&&ScintillatorCoincidence[i]-itt->first<=-3) Scintillatorseeittoo=true;
-	    }
+	  }
 	  EventsGrouped.clear();
 	  EstimationNoiseBefore.clear();
 	  EstimationNoiseAfter.clear();
@@ -879,8 +871,7 @@ void TriventProcessor::end()
   //tf->Write();
   //delete Branch11;
   //delete t;
-  hfile->Close();
-  delete hfile;
+  
   _EventWriter->close();
   if(_noiseFileName!="") _NoiseWriter->close();
   std::cout << "TriventProcess::end() !! "<<_trig_count<<" Events Trigged"<< std::endl;
@@ -894,6 +885,15 @@ void TriventProcessor::end()
   
   if(EffiwithDiscri.size()!=0)
     {
+      counterScinti->Fill(0.5,_Front_scintillator);
+      counterScinti->Fill(1.5,_Back_scintillator);
+      counterScinti->Fill(2.5,_Both_scintillator);
+      counterScinti->Fill(3.5,_Front_scintillator*1.0/_efficiencyFrontScintillator);
+      counterScinti->Fill(4.5,_Back_scintillator*1.0/_efficiencyBackScintillator);
+      counterScinti->Fill(5.5,_Both_scintillator*1.0/(_efficiencyFrontScintillator*_efficiencyBackScintillator));
+      counterScinti->Write();
+      counterScinti->Scale(1.0/(HistoPlanes[0]->Get_Global_Total_Time()*200e-9));
+      counterScinti->Write("EstimatedRateScinti");
       std::cout<<green<<"Counter Front scintillator : "<<_Front_scintillator<<" Counter Back scintillator : "<< _Back_scintillator<<" Counter Both scintillator : "<<_Both_scintillator<<"  "<<normal<<std::endl;
       std::cout<<green<<"Counter Front scintillator : "<<_Front_scintillator*1.0/_efficiencyFrontScintillator<<" Counter Back scintillator : "<< _Back_scintillator*1.0/_efficiencyBackScintillator<<" Counter Both scintillator : "<<_Both_scintillator*1.0/(_efficiencyFrontScintillator*_efficiencyBackScintillator)<<"  "<<normal<<std::endl;
       std::cout<<green<<"Efficiency Calculated with Scintillators : "<<normal<<std::endl;
@@ -919,7 +919,8 @@ void TriventProcessor::end()
     }//end if(EffiwithDiscri.size()!=0)
   
    
-  
+  hfile->Close();
+  delete hfile;
   
   if(_WantCalibration==true)
     {

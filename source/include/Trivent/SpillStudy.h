@@ -34,58 +34,58 @@ TH1D* UsefullTime=new TH1D("UselessTime","UselessTime",1000,0,1);
 std::vector<TH1*>typeee;
 unsigned long int total_time_file=0;
 unsigned long int total_time_by_user=0;
-void SpillStudy(unsigned int& _skip, unsigned int& _GlobalEvents,unsigned int& _maxRecord,Geometry& geom,std::map<int,HistoPlane*>&HistoPlanes,std::vector<std::string>&LCIOFiles,bool& _Spill_Study)
+void SpillStudy(unsigned int& _skip, unsigned int& _GlobalEvents,unsigned int& _maxRecord,Geometry& geom,std::map<int,HistoPlane*>& HistoPlanes,std::vector<std::string>& LCIOFiles,bool& _Spill_Study,std::map<std::string,std::vector<double>> & Types)
 {
   if(_Spill_Study)
   {
-  std::map<unsigned long long int,int>Time_stamps;
-  std::map<unsigned long long int,int>Time_stampss;
-  int32_t timetime=0;
-  LCReader* lcReader = LCFactory::getInstance()->createLCReader() ;
-  std::vector<std::string>colee{"DHCALRawHits"};
-  lcReader->setReadCollectionNames( colee ) ;
-  unsigned eventnumber=-1;
-  unsigned long long int min_by_user=999999999999;
-  unsigned long long int  max_by_user=1;
-  for(unsigned int i=0;i!=LCIOFiles.size();++i)
-  {
-    std::cout<<"I'm Readind The DATA in "<<LCIOFiles[i]<<std::endl;
-    LCEvent* evt(0) ;
-    lcReader->open( LCIOFiles[i] ) ;
-    std::cout<<lcReader->getNumberOfRuns()<<" "<<lcReader->getNumberOfEvents()<<std::endl;
-    evt=lcReader->readNextEvent();
-    unsigned int counter=0;
-    std::cout<<"Spill Study progression"<<std::endl;
-    do
+    std::map<unsigned long long int,int>Time_stamps;
+    std::map<unsigned long long int,int>Time_stampss;
+    int32_t timetime=0;
+    LCReader* lcReader = LCFactory::getInstance()->createLCReader() ;
+    std::vector<std::string>colee{"DHCALRawHits"};
+    lcReader->setReadCollectionNames( colee ) ;
+    unsigned eventnumber=-1;
+    unsigned long long int min_by_user=999999999999;
+    unsigned long long int  max_by_user=1;
+    for(unsigned int i=0;i!=LCIOFiles.size();++i)
     {
-      counter++;
-      Progress(_skip,_GlobalEvents,_maxRecord,counter);
-      LCCollection* col=evt->getCollection("DHCALRawHits");
-      if(col!=nullptr)
-		  {
-        eventnumber++;
-        RawCalorimeterHit * myhit = dynamic_cast<RawCalorimeterHit*>(col->getElementAt(0)) ;
-       
-        unsigned int dif_id=myhit->getCellID0()&0xFF;
-        if (dif_id==0) return;
-        std::string name="DIF"+patch::to_string(dif_id)+"_Triggers";
+      std::cout<<"I'm Readind The DATA in "<<LCIOFiles[i]<<std::endl;
+      LCEvent* evt(0) ;
+      lcReader->open( LCIOFiles[i] ) ;
+      std::cout<<lcReader->getNumberOfRuns()<<" "<<lcReader->getNumberOfEvents()<<std::endl;
+      evt=lcReader->readNextEvent();
+      unsigned int counter=0;
+      std::cout<<"Spill Study progression"<<std::endl;
+      do
+      {
+        counter++;
+        Progress(_skip,_GlobalEvents,_maxRecord,counter);
+        LCCollection* col=evt->getCollection("DHCALRawHits");
+        if(col!=nullptr)
+		    {
+          eventnumber++;
+          RawCalorimeterHit * myhit = dynamic_cast<RawCalorimeterHit*>(col->getElementAt(0)) ;
+         
+          unsigned int dif_id=myhit->getCellID0()&0xFF;
+          if (dif_id==0) return;
+          std::string name="DIF"+patch::to_string(dif_id)+"_Triggers";
+          
+          lcio::IntVec vTrigger;
+          col->getParameters().getIntVals(name,vTrigger);
+          unsigned long long _bcid=0;
+          if (vTrigger.size()>=5)
+          {
+            unsigned long long Shift=16777216ULL;
+  	        _bcid=vTrigger[4]*Shift+vTrigger[3];
+          }
+          Time_stamps[_bcid]++;
+          for(unsigned int i=0;i<col->getNumberOfElements();++i)
+          {
+            myhit=dynamic_cast<RawCalorimeterHit*>(col->getElementAt(i));
+            unsigned int dif_id=myhit->getCellID0()&0xFF;
         
-        lcio::IntVec vTrigger;
-        col->getParameters().getIntVals(name,vTrigger);
-        unsigned long long _bcid=0;
-        if (vTrigger.size()>=5)
-        {
-          unsigned long long Shift=16777216ULL;
-  	      _bcid=vTrigger[4]*Shift+vTrigger[3];
-        }
-        Time_stamps[_bcid]++;
-        for(unsigned int i=0;i<col->getNumberOfElements();++i)
-        {
-        myhit=dynamic_cast<RawCalorimeterHit*>(col->getElementAt(i));
-        unsigned int dif_id=myhit->getCellID0()&0xFF;
-        
        
-        if(geom.GetDifType(int(dif_id))<=1)if(geom.GetDifNbrPlate(int(dif_id))!=-1) HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("timestamp")->Fill(_bcid*200e-9,1);
+            if(geom.GetDifType(int(dif_id))<=1)if(geom.GetDifNbrPlate(int(dif_id))!=-1) HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Return_TH1F("timestamp")->Fill(_bcid*200e-9,1);
         }
         Time_stampss[_bcid]=col->getNumberOfElements();
         if(eventnumber>=_skip&&eventnumber<=_maxRecord)
@@ -190,7 +190,24 @@ void SpillStudy(unsigned int& _skip, unsigned int& _GlobalEvents,unsigned int& _
     if(it->first>max)max=it->first;
     
   }
- 
+   for(std::map<double,std::vector<double>>::iterator j=Vec_timebetweentime.begin();j!=Vec_timebetweentime.end();++j)
+  {
+	  if(j->first<=0.5) 
+    {
+		  //Between_spill[j->first]=j->second;
+		  Types["RamFull"].insert(Types["RamFull"].end(),j->second.begin(),j->second.end());
+	  }
+    else if (j->first>=1) 
+	  {
+		  //Spills[j->first]=j->second;
+		  Types["Spill"].insert(Types["Spill"].end(),j->second.begin(),j->second.end());
+	  }
+    else 
+	  {
+		  //Others[j->first]=j->second;
+		  Types["Other"].insert(Types["Other"].end(),j->second.begin(),j->second.end());
+	  }
+  }
   int diffbetweentime=(int((max_betweentime-min_betweentime))+1)*10;
   time2readtime = new TH1D("Difference in time bettwen two time","Difference in time bettwen two time",10000000,-10,10);
   for(unsigned int i =0;i<timebetweentime_toplot.size();++i)
@@ -207,7 +224,6 @@ void SpillStudy(unsigned int& _skip, unsigned int& _GlobalEvents,unsigned int& _
   }
   double diff=(max-min);
   if(diff>9999999)diff=9999999;
-  std::cout<<red<<"rrrrrrrrrrrrrrrrrrrrrrrrrr"<<diff<<"  "<<INT_MAX<<normal<<std::endl;
   timestamp= new TH1D("timestamp","timestamp",diff,min*200e-9,max*200e-9);
   timestamps= new TH1D("timestampS","timestampS",diff,min*200e-9,max*200e-9);
   for(std::map<double,std::vector<double>>::iterator j=Vec_timebetweentime.begin();j!=Vec_timebetweentime.end();++j)

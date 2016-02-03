@@ -7,7 +7,6 @@
 #include<cstdlib>
 void inline Intro()
 {
-system("clear");
 std::cout<<std::endl;
 std::cout<<std::endl;
 std::cout<<std::endl;
