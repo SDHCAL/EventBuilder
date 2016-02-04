@@ -114,3 +114,12 @@ ${PROJECT_SOURCE_DIR}/source/src/Simulation/Simulation.cc
 SET_TARGET_PROPERTIES( Simulation PROPERTIES OUTPUT_NAME Simulation )
 INSTALL( TARGETS Simulation DESTINATION bin )
 # ----------------------------------------------------------------------------
+
+# ----- RunHeaderTest executable ----------------------------------------------------
+ADD_EXECUTABLE( RunHeaderTest
+${PROJECT_SOURCE_DIR}/source/src/RunHeaderTest/RunHeaderTest.cc  
+)
+# avoid name conflict between Marlin library and Marlin application
+SET_TARGET_PROPERTIES(RunHeaderTest  PROPERTIES OUTPUT_NAME RunHeaderTest )
+INSTALL( TARGETS RunHeaderTest DESTINATION bin )
+# ----------------------------------------------------------------------------
