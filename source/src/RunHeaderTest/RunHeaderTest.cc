@@ -58,6 +58,10 @@ void createLCIOfile(std::string filename)
   delete lcWrt ;
 }
 
+#include "IO/LCEventListener.h"
+#include "IO/LCRunListener.h"
+
+
 
 void dumpRunHeaders(std::string filename)
 {
@@ -73,12 +77,66 @@ void dumpRunHeaders(std::string filename)
     }
 }
 
+class RunEventProcessor : public LCRunListener, public LCEventListener{
+  
+protected:
+  LCWriter* lcWrt ;
+public:
+  
+  RunEventProcessor(std::string newFileName) 
+  {
+    // open outputfile
+    lcWrt = LCFactory::getInstance()->createLCWriter() ;
+    lcWrt->open(newFileName , LCIO::WRITE_NEW );
+  }
+  
+  ~RunEventProcessor()
+  {
+    // close outputfile
+    lcWrt->close()  ;
+  }
+  
+  void modifyEvent( LCEvent * evt ) {  /* Nothing */ ; }
+
+  void processEvent( LCEvent * evt ) 
+  {    
+    // just copy events to outputfiles  
+    lcWrt->writeEvent( evt ) ;
+  }
+
+  void modifyRunHeader(LCRunHeader* run)
+  {
+    run->parameters().setValue("Mechant","Darth Vador");
+    // save modified run headers to the outputfile
+    lcWrt->writeRunHeader( run ) ;
+    
+  }
+
+  void processRunHeader( LCRunHeader* run) {  /* Nothing */ ; }
+
+} ; //end event+run listener class
+
+
+
+void copyUpdate(std::string filename, std::string newFile)
+{
+  LCReader* lcReader = LCFactory::getInstance()->createLCReader() ;
+  lcReader->open( filename );
+  RunEventProcessor evtProc( newFile );  
+  lcReader->registerLCRunListener( &evtProc ); 
+  lcReader->registerLCEventListener( &evtProc ); 
+  lcReader->readStream();
+  lcReader->close();
+}
+
 void Usage(char** argv)
 {
   std::cout << "Usage " << argv[0] << " number " << std::endl;
   std::cout << "number should be " << std::endl;
   std::cout << 1 << " for generating a lcio test file" << std::endl;
   std::cout << 2 << " for dumping the run header of the lcio file " << std::endl;
+  std::cout << 3 << " copy and change RunHeader in a new file " << std::endl;
+  std::cout << 4 << " dump RunHeader of new file " << std::endl;
 }
 
 
@@ -101,6 +159,8 @@ int main(int argc, char** argv)
     {  
     case 1 : createLCIOfile(filename); break;
     case 2 : dumpRunHeaders(filename); break;
+    case 3 : copyUpdate(filename,"update.slcio"); break;
+    case 4 : dumpRunHeaders("update.slcio"); break;
     default: Usage(argv); return 1;
     }
 
