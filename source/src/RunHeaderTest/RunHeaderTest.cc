@@ -13,6 +13,10 @@
 #include "IMPL/LCCollectionVec.h"
 #include "IMPL/LCParametersImpl.h"
 
+#include "IO/LCReader.h"
+#include "IMPL/LCTOOLS.h"
+#include "EVENT/LCRunHeader.h" 
+
 using namespace lcio ;
 
 void createLCIOfile(std::string filename)
@@ -55,12 +59,50 @@ void createLCIOfile(std::string filename)
 }
 
 
+void dumpRunHeaders(std::string filename)
+{
+  LCReader* lcReader = LCFactory::getInstance()->createLCReader() ;
+  lcReader->open(filename);
+  std::cout << "Found " << lcReader->getNumberOfRuns() << " runs and "
+	    << lcReader->getNumberOfEvents() << " events." << std::endl;
+
+  LCRunHeader *runHdr;
+  while( ( runHdr = lcReader->readNextRunHeader() ) != 0 )
+    {
+      LCTOOLS::dumpRunHeader( runHdr ) ;
+    }
+}
+
+void Usage(char** argv)
+{
+  std::cout << "Usage " << argv[0] << " number " << std::endl;
+  std::cout << "number should be " << std::endl;
+  std::cout << 1 << " for generating a lcio test file" << std::endl;
+  std::cout << 2 << " for dumping the run header of the lcio file " << std::endl;
+}
+
+
+
 int main(int argc, char** argv)
 {
   for (int i=0; i<argc; ++i)
     std::cout << std::setw(4) << i << " : "  << argv[i] << std::endl;
 
-  createLCIOfile("test.slcio");
+  if (argc==1) 
+    {
+      Usage(argv);
+      return 1;
+    }
+  
+  std::string filename=("test.slcio");
+  
+  int icase=std::atoi(argv[1]);
+  switch(icase) 
+    {  
+    case 1 : createLCIOfile(filename); break;
+    case 2 : dumpRunHeaders(filename); break;
+    default: Usage(argv); return 1;
+    }
 
   return 0;
 }
