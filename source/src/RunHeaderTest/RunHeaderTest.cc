@@ -106,7 +106,10 @@ public:
 
   void modifyRunHeader(LCRunHeader* run)
   {
+    // add a parameter
     run->parameters().setValue("Mechant","Darth Vador");
+    // change an existing parameter
+    run->parameters().setValue("UnEntier",22);
     // save modified run headers to the outputfile
     lcWrt->writeRunHeader( run ) ;
     
