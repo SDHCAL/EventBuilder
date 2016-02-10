@@ -25,7 +25,7 @@ include_directories("${PROJECT_BINARY_DIR}")
 INCLUDE_DIRECTORIES( include )
 
 # require proper c++
-ADD_DEFINITIONS( "-fPIC -pedantic -Wunused-value -O3 -Wno-long-long -Wreturn-type " )
+ADD_DEFINITIONS( "-fPIC -pedantic -Wunused-value -O3 -Wno-long-long -Wreturn-type -Wall" )
 
 
 # -------------------------------------------------
@@ -85,7 +85,20 @@ ADD_LIBRARY( Trivent SHARED ${TRIVENT_SRC_FILES} )
 TARGET_LINK_LIBRARIES( Trivent Common )
 INSTALL(TARGETS Trivent LIBRARY DESTINATION lib)  
 
+# -------------------------------------------------
+# build the Test library
 
+#FILE (GLOB_RECURSE Test_SRC_FILES src/Analysis/*)
+#ADD_LIBRARY( Analysis SHARED ${Test_SRC_FILES} )
+#TARGET_LINK_LIBRARIES( Analysis Common  )
+#INSTALL(TARGETS Analysis LIBRARY DESTINATION lib)  
+
+
+
+# ----- ElogFiller executable ----------------------------------------------------
+ADD_EXECUTABLE( ElogFiller ${PROJECT_SOURCE_DIR}/source/src/ElogFiller/ElogFiller.cc)
+INSTALL( TARGETS ElogFiller DESTINATION bin )
+ 
 # -------------------------------------------------
 # build the VirerMarlin library
 
@@ -107,10 +120,7 @@ INSTALL(TARGETS Trivent LIBRARY DESTINATION lib)
 
 
 # ----- Simulation executable ----------------------------------------------------
-ADD_EXECUTABLE( Simulation 
-${PROJECT_SOURCE_DIR}/source/src/Simulation/Simulation.cc  
-)
-# avoid name conflict between Marlin library and Marlin application
-SET_TARGET_PROPERTIES( Simulation PROPERTIES OUTPUT_NAME Simulation )
+ADD_EXECUTABLE( Simulation ${PROJECT_SOURCE_DIR}/source/src/Simulation/Simulation.cc )
 INSTALL( TARGETS Simulation DESTINATION bin )
-# ----------------------------------------------------------------------------
+
+

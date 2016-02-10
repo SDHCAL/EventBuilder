@@ -31,4 +31,5 @@ CreateBuildDir
 cd build
 CreateMakefile
 Compile
+cp $(pwd)/source/src/ElogFiller/postlog.py $(pwd)/bin/
 echo " Compilation done"
