@@ -864,7 +864,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 	LdaConfiguration *lda_conf = s->getLdaConfiguration();
 	DccConfiguration *dcc_conf = s->getDccConfiguration();
 	DifConfiguration *dif_conf = s->getDifConfiguration();
-	AsicConfiguration *asic_conf = s->getAsicConfiguration();
+	AsicConfiguration *asic_conf = s->getAsicConfiguration();*/
     }
     Planss.clear();
     if (evtP != nullptr) 
@@ -964,7 +964,6 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
             }
     	    }
     	  }
-=======
     } // end if(isFirstEvent()==true)
   Planss.clear();
   //Plans.clear();
@@ -976,7 +975,6 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
     }
     
   //double rate0=0.0;
->>>>>>> refs/remotes/origin/beta
       
   /*std::vector<std::string>names=*evtP->getCollectionNames();
     for(unsigned int i=0; i< _hcalCollections.size(); i++)
