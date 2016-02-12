@@ -5,13 +5,13 @@
 #include <iomanip>
 #include "Progress.h"
 #include "marlin/Processor.h"
-
+#include "Utilities.h"
 #ifdef OCCI_SUPPORT
 #include "Database/db/DBInit.h"
 #include "Database/configObjects/Setup.h"
 #include "Database/daq/RunInfo.h"
 #endif
-
+#include "THnSparse.h"
 #include "UTIL/LCTOOLS.h"
 #include "UTIL/CellIDDecoder.h"
 #include "IMPL/CalorimeterHitImpl.h"
@@ -31,7 +31,6 @@
 #include "TH3F.h"
 #include "TTree.h"
 #include "Trivent/Mapping.h"
-#include "TGLTH3Composition.h"
 #include "TGraph2D.h"
 #include "Utilities.h"
 #include <map>
@@ -54,11 +53,11 @@ using namespace std;
 using namespace oracle::occi;
 #endif
 
-std::vector<std::vector<std::array<int,4>>>useforrealrate;
+std::vector<std::vector<std::array<double,7>>>useforrealrate;
 std::map<std::string,std::vector<std::vector<TH1F*>>>Short_Efficiency;
 std::map<std::string,std::vector<std::vector<TH1F*>>>Short_Multiplicity;
 std::map<std::string,unsigned int>Numbers;
-unsigned int SumCombinaison(int n,int kmin)
+unsigned int SumCombinaison(unsigned int n,unsigned int kmin)
 {
   unsigned int sumcomb=0;
   for(unsigned int i=kmin;i<=n;++i) sumcomb+=TMath::Binomial(n,i);
@@ -80,7 +79,8 @@ TBranch* Branch4 =  tt->Branch("CDYZ",&(totreee.CDYZ));
 TBranch* Branch5 =  tt->Branch("OrdXZ",&(totreee.OrdXZ));
 TBranch* Branch6 =  tt->Branch("OrdYZ",&(totreee.OrdYZ));
 
-
+THnSparseD* hss2=nullptr;
+THnSparseD* hss=nullptr;
 std::vector<TGraphErrors>xzaxis;
 std::map<int,int long>RealNumberPlane;
 std::vector<TGraphErrors>yzaxis;
@@ -88,6 +88,7 @@ std::vector<std::string> names={"SDHCAL_HIT"};
 enum Tresholds {Threshold1,Threshold2,Threshold3,Threshold12,Threshold23,Thresholdall};
 std::array<std::string,6>Thresholds_name{"Threshold1","Threshold2","Threshold3","Threshold12","Threshold23","Thresholdall"};
 std::map<std::string,std::vector<TH2F*>>Distribution_hits;
+std::array<std::map<std::string,std::vector<TH2F*>>,6>All_The_Hits_From_Trivent;
 std::array<std::map<std::string,std::vector<TH2F*>>,6>Efficiency_pads;
 std::array<std::map<std::string,std::vector<TH2F*>>,6>Multiplicity_pads;
 std::array<std::map<std::string,std::vector<TH2F*>>,6>Efficiency_asics;
@@ -96,6 +97,7 @@ std::map<std::string,std::vector<TH1F*>>HowLongFromExpectedY;
 std::map<std::string,std::vector<TH2D*>>difxy;
 std::map<int,TH1D*> estimateur;
 std::map<int,TH1D*> estimateur2;
+TH1D* Rate_Estimation = new TH1D("Nbr_Tracks_divided_by_time","Nbr_Tracks_divided_by_time",1,0,1);
 std::map<int,std::map<int,TH2F*>> Nbrviewedtracks;
 std::map<int,std::map<int,TH2F*>> eff;
 std::map<int,std::map<int,TH2F*>> effsquared;
@@ -107,13 +109,16 @@ std::array<std::map<std::string,std::vector<TH2F*>>,3>ThresholdMap;
 std::map<std::string,std::vector<TH2F*>>Gain;
 std::map<int,std::map<int,TH2F*>>RealRateWithSelectedZone;
 std::map<int,std::map<int,TH2F*>>RealRateWithSelectedZonemin;
+std::map<int,TH2F*>RateSeen;
+std::map<int,TH2F*>RateSeenPon;
 std::map<int,TH2F*>EfficacityVsRate;
 std::map<std::string,TGraph2D*> Distribution_exp_tgraph;
 std::map<std::string,std::vector<TH2F*>>Distribution_exp;
 std::map<std::string,TGraph2D*> Distribution_hits_tgraph;
+std::map<std::string,TGraph2D*> RateSeen3D;
 std::vector<std::string>Maketracks{"SDHCAL_HIT","SDHCAL_HIT_SC"};
 std::vector<std::string>Makeeffi{"NOISE_ESTIMATION_BEFORE","NOISE_ESTIMATION_AFTER"};
-
+unsigned int numbertracks;
 void AnalysisProcessor::PrintStatShort(std::string name)
 {
   static std::map<std::string,std::string>Mess;
@@ -223,17 +228,20 @@ std::map<std::string,int> plan::countHitAtStrip(double& x, double dlim,std::stri
   return N;  
 }
 
-void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,std::map<int,geometryplan> geometryplans,std::vector<std::vector<std::array<int,4>>>& useforrealrate)
+void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,std::map<int,geometryplan> geometryplans,std::vector<std::vector<std::array<double,7>>>& useforrealrate)
 {
+  
   double NbrPlateTotal=geom.GetNumberPlates();
+  
   for(std::map<std::string,std::map<int,plan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
   {
-    std::vector<std::array<int,4>>XYZExpected;
+    std::vector<std::array<double,7>>XYZExpected;
     bool Doit=false;
     for(unsigned int mm=0;mm!=Maketracks.size();++mm)
     {
       if(itt->first!=Maketracks[mm]) continue;
       else Doit=true;
+      
     }
     if(Doit==true)
     {
@@ -246,7 +254,7 @@ void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,s
         PlaneNbr.push_back(it->first);
       }
       for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((*it)->nHits(itt->first)>=_NbrHitPerPlaneMax ) return;
-      if(plansUsedForTrackMaking.size()<_NbrPlaneUseForTrackingRate) return;
+      if(plansUsedForTrackMaking.size()<(unsigned int )(_NbrPlaneUseForTrackingRate)) return;
       for(unsigned int i=0;i!=NbrPlateTotal-1;++i)
       {
         int notinPlanNbr=1;
@@ -276,11 +284,10 @@ void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,s
         double cg=geometryplans[PlaneNbr[i]].get_cg();
         double sg=geometryplans[PlaneNbr[i]].get_sg();
         int istouched=1;
-        double I=cg*cb*1.0/size_pad*(p.barycentreX(itt->first)-geometryplans[PlaneNbr[i]].get_X0())+sg*cb*1.0/size_pad*(p.barycentreY(itt->first)-geometryplans[PlaneNbr[i]].get_Y0())+-sb*geometryplans[PlaneNbr[i]].get_Z0();
-        double J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(p.barycentreX(itt->first)-geometryplans[PlaneNbr[i]].get_X0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(p.barycentreY(itt->first)-geometryplans[PlaneNbr[i]].get_Y0())+cb*sa*geometryplans[PlaneNbr[i]].get_Z0();
+        double I=cg*cb*1.0/size_pad*(p.barycentreX(itt->first)-geometryplans[PlaneNbr[i]].GetX0())+sg*cb*1.0/size_pad*(p.barycentreY(itt->first)-geometryplans[PlaneNbr[i]].GetY0())+-sb*geometryplans[PlaneNbr[i]].GetZ0();
+        double J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(p.barycentreX(itt->first)-geometryplans[PlaneNbr[i]].GetX0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(p.barycentreY(itt->first)-geometryplans[PlaneNbr[i]].GetY0())+cb*sa*geometryplans[PlaneNbr[i]].GetZ0();
         int K=geometryplans[PlaneNbr[i]].NbrPlate();
-       //std::cout<<green<<"  "<<"  "<<"  "<<I<<"  "<<J<<"  "<<K<<"  "<<int(ceil(I))<<"  "<<int(ceil(J))<<"  "<<istouched<<normal<<std::endl;
-        XYZExpected.push_back({int(ceil(I)),int(ceil(J)),K,istouched});
+        XYZExpected.push_back({ceil(I),ceil(J),double(K),double(istouched),p.barycentreX(itt->first),p.barycentreY(itt->first),geometryplans[PlaneNbr[i]].GetZ0()});
         p.computeMaxima(itt->first);
         grxz.SetPoint(i,p.barycentreZ(itt->first),p.barycentreX(itt->first));
         if(p.GetType()==pad)
@@ -302,7 +309,7 @@ void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,s
       if (kyz>= _Chi2Rate) return;
       double pyz0 = myfityz->GetParameter(0);
       double  pyz1 = myfityz->GetParameter(1);
-      
+      if(itt->first=="SDHCAL_HIT")numbertracks++;
       for (unsigned int i=0; i < othersNbr.size(); ++i)
       {
         int istouched=0;
@@ -315,18 +322,26 @@ void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,s
         double Zexpp=geometryplans[othersNbr[i]].GetZexp(pxz0,pyz0,pxz1,pyz1);
         double iexp=geometryplans[othersNbr[i]].GetProjectioni(pxz0+pxz1*Zexpp,pyz0+pyz1*Zexpp,Zexpp);
         double jexp=geometryplans[othersNbr[i]].GetProjectionj(pxz0+pxz1*Zexpp,pyz0+pyz1*Zexpp,Zexpp);
-        double I=cg*cb*1.0/size_pad*(iexp-geometryplans[othersNbr[i]].get_X0())+sg*cb*1.0/size_pad*(jexp-geometryplans[othersNbr[i]].get_Y0())+-sb*geometryplans[othersNbr[i]].get_Z0();
-        double J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(iexp-geometryplans[othersNbr[i]].get_X0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(jexp-geometryplans[othersNbr[i]].get_Y0())+cb*sa*geometryplans[othersNbr[i]].get_Z0();
+        double I=cg*cb*1.0/size_pad*(iexp-geometryplans[othersNbr[i]].GetX0())+sg*cb*1.0/size_pad*(jexp-geometryplans[othersNbr[i]].GetY0())+-sb*geometryplans[othersNbr[i]].GetZ0();
+        double J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(iexp-geometryplans[othersNbr[i]].GetX0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(jexp-geometryplans[othersNbr[i]].GetY0())+cb*sa*geometryplans[othersNbr[i]].GetZ0();
         int K=geometryplans[othersNbr[i]].NbrPlate();
        //std::cout<<red<<Zexpp<<"  "<<"  "<<"  "<<I<<"  "<<J<<"  "<<K<<"  "<<int(ceil(I))<<"  "<<int(ceil(J))<<"  "<<istouched<<normal<<std::endl;
-        XYZExpected.push_back({int(ceil(I)),int(ceil(J)),K,istouched});
+        XYZExpected.push_back({ceil(I),ceil(J),double(K),double(istouched),iexp,jexp,Zexpp});
+        
+        
       }
     delete myfityz;
     delete myfitxz;
     }
-    if(itt->first=="SDHCAL_HIT")useforrealrate.push_back(XYZExpected);
+   if(itt->first=="SDHCAL_HIT")
+    {
+      useforrealrate.push_back(XYZExpected);
+     
+    }
+    
     //std::cout<<magenta<<useforrealrate.size()<<normal<<std::endl;
   }
+   
 }
 
 void plan::computeBarycentre(std::string name)
@@ -380,7 +395,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
       std::vector<int>PlaneNbr;
       for (std::map<int,plan>::iterator it=mapDIFplan[itt->first].begin(); it!=mapDIFplan[itt->first].end(); ++it)
       {
-        if (Nbr!=it->first) 
+        if (geomplan.NbrPlate()!=it->first) 
         {
           if((it->second).nHits(itt->first)>0)//Verify is hits are present
           {
@@ -446,12 +461,12 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
 
         if (nullptr==thisPlan) return;
         int I,J,K;
-        ca=this->get_ca();
-        sa=this->get_sa();
-        cb=this->get_cb();
-        sb=this->get_sb();
-        cg=this->get_cg();
-        sg=this->get_sg();
+        double ca=this->get_ca();
+        double sa=this->get_sa();
+        double cb=this->get_cb();
+        double sb=this->get_sb();
+        double cg=this->get_cg();
+        double sg=this->get_sg();
         Distribution_exp_tgraph[itt->first]->SetPoint(nombreTests[itt->first],Projectioni,Projectionj,Zexp);
         
         for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][NOHITINPLAN]++;
@@ -462,8 +477,8 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
           std::map<std::string,int> nhit;
           if(this->GetType()==pad)
           {
-            I=cg*cb*1.0/size_pad*(Projectioni-this->get_X0())+sg*cb*1.0/size_pad*(Projectionj-this->get_Y0())+-sb*this->get_Z0();
-        	  J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(Projectioni-this->get_X0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(Projectionj-this->get_Y0())+cb*sa*this->get_Z0();
+            I=cg*cb*1.0/size_pad*(Projectioni-this->GetX0())+sg*cb*1.0/size_pad*(Projectionj-this->GetY0())+-sb*this->GetZ0();
+        	  J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(Projectioni-this->GetX0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(Projectionj-this->GetY0())+cb*sa*this->GetZ0();
         	  K=this->NbrPlate()+1;
             Distribution_exp[itt->first][this->NbrPlate()]->Fill(ceil(I),ceil(J));
             Thresholds=thisPlan->countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
@@ -484,11 +499,8 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
               if (Thresholds[kk]>0)
 	            {
 		            nombreTestsOK[ToComputeEffi[i]][kk]++;
-		            //std::cout<<ToComputeEffi[i]<<nombreTestsOK[ToComputeEffi[i]][kk]<<red<<this->GetNumberOK(kk,ToComputeEffi[i])<<normal<<std::endl;
 		            nombreTestsOKShort[ToComputeEffi[i]][kk]++;
-
                 sommeNombreHits[ToComputeEffi[i]][kk]+=Thresholds[kk];
-                //std::cout<<ToComputeEffi[i]<<sommeNombreHits[ToComputeEffi[i]][kk]<<red<<this->GetNombreHits(kk,ToComputeEffi[i])<<normal<<std::endl;
                 sommeNombreHitsShort[ToComputeEffi[i]][kk]+=Thresholds[kk];
   
               }
@@ -511,7 +523,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
 
 void testedPlan::print(std::string name)
 {
-    std::cout<<red<<"Plane Number (in geometry file): "<<Nbr+1<<" Z = "<<Z0<<" : "<<normal<<std::endl;
+    std::cout<<red<<"Plane Number (in geometry file): "<<geomplan.NbrPlate()+1<<" Z = "<<geomplan.GetZ0()<<" : "<<normal<<std::endl;
     std::cout<<blue<<"Number of Test : "<<Counts[name][0]<<"; with >="<<_NbrPlaneUseForTracking<<" planes for tracking : "<<Counts[name][1]<<"; with ChiXZ <"<<_Chi2<<" : "<<Counts[name][2]<<"; with ChiYZ <"<<_Chi2<<" : "<<Counts[name][3]<<" ; with track in the Delimiters "<<nombreTests[name]<<"; with hits in it : "<<Counts[name][4]<<" ; "<<std::endl;
     std::cout<<red<<"with hits in dlim : "<<normal<<std::endl;
     for(unsigned int i=0;i!=Thresholds_name.size();++i)
@@ -575,8 +587,8 @@ AnalysisProcessor::AnalysisProcessor() : Processor("AnalysisProcessorType")
     registerProcessorParameter("ReaderType","Type of the Reader needed to read InFileName",_ReaderType ,_ReaderType);
     _Chi2 = 1.0;
     registerProcessorParameter("Chi2" ,"Value of the Chi2  ",_Chi2 ,_Chi2);
-    _Chi2Rate = 1.0;
-    registerProcessorParameter("Chi2Rate" ,"Value of the Chi2 for Rate estimation  ",_Chi2Rate ,_Chi2Rate);
+    _Chi2Rate = 100.0;
+    registerProcessorParameter("Chi2" ,"Value of the Chi2 for Rate estimation  ",_Chi2Rate ,_Chi2Rate);
     _NbrHitPerPlaneMax = 6;
     registerProcessorParameter("NbrHitPerPlaneMax" ,"Maximal number of Hit in each Plane (<=6 by default)  ",_NbrHitPerPlaneMax ,_NbrHitPerPlaneMax);
     _NbrPlaneUseForTracking = 3;
@@ -593,32 +605,34 @@ AnalysisProcessor::AnalysisProcessor() : Processor("AnalysisProcessorType")
     registerProcessorParameter("ShortEfficiency" ,"ShortEfficiency",_ShortEfficiency,_ShortEfficiency);
     _Config_xml="";
     registerProcessorParameter("Config_xml" ,"Config_xml",_Config_xml,_Config_xml);
+    EstimateNoiseContamination=true;
+    registerProcessorParameter("NoiseContaminationEstimation" ,"Estimation Noise Contamination",EstimateNoiseContamination,EstimateNoiseContamination);
 }
 
 AnalysisProcessor::~AnalysisProcessor() {}
 void AnalysisProcessor::init()
 {
     Intro();
-    bool Noise=true;
     _maxRecord= Global::parameters->getIntVal("MaxRecordNumber")-1;
     _skip= Global::parameters->getIntVal("SkipNEvents");
-    if(Noise==true)
+    if(EstimateNoiseContamination==true)
     {
       names.push_back("NOISE_ESTIMATION_BEFORE");
       names.push_back("NOISE_ESTIMATION_AFTER");
     }
     std::vector<std::string>LCIOFiles;
-   Global::parameters->getStringVals("LCIOInputFiles" ,LCIOFiles );
+    Global::parameters->getStringVals("LCIOInputFiles" ,LCIOFiles );
 
    for(unsigned int i=0;i!=LCIOFiles.size();++i)
    {
     LCReader* lcReader = LCFactory::getInstance()->createLCReader() ;
-    std::vector<std::string>colee{"DHCALRawHits"};
+    std::vector<std::string>colee{"SDHCAL_HIT"};
     lcReader->open( LCIOFiles[i] ) ;
     lcReader->setReadCollectionNames( colee ) ;
     _GlobalEvents+=lcReader->getNumberOfEvents()-1;
     delete lcReader;
    }
+   std::cout<<_GlobalEventsSc<<"  "<<_GlobalEvents<<std::endl;
     printParameters();
     ReaderFactory readerFactory;
     Reader* myReader = readerFactory.CreateReader(_ReaderType);
@@ -638,14 +652,15 @@ void AnalysisProcessor::init()
         }
       }
       FillDelimiter(_Delimiters,PlansType.size(),Delimiter);
+      int Xmax=geom.GetXMax();
+      int Ymax=geom.GetYMax();
       for(std::map<int, int >::iterator it=PlansType.begin(); it!=PlansType.end(); ++it)
 	    {
-	      if(Delimiter.size()!=0)geometryplans[it->first]=geometryplan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second,Delimiter[it->first+1][1],Delimiter[it->first+1][0],Delimiter[it->first+1][3],Delimiter[it->first+1][2]);
-	      else geometryplans[it->first]=geometryplan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second,0,0,0,0);
-	      if(Delimiter.size()!=0) testedPlanList.push_back(testedPlan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second,Delimiter[it->first+1][1],Delimiter[it->first+1][0],Delimiter[it->first+1][3],Delimiter[it->first+1][2]));
-        else testedPlanList.push_back(testedPlan(it->first,geom.GetPlatePositionX(it->first),geom.GetPlatePositionY(it->first),geom.GetPlatePositionZ(it->first),geom.GetDifPlateAlpha(it->first),geom.GetDifPlateBeta(it->first),geom.GetDifPlateGamma(it->first),it->second,0,0,0,0));
+	      geometryplans[it->first]=geometryplan(it->first,it->second,geom,Delimiter);
+	      testedPlanList.push_back(geometryplans[it->first]);
         std::string a="Distribution_hit_selectionner_par_analysis"+ std::to_string(it->first +1 );
         std::string b="Hit_expected_"+ std::to_string(it->first +1 );
+        std::string AllTheHits="All_The_Hits_From_Trivent"+ std::to_string(it->first +1 );
         std::string c="Efficiency_of_the_voisinage_of_the_pad"+ std::to_string(it->first +1 );
         std::string d="Efficiency_of_the Asic_"+ std::to_string(it->first +1 );
         std::string e="Distance_to_the_expected_hit_in_X_"+ std::to_string(it->first +1 );
@@ -662,6 +677,8 @@ void AnalysisProcessor::init()
         std::string estimateurrmin="estimateur_min_"+std::to_string(it->first +1 );
         std::string estimateurr="estimateur_"+std::to_string(it->first +1 );
         std::string estimateurrr="estimateur_suposed_more_robust_"+std::to_string(it->first +1 );
+        std::string rateseen="Rate_Seen"+std::to_string(it->first +1 );
+        std::string rateestim="Rate_estim"+std::to_string(it->first +1 );
         int X=geom.GetSizeX(it->first)+1;
         int Y=geom.GetSizeY(it->first)+1;
         std::string ndifxy="difxy_"+std::to_string(it->first +1 );
@@ -669,6 +686,8 @@ void AnalysisProcessor::init()
         estimateurmax[it->first]=new TH1D(estimateurrmin.c_str(),estimateurrmin.c_str(),PlansType.size()+1-_NbrPlaneUseForTrackingRate,double(_NbrPlaneUseForTrackingRate),double(PlansType.size()+1));
         estimateur[it->first]=new TH1D(estimateurr.c_str(),estimateurr.c_str(),PlansType.size()+1-_NbrPlaneUseForTrackingRate,double(_NbrPlaneUseForTrackingRate),double(PlansType.size()+1));
         estimateur2[it->first]=new TH1D(estimateurrr.c_str(),estimateurrr.c_str(),PlansType.size()+1-_NbrPlaneUseForTrackingRate,double(_NbrPlaneUseForTrackingRate),double(PlansType.size()+1));
+        RateSeen[it->first]=new TH2F(rateseen.c_str(),rateseen.c_str(),X,0,X,Y,0,Y);
+        RateSeenPon[it->first]=new TH2F(rateestim.c_str(),rateestim.c_str(),X,0,X,Y,0,Y);
         for(unsigned int Nbrplatetouched=_NbrPlaneUseForTrackingRate;Nbrplatetouched<=PlansType.size();++Nbrplatetouched)
         {
           std::string nbrplan=std::to_string(Nbrplatetouched);
@@ -678,11 +697,18 @@ void AnalysisProcessor::init()
           std::string name4=efff+"_"+nbrplan;
           std::string name5=effsq+"_"+nbrplan;
           RealRateWithSelectedZone[it->first][Nbrplatetouched]=new TH2F(name1.c_str(),name1.c_str(),X,0,X,Y,0,Y);
+          
           RealRateWithSelectedZonemin[it->first][Nbrplatetouched]=new TH2F(name2.c_str(),name2.c_str(),X,0,X,Y,0,Y);
           Nbrviewedtracks[it->first][Nbrplatetouched]=new TH2F(name3.c_str(),name3.c_str(),X,0,X,Y,0,Y);
           eff[it->first][Nbrplatetouched]=new TH2F(name4.c_str(),name4.c_str(),X,0,X,Y,0,Y);
           effsquared[it->first][Nbrplatetouched]=new TH2F(name5.c_str(),name5.c_str(),X,0,X,Y,0,Y);
         }
+        
+        int bin[3]={Xmax,Ymax,int(PlansType.size())*2};
+        double xmin[3]={0.,0.,0.};
+        double xmax[3]={double(Xmax),double(Ymax),double(PlansType.size())};
+        hss2= new THnSparseD("Tracks", "Tracks", 3, bin, xmin, xmax);
+        hss= new THnSparseD("TracksPon", "TracksPon", 3, bin, xmin, xmax);
         Gain[names[0]].push_back(new TH2F(hh.c_str(),hh.c_str(),X,0,X,Y,0,Y));
         if(_Config_xml!="")
         {
@@ -695,14 +721,16 @@ void AnalysisProcessor::init()
         {
           Distribution_exp_tgraph[names[i]]=new TGraph2D();
           Distribution_hits_tgraph[names[i]]=new TGraph2D();
+          RateSeen3D[names[i]]=new TGraph2D();
           if(it->second==positional)
           {
             difxy[names[i]].push_back(new TH2D((ndifxy+names[i]).c_str(),(ndifxy+names[i]).c_str(),346,-50,50,1000,-50,50));
             difr[names[i]].push_back(new TH1D((ndifr+names[i]).c_str(),(ndifr+names[i]).c_str(),346,-50,50));
-            Distribution_hits[names[i]].push_back(new TH2F((a+names[i]).c_str(),(a+names[i]).c_str(),100,0,100,100,0,100));
-            Distribution_exp[names[i]].push_back(new TH2F((b+names[i]).c_str(),(b+names[i]).c_str(),100,0,100,100,0,100));
+            Distribution_hits[names[i]].push_back(new TH2F((a+names[i]).c_str(),(a+names[i]).c_str(),X,0,X,Y,0,Y));
+            Distribution_exp[names[i]].push_back(new TH2F((b+names[i]).c_str(),(b+names[i]).c_str(),X,0,X,Y,0,Y));
             for(int j=0;j<Efficiency_pads.size();++j)
             {
+              All_The_Hits_From_Trivent[j][names[i]].push_back(new TH2F((AllTheHits+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(AllTheHits+names[i]).c_str(),X,0,X,Y,0,Y));
               Efficiency_pads[j][names[i]].push_back(new TH2F((c+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(c+names[i]).c_str(),X,0,X,Y,0,Y));
               Efficiency_asics[j][names[i]].push_back(new TH2F((d+names[i]+Thresholds_name[j]).c_str(),(d+names[i]).c_str(),X,0,X,Y,0,Y));
               Multiplicity_pads[j][names[i]].push_back(new TH2F((g+names[i]+Thresholds_name[j]).c_str(),(g+names[i]).c_str(),X,0,X,Y,0,Y));
@@ -715,10 +743,11 @@ void AnalysisProcessor::init()
           {
             difxy[names[i]].push_back(new TH2D((ndifxy+names[i]).c_str(),(ndifxy+names[i]).c_str(),346,-50,50,1000,-50,50));
             difr[names[i]].push_back(new TH1D((ndifr+names[i]).c_str(),(ndifr+names[i]).c_str(),346,-50,50));
-            Distribution_hits[names[i]].push_back(new TH2F((a+names[i]).c_str(),(a+names[i]).c_str(),100,0,100,100,0,100));
-            Distribution_exp[names[i]].push_back(new TH2F((b+names[i]).c_str(),(b+names[i]).c_str(),100,0,100,100,0,100));
+            Distribution_hits[names[i]].push_back(new TH2F((a+names[i]).c_str(),(a+names[i]).c_str(),X,0,X,Y,0,Y));
+            Distribution_exp[names[i]].push_back(new TH2F((b+names[i]).c_str(),(b+names[i]).c_str(),X,0,X,Y,0,Y));
             for(int j=0;j<Efficiency_pads.size();++j)
             {
+            //All_The_Hits_From_Trivent[j][names[i]].push_back(new TH2F((AllTheHits+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(AllTheHits+names[i]).c_str(),X,0,X,Y,0,Y));
             Efficiency_pads[j][names[i]].push_back(new TH2F((c+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(c+names[i]).c_str(),X,0,X,Y,0,Y));
             Efficiency_asics[j][names[i]].push_back(new TH2F((d+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(d+names[i]).c_str(),X,0,X,Y,0,Y));
             Multiplicity_pads[j][names[i]].push_back(new TH2F((g+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(g+names[i]).c_str(),X,0,X,Y,0,Y));
@@ -787,7 +816,6 @@ void AnalysisProcessor::init()
          }
       }
     }
-    //testedPlanListScinti=testedPlanList;
 }
 
 void AnalysisProcessor::processEvent( LCEvent * evtP )
@@ -796,7 +824,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
     _NbrRun=evtP->getRunNumber();
  if(isFirstEvent()==true)
     { 
-     // DBInit::init();
+     //DBInit::init();
     /*RunInfo* r = RunInfo::getRunInfo(int(_NbrRun));
       cout<<r->getStartTime()<<endl;  
       cout<<r->getStopTime()<<endl;
@@ -834,8 +862,6 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
       //DBInit::terminate();
     }
     Planss.clear();
-    //Plans.clear();
-    //PlansScintillator.clear();
     if (evtP != nullptr) 
     {
         double rate0=0.0;
@@ -863,36 +889,6 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
             }
           }
         }
-      
-        /*std::vector<std::string>names=*evtP->getCollectionNames();
-        for(unsigned int i=0; i< _hcalCollections.size(); i++)
-        {
-            IsScinti=false;
-            LCCollection* col=nullptr;
-            for(unsigned int i=0;i<names.size();++i)
-            {
-              if(names[i]=="SDHCAL_HIT")
-              {
-                col = evtP ->getCollection(names[i].c_str());
-                _eventNr=evtP->getEventNumber();
-                //eventnbrr=_eventNr;
-                Progress(_skip,_GlobalEvents,_maxRecord,_eventNr);
-              }
-              else if(names[i]=="SDHCAL_HIT_SC")
-              {
-                //std::cout<<"SC one"<<std::endl;
-                col = evtP ->getCollection(names[i].c_str());
-                _eventNrSC=evtP->getEventNumber();
-                if(_eventNrSC %1000 ==0)std::cout<<"Event Number Scintillator : "<<_eventNrSC<<std::endl;
-                IsScinti=true;
-              }
-            }
-            if(col == nullptr)
-            {
-                if(IsScinti==true) std::cout<< red << "TRIGGER WITH SCINTILLATOR SKIPED ..."<< normal <<std::endl;
-                else  std::cout<< red << "TRIGGER WITH SKIPED ..."<< normal <<std::endl;
-                break;
-            }*/
             for(std::map<std::string,LCCollection*>::iterator it=Collections.begin(); it!=Collections.end(); ++it)
             {
               CellIDDecoder<CalorimeterHit> cd(it->second);
@@ -902,37 +898,51 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
                 CalorimeterHit *raw_hit = dynamic_cast<CalorimeterHit*>( (it->second)->getElementAt(ihit)) ;
                 if (raw_hit != nullptr)
                 {
-                    /*if(it->first=="SDHCAL_HIT_SC")
+                   ////////////////////////ALL Hits from Trivent /////////////////////////
+                   int dif_id=cd(raw_hit)["Dif_id"];
+                 /*  int nbrplaall=geom.GetDifNbrPlate(dif_id)-1;
+                   double xall=raw_hit->getPosition()[0];
+                   double yall=raw_hit->getPosition()[1];
+                    double ca=geometryplans[nbrplaall].get_ca();
+        double sa=geometryplans[nbrplaall].get_sa();
+        double cb=geometryplans[nbrplaall].get_cb();
+        double sb=geometryplans[nbrplaall].get_sb();
+        double cg=geometryplans[nbrplaall].get_cg();
+        double sg=geometryplans[nbrplaall].get_sg();
+                    double I=cg*cb*1.0/size_pad*(xall-geometryplans[nbrplaall].GetX0())+sg*cb*1.0/size_pad*(yall-geometryplans[nbrplaall].GetY0())+-sb*geometryplans[nbrplaall].GetZ0();
+        double J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(xall-geometryplans[nbrplaall].GetX0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(yall-geometryplans[nbrplaall].GetY0())+cb*sa*geometryplans[nbrplaall].GetZ0();
+                    int Threshold_Hit=raw_hit->getEnergy();
+                    std::cout<<I<<"  "<<J<<"  "<<Threshold_Hit<<std::endl;
+                    if(Threshold_Hit==Threshold_3)
                     {
-                      rate->Fill(raw_hit->getTime()*200-rate0);
-                      rate0=raw_hit->getTime()*200;
+                      Efficiency_pads[Threshold3][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
+                      Efficiency_pads[Threshold23][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
+                      Efficiency_pads[Thresholdall][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
+                      std::cout<<"ggggg"<<std::endl;
+                    }
+                    else if(Threshold_Hit==Threshold_2)
+                    {
+                      Efficiency_pads[Threshold2][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
+                      Efficiency_pads[Threshold12][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
+                      Efficiency_pads[Threshold23][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
+                      Efficiency_pads[Thresholdall][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
+                    }
+                    else if(Threshold_Hit==Threshold_1)
+                    {
+                      Efficiency_pads[Threshold1][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
+                      Efficiency_pads[Threshold12][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
+                      Efficiency_pads[Thresholdall][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
                     }*/
-                    int dif_id=cd(raw_hit)["Dif_id"];
-                    //int I=cd(raw_hit)["I"];
-                    //int J=cd(raw_hit)["J"];
+                
+                    //////////////////////////////////////////////////////////////////////
+                    
                     RealNumberPlane[dif_id]++;
                     Planss[it->first][geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit,it->first);
                     Planss[it->first][geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
-                    //std::cout<<red<<"ttttt"<<normal<<std::endl;
-                    /*if(IsScinti==true)
-                    {
-                      PlansScintillator[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
-                      PlansScintillator[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
-                    }
-                    else
-                    {
-                      Plans[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
-                      Plans[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
-                    }*/
                 }
             }
            }
         }
-        //if(IsScinti==true)
-        //{
-          // for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(PlansScintillator,true,testedPlanList);
-        //}
-        //else for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans,false,testedPlanList);
         Tracks(Planss,geom,geometryplans,useforrealrate);
         for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Planss,testedPlanList);
         for(unsigned f=0;f!=_hcalCollections.size();++f)
@@ -974,6 +984,7 @@ void AnalysisProcessor::end()
 			        number_of_hits+=it->second[j];
 		        }
 	        }
+	        std::cout<<red<<i<<"  "<<itt->first<<"  "<<it->first[2]-1<<"  "<<it->first[0]<<"  "<<it->first[1]<<normal<<std::endl;
           Efficiency_pads[i][itt->first][it->first[2]-1]->Fill(it->first[0],it->first[1],was_at_least_a_hit*1.0/(it->second).size());
           if(was_at_least_a_hit!=0)Multiplicity_pads[i][itt->first][it->first[2]-1]->Fill(it->first[0],it->first[1],number_of_hits*1.0/was_at_least_a_hit);
       }
@@ -1007,20 +1018,23 @@ void AnalysisProcessor::end()
     {*/
      for(unsigned int i=0;i!=useforrealrate/*[it->first]*/.size();++i)
      {
-      double inbin=1.0;
-      int II=0;
-      int JJ=0;
-      int ZZ=0;
-      unsigned int number_touched=0;
+      double inbin=1.0;int II=0;int JJ=0;int ZZ=0;double x=0;double y=0;double z=0;unsigned int number_touched=0;
       for(unsigned int j=0;j!=useforrealrate/*[it->first]*/[i].size();++j)
       {
+        static int numberrrr=0;
         
-        II=useforrealrate/*[it->first]*/[i][j][0];
-        JJ=useforrealrate/*[it->first]*/[i][j][1];
-        ZZ=useforrealrate/*[it->first]*/[i][j][2];
+        II=int(useforrealrate/*[it->first]*/[i][j][0]);
+        JJ=int(useforrealrate/*[it->first]*/[i][j][1]);
+        ZZ=int(useforrealrate/*[it->first]*/[i][j][2]);
+        x=useforrealrate/*[it->first]*/[i][j][4];
+        y=useforrealrate/*[it->first]*/[i][j][5];
+        z=useforrealrate/*[it->first]*/[i][j][6];
+        
+        RateSeen3D["SDHCAL_HIT"]->SetPoint(numberrrr,II,JJ,ZZ);
+        numberrrr++;
         int xmax=Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetNbinsX();
         int ymax=Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetNbinsY();
-        if(useforrealrate/*[it->first]*/[i][j][3]==1)
+        if(int(useforrealrate/*[it->first]*/[i][j][3])==1)
         {
           number_touched++;
           
@@ -1028,6 +1042,7 @@ void AnalysisProcessor::end()
          
           if(II>0&&II<xmax&&JJ>0&&JJ<ymax)
           {
+             
             if(Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetBinContent(II,JJ)>0)inbin*=Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetBinContent(II,JJ);
           }
         }
@@ -1035,20 +1050,24 @@ void AnalysisProcessor::end()
         {
           if(II>0&&II<xmax&&JJ>0&&JJ<ymax)
           {
-            if(Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetBinContent(II,JJ)>0&&Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetBinContent(II,JJ)!=1)inbin*=1-Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetBinContent(II,JJ);
+            if(Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetBinContent(II,JJ)>=0&&Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetBinContent(II,JJ)!=1)inbin*=1-Efficiency_pads[5]["SDHCAL_HIT"][ZZ]->GetBinContent(II,JJ);
           }
         }
         
       }
-      std::cout<<red<<inbin<<normal<<std::endl;
       for(unsigned int j=0;j!=useforrealrate/*[it->first]*/[i].size();++j)
       {      
-        II=useforrealrate/*[it->first]*/[i][j][0];
-        JJ=useforrealrate/*[it->first]*/[i][j][1];
-        ZZ=useforrealrate/*[it->first]*/[i][j][2];
+        II=int(useforrealrate/*[it->first]*/[i][j][0]);
+        JJ=int(useforrealrate/*[it->first]*/[i][j][1]);
+        ZZ=int(useforrealrate/*[it->first]*/[i][j][2]);
+        double fillr[3]={II,JJ,ZZ};
+        hss2->Fill(fillr,1);
+        hss->Fill(fillr,1.0/inbin);
         for(std::map<int,TH2F*>::iterator it=RealRateWithSelectedZonemin[ZZ].begin();it!=RealRateWithSelectedZonemin[ZZ].end();++it)
         {
           if(number_touched>=it->first)RealRateWithSelectedZonemin[ZZ][it->first]->Fill(II,JJ,1.0/inbin);
+          RateSeen[ZZ]->Fill(II,JJ,1.0);
+          RateSeenPon[ZZ]->Fill(II,JJ,1.0/inbin);
         }
         if(number_touched>=_NbrPlaneUseForTrackingRate)
         {
@@ -1066,29 +1085,32 @@ void AnalysisProcessor::end()
       for(std::map<int,TH2F*>::iterator itt=Nbrviewedtracks[it->first].begin();itt!=Nbrviewedtracks[it->first].end();++itt)
       {
          namei="rate_estimated_"+std::to_string(it->first)+"_"+std::to_string(itt->first)+"_planes_touched";
-         std::cout<<blue<<namei<<normal<<std::endl;
          estimatedrate[it->first][itt->first]=dynamic_cast<TH2F*>( (itt->second)->Clone(namei.c_str()) ) 		;
          estimatedrate[it->first][itt->first]->Multiply(eff[it->first][itt->first]);
          estimatedrate[it->first][itt->first]->Divide(effsquared[it->first][itt->first]);
       }
     }
 
-      /*for(std::map<int,TH2F*>::iterator it=RealRateWithSelectedZone.begin();it!=RealRateWithSelectedZone.end();++it)
-      {
-        std::string dddd="Efficiency_Vs_Rate"+std::to_string( (long long int) it->first +1 );
-        std::string name="SDHCAL_HIT";
-        unsigned long int min_rate=(it->second)->GetMinimum();
-        unsigned long int max_rate=(it->second)->GetMaximum();
-        EfficacityVsRate[it->first]=new TH2F(dddd.c_str(),dddd.c_str(),100,0,1000,10,0,1.0);
-        unsigned long int size= (it->second)->GetSize()-2;
-        for(unsigned long j=0;j<size;++j)EfficacityVsRate[it->first]->Fill((it->second)->GetBinContent(j),Efficiency_pads[5][name][it->first]->GetBinContent(j));
-        
-        
-      }*/
 
-    
+
+    TF1 * tf = new TF1("TransferFunction", transfer_function);
     tt->Write();
+    hss2->Write();
+    hss->Write();
+    TH3D* h2= hss2->Projection(2,1,0);
+    TH3D* h1= hss->Projection(2,1,0);
+    Make_good_TH3(h2);
+    Make_good_TH3(h1);
+    h2->GetListOfFunctions()->Add(tf);
+    h2->Write();
+    h1->GetListOfFunctions()->Add(tf);
+    h1->Write();
+    RateSeen3D["SDHCAL_HIT"]->Write("Rate_Seen_3D");
     std::string traces="Traces";
+    Rate_Estimation->Fill (0.5,useforrealrate.size());
+    Rate_Estimation->Fill(0.5,numbertracks);
+    Rate_Estimation->Scale(1.0/total_time);
+    Rate_Estimation->Write();
       hfile->mkdir(traces.c_str());
       hfile->cd(traces.c_str());
       
@@ -1125,7 +1147,7 @@ void AnalysisProcessor::end()
     }
       for(unsigned int i =0 ;i!=HowLongFromExpectedX["SDHCAL_HIT"].size();++i)
       {
-
+        
         plate="Plate "+ patch::to_string(i+1);
 
        
@@ -1141,13 +1163,17 @@ void AnalysisProcessor::end()
     	  if(naa==0)
         {
         
-       
+     
         
         hfile->mkdir((plate+"/Rate_Estimation").c_str());
         hfile->cd((plate+"/Rate_Estimation").c_str());
         std::string name="Rate_estimated_nbr_plane_used_";
         std::string name2="Rate_estimated_nbr_plane_used_min_";
         //EfficacityVsRate[i]->Write();
+        RateSeen[i]->Scale(1.0/total_time);
+        RateSeen[i]->Write();
+        RateSeenPon[i]->Scale(1.0/total_time);
+        RateSeenPon[i]->Write();
         for(std::map<int,TH2F*>::iterator it=RealRateWithSelectedZonemin[i].begin();it!=RealRateWithSelectedZonemin[i].end();++it)
         {
             RealRateWithSelectedZonemin[i][it->first]->Write();
@@ -1173,8 +1199,6 @@ void AnalysisProcessor::end()
         estimateur[i]->Write();
         estimateur2[i]->Write();
         estimateurmax[i]->Write();
-       // rate->Write();
-        //EfficacityVsRate[i]->Write();
         }
         hfile->cd(plate.c_str());
 	      HowLongFromExpectedX[names[naa]][i]->Write();
@@ -1185,13 +1209,18 @@ void AnalysisProcessor::end()
         { 
           if(naa==0)hfile->mkdir((plate+"/Short_Efficiency").c_str());
           hfile->cd((plate+"/Short_Efficiency").c_str());
-          for(unsigned j=0;j!=Thresholds_name.size();++j)
+          for(unsigned int j=0;j!=Thresholds_name.size();++j)
           {
             Short_Efficiency[names[naa]][i][j]->Write();
             Short_Multiplicity[names[naa]][i][j]->Write();
           }
           hfile->cd(plate.c_str());
         }
+        /*for(unsigned int j=0;j<All_The_Hits_From_Trivent.size();++j)
+        {
+          All_The_Hits_From_Trivent[j][names[naa]][i]->Scale(1.0/total_time);
+          All_The_Hits_From_Trivent[j][names[naa]][i]->Write();
+        }*/
         Distribution_exp[names[naa]][i]->Write();
         if(naa==0)hfile->mkdir((plate+"/Efficiency_Multiplicity_Maps").c_str());
         hfile->cd((plate+"/Efficiency_Multiplicity_Maps").c_str());
@@ -1220,7 +1249,7 @@ void AnalysisProcessor::end()
           }
           if(_ShortEfficiency!=0) 
           {
-            for(unsigned j=0;j!=Thresholds_name.size();++j)
+            for(unsigned int j=0;j!=Thresholds_name.size();++j)
             {
               delete Short_Efficiency[names[naa]][i][j];
               delete Short_Multiplicity[names[naa]][i][j];
@@ -1238,7 +1267,7 @@ void AnalysisProcessor::end()
     delete Branch4;
     delete Branch5;
     delete Branch6;
-    for(unsigned f=0;f!=_hcalCollections.size();++f)
+    for(unsigned int f=0;f!=_hcalCollections.size();++f)
     {
       PrintStat(_hcalCollections[f]);    
    }

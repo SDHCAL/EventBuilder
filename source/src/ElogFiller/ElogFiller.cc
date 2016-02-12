@@ -129,7 +129,7 @@ void Read(std::string& FileName,std::string& parameters)
     }
   }
   for(unsigned int i=1;i!=PlateNumber+1;++i) HVs+=" -a HV"+std::to_string(i)+"=\"Not Set\"";
-  parameters+=Types+" "+HVChannels+" "+GasChannels+" "+DifTypes+" -a \"Number Dif\"="+Numbers[PlateNumber]+" "+Dif_Ids+" "+zs+" "+HVs+" "+ Tcherenkov+" "+Scintillator+" " ;
+  parameters+=Types+" "+HVChannels+" "+GasChannels+" "+DifTypes+" -a \"Number Dif\"="+Numbers[PlateNumber]+" "+Dif_Ids+" "+zs+" "+HVs+" "+ Tcherenkov+" "+Scintillator+" "+ TcheScinti+" ";
 }
 
 void FillElogPlease(std::string Filename,std::string run,std::string daqname)

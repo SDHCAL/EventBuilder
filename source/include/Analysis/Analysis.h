@@ -2,6 +2,7 @@
 #define ANALYSIS_H
 // marlin
 #include "marlin/Processor.h"
+#include "marlin/EventModifier.h"
 #include "EVENT/RawCalorimeterHit.h"
 #include "EVENT/CalorimeterHit.h"
 #include "Geometry/Geometry.h"
@@ -47,6 +48,52 @@ class geometryplan
         yj=cg*ca+sg*sb*sa;
         zj=cb*sa;
     }
+    geometryplan(const int& numeroPlan,const int& type,Geometry& geom,std::map<int,std::vector<double>>& Delimiter)
+    {
+      Nbr=numeroPlan;
+      X0=geom.GetPlatePositionX(numeroPlan);
+	    Y0=geom.GetPlatePositionY(numeroPlan);
+	    Z0=geom.GetPlatePositionZ(numeroPlan);
+	    XY=geom.GetDifPlateAlpha(numeroPlan);
+	    XZ=geom.GetDifPlateBeta(numeroPlan);
+	    YZ=geom.GetDifPlateGamma(numeroPlan);
+	    Type=type;
+	    ca=cos(XY*degtorad);
+      sa=sin(XY*degtorad);
+      cb=cos(XZ*degtorad);
+      sb=sin(XZ*degtorad);
+      cg=cos(YZ*degtorad);
+      sg=sin(YZ*degtorad);
+      /*****************************/
+      /* Xexp=pxz0+pxz1*Zexp
+           Yexp = pyz0+pyz1*Zexp
+           Zexp=Zexp
+           (xnorm,ynorm,znorm).(Xexp-X0,Yexp-Y0,Zexp-z0)=0
+      */
+      xnorm=sg*sa+cg*sb*ca;
+      ynorm=-cg*sa+sg*sb*ca;
+      znorm=cb*ca;
+      xi=cg*cb;
+      yi=sg*cb;
+      zi=-sb;
+      xj=-sg*ca+cg*sb*sa;
+      yj=cg*ca+sg*sb*sa;
+      zj=cb*sa;
+	    if(Delimiter.size()==0)
+	    {
+	      Ip=0;
+	      Im=0;
+	      Jp=0;
+	      Jm=0;
+	    }
+	    else
+	    {
+	      Ip=Delimiter[numeroPlan+1][1];
+	      Im=Delimiter[numeroPlan+1][0];
+	      Jp=Delimiter[numeroPlan+1][3];
+	      Jm=Delimiter[numeroPlan+1][2];
+	    } 
+    }
     inline float GetZexp(const double & pxz0,const double & pyz0,const double & pxz1,const double& pyz1)
     {
         return (xnorm*(pxz0-X0)+ynorm*(pyz0-Y0)+znorm*Z0)/(xnorm*pxz1+ynorm*pyz1+znorm);
@@ -59,15 +106,12 @@ class geometryplan
     {
         return (Xexp-X0)*xj+(Yexp-Y0)*yj+(Zexp-Z0)*zj;
     }
-       inline float get_ca(){return ca;};
+    inline float get_ca(){return ca;};
     inline float get_sa(){return sa;};
     inline float get_cb(){return cb;};
     inline float get_sb(){return sb;};
     inline float get_cg(){return cg;};
     inline float get_sg(){return sg;};
-    inline float get_X0(){return X0;};
-    inline float get_Y0(){return Y0;};
-    inline float get_Z0(){return Z0;};
      inline int NbrPlate()
     {
         return Nbr;
@@ -129,51 +173,33 @@ class geometryplan
 
 
 
+
 class testedPlan
 {
-public:
-    testedPlan(int numeroPlan,float x ,float y,float z,float xy, float xz, float yz, int type,double _Ip,double _Im, double _Jp, double _Jm) : Nbr(numeroPlan),X0(x),Y0(y),Z0(z),XY(xy),XZ(xz),YZ(yz),Type(type),Ip(_Ip),Im(_Im),Jp(_Jp),Jm(_Jm)
-    {
 
+public:
+    void print(std::string name);
+    testedPlan(geometryplan geo):geomplan(geo)
+    {
+        Counts.clear();
         nombreTests.clear();
         nombreTestsShort.clear();
         nombreTestsOK.clear();
         nombreTestsOKShort.clear();
         sommeNombreHits.clear();
         sommeNombreHitsShort.clear();
-        ca=cos(xy*degtorad);
-        sa=sin(xy*degtorad);
-        cb=cos(xz*degtorad);
-        sb=sin(xz*degtorad);
-        cg=cos(yz*degtorad);
-        sg=sin(yz*degtorad);
-        /*****************************/
-        /* Xexp=pxz0+pxz1*Zexp
-           Yexp = pyz0+pyz1*Zexp
-           Zexp=Zexp
-           (xnorm,ynorm,znorm).(Xexp-X0,Yexp-Y0,Zexp-z0)=0
-        */
-        xnorm=sg*sa+cg*sb*ca;
-        ynorm=-cg*sa+sg*sb*ca;
-        znorm=cb*ca;
-        xi=cg*cb;
-        yi=sg*cb;
-        zi=-sb;
-        xj=-sg*ca+cg*sb*sa;
-        yj=cg*ca+sg*sb*sa;
-        zj=cb*sa;
     }
     inline float GetZexp(const double & pxz0,const double & pyz0,const double & pxz1,const double& pyz1)
     {
-        return (xnorm*(pxz0-X0)+ynorm*(pyz0-Y0)+znorm*Z0)/(xnorm*pxz1+ynorm*pyz1+znorm);
+        return geomplan.GetZexp(pxz0,pyz0,pxz1,pyz1);
     }
     inline float GetProjectioni(const double & Xexp,const double & Yexp,const double & Zexp)
     {
-        return (Xexp-X0)*xi+(Yexp-Y0)*yi+(Zexp-Z0)*zi;
+        return geomplan.GetProjectioni(Xexp,Yexp,Zexp);
     }
     inline float GetProjectionj(const double & Xexp,const double & Yexp,const double & Zexp)
     {
-        return (Xexp-X0)*xj+(Yexp-Y0)*yj+(Zexp-Z0)*zj;
+        return geomplan.GetProjectionj(Xexp,Yexp,Zexp);
     }
     inline void ClearShort(std::string name)
     {
@@ -183,61 +209,59 @@ public:
     }
         inline int NbrPlate()
     {
-        return Nbr;
+        return geomplan.NbrPlate();
     }
     inline float GetXY()
     {
-        return XY;
+        return geomplan.GetXY();
     }
     inline float GetXZ()
     {
-        return XZ;
+        return geomplan.GetXZ();
     }
     inline float GetYZ()
     {
-        return YZ;
+        return geomplan.GetYZ();
     }
     inline float GetX0()
     {
-        return X0;
+        return geomplan.GetX0();
     }
     inline float GetY0()
     {
-        return Y0;
+        return geomplan.GetY0();
     }
     inline float GetZ0()
     {
-        return Z0;
+        return geomplan.GetZ0();
     }
     inline int GetType()
     {
-        return Type;
+        return geomplan.GetType();
     }
     inline double GetIp()
     {
-        return Ip;
+        return geomplan.GetIp();
     }
     inline double GetIm()
     {
-        return Im;
+        return geomplan.GetIm();
     }
     inline double GetJp()
     {
-        return Jp;
+        return geomplan.GetJp();
     }
     inline double GetJm()
     {
-        return Jm;
+        return geomplan.GetJm();
     }
-        inline void clear()
+    inline void clear()
     {
         nombreTests.clear();
         nombreTestsOK.clear();
         sommeNombreHits.clear(); 
     }
-    
-    
-    
+   
     inline double multiplicityShort(int i, std::string name)
     {
       if(sommeNombreHitsShort.find(name)==sommeNombreHitsShort.end()||nombreTestsOKShort.find(name)==nombreTestsOKShort.end())return -1;
@@ -278,6 +302,17 @@ public:
         else return sommeNombreHits[name][i];
     }
     
+    
+    inline float get_ca(){return geomplan.get_ca();};
+    inline float get_sa(){return geomplan.get_sa();};
+    inline float get_cb(){return geomplan.get_cb();};
+    inline float get_sb(){return geomplan.get_sb();};
+    inline float get_cg(){return geomplan.get_cg();};
+    inline float get_sg(){return geomplan.get_sg();};
+    void testYou(std::map<std::string,std::map<int,plan>>&mapDIFplan,std::vector<testedPlan>& tested);
+    
+    private:
+    
     std::map<std::string,std::array<double,5>>Counts;
     std::map<std::string,double>nombreTests;
     std::map<std::string,double>nombreTestsShort;
@@ -285,35 +320,9 @@ public:
     std::map<std::string,std::array<double,6>>nombreTestsOKShort;
     std::map<std::string,std::array<double,6>>sommeNombreHits;
     std::map<std::string,std::array<double,6>>sommeNombreHitsShort;
-    inline float get_ca(){return ca;};
-    inline float get_sa(){return sa;};
-    inline float get_cb(){return cb;};
-    inline float get_sb(){return sb;};
-    inline float get_cg(){return cg;};
-    inline float get_sg(){return sg;};
-    inline float get_X0(){return X0;};
-    inline float get_Y0(){return Y0;};
-    inline float get_Z0(){return Z0;};
-    //void testYou(std::map<int,plan>& mapDIFplan,bool IsScinti,std::vector<testedPlan>& tested);
-    void testYou(std::map<std::string,std::map<int,plan>>&mapDIFplan,std::vector<testedPlan>& tested);
-    void print(std::string name);
-    private:
-    int Nbr;
-    float X0,Y0,Z0,XY,XZ,YZ,xnorm,ynorm,znorm,xi,yi,zi,xj,yj,zj,ca,sa,cb,sb,cg,sg;
-    int Type;
-    double Ip;
-    double Im;
-    double Jp;
-    double Jm;
-    
-    //double nombreTestsOKShort;
-    //double sommeNombreHitsShort;
+    geometryplan geomplan;
     enum {TESTYOUCALLED,NOTOOMUCHHITSINPLAN,XZTRACKFITPASSED,YZTRACKFITPASSED,NOHITINPLAN, NCOUNTERS};
-    
-    //double counts[NCOUNTERS];
-    //double countsScinti[NCOUNTERS];
 };
-
 
 
 
@@ -329,37 +338,12 @@ public:
     {
         hits[name].push_back(a);
     }
-    /*inline void addHit(CalorimeterHit* a)
-    {
-        hits.push_back(a);
-    }*/
-    /*inline int nHits()
-    {
-        return hits.size();
-    }*/
     inline int nHits(std::string name)
     {
         return hits[name].size();
     }
-    //inline void computeBarycentre();
-    inline void computeBarycentre(std::string);
-    /*inline double barycentreX()
-    {
-        return barycentre[0];
-    }
-    inline double barycentreY()
-    {
-        return barycentre[1];
-    }
-    inline double barycentreZ()
-    {
-        return barycentre[2];
-    }
-    inline void computeMaxima();
-    inline double minX()
-    {
-        return min[0];
-    }*/
+    void computeBarycentre(std::string);
+    
     inline double barycentreX(std::string name)
     {
         return barycentre[name][0];
@@ -381,26 +365,6 @@ public:
     {
         _type=i;
     }
-    /*inline double minY()
-    {
-        return min[1];
-    }
-    inline double minZ()
-    {
-        return min[2];
-    }
-    inline double maxX()
-    {
-        return max[0];
-    }
-    inline double maxY()
-    {
-        return max[1];
-    }
-    inline double maxZ()
-    {
-        return max[2];
-    }*/
     inline double minY(std::string name)
     {
         return min[name][1];
@@ -443,8 +407,6 @@ public:
     }
     inline bool operator==(plan b);
     inline bool operator!=(plan b);
-    //void printBarycentre();
-    //void printMaxima();
     void printBarycentre(std::string name);
     void printMaxima(std::string name);
     inline void Clear(std::string name)
@@ -455,10 +417,8 @@ public:
     {
         return _type;
     }
-    //inline std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,bool IsScinti);
     inline std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,std::string);
     inline std::map<std::string,int> countHitAtStrip(double& x, double dlim,std::string);
-    //void GivePoint();
     inline std::map<std::string,std::vector<CalorimeterHit*>> GetHits() 
     {
       return hits;
@@ -470,10 +430,6 @@ public:
 private:
     int _type;
     std::map<std::string,std::vector<CalorimeterHit*>> hits;
-    //std::vector<CalorimeterHit*>
-    //double barycentre[3];
-    //double min[3];
-    //double max[3];
     std::map<std::string,std::array<double,3>>barycentre;
     std::map<std::string,std::array<double,3>>min;
     std::map<std::string,std::array<double,3>>max;
@@ -482,8 +438,6 @@ private:
 
 
 std::map<std::string,std::array<std::map<std::vector<int>,std::vector<int>>,6>>Efficiency_per_pad;
-//std::array<std::map<std::vector<int>,std::vector<int>>,6>Efficiency_per_padScinti;
-//std::array<std::map<std::vector<int>,std::vector<int>>,6>Efficiency_per_pad;
 double _Chi2;
 double _Chi2Rate;
 int _ShortEfficiency;
@@ -493,9 +447,10 @@ int _NbrPlaneUseForTrackingRate ;
 double _dlimforPad;
 int _NbrRun;
 double _dlimforStrip;
+bool EstimateNoiseContamination;
 std::map<int ,std::vector<double> >Delimiter;
 std::string _Delimiters;
-   std::vector<std::string> _hcalCollections;
+std::vector<std::string> _hcalCollections;
 class AnalysisProcessor : public marlin::Processor
 {
 public:
@@ -503,7 +458,10 @@ public:
     ~AnalysisProcessor();
     void PrintStat(std::string);
     void PrintStatShort(std::string);
-    marlin::Processor *newProcessor(){return new AnalysisProcessor();}
+    void operator=(const AnalysisProcessor&);
+    virtual marlin::Processor* newProcessor() {
+      return new AnalysisProcessor;
+    }
     void init();
     void processEvent(EVENT::LCEvent *evtP);
     void processRunHeader( LCRunHeader* run);
@@ -516,6 +474,8 @@ protected:
     unsigned int _skip;
     unsigned int _maxRecord;
     unsigned int _GlobalEvents;
+    unsigned int _GlobalEventsSc;
+    
     std::string _Config_xml;   
 
     ConfigInfos conf;
@@ -523,9 +483,7 @@ protected:
     std::string _ReaderType;
     std::map<std::string,std::map<int,plan>>Planss;
     std::map<int,geometryplan> geometryplans;
-    //std::map<int,plan>Plans;
-    //std::map<int,plan>PlansScintillator;
     std::vector<testedPlan> testedPlanList;
-    //std::vector<testedPlan> testedPlanListScinti;
+
 };
 #endif
