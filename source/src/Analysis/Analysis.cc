@@ -854,8 +854,12 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
     Planss.clear();
     //Plans.clear();
     //PlansScintillator.clear();
-    if (evtP != nullptr) 
-    {
+    if (evtP == nullptr) 
+      {
+	PrintStatShort();  // utile à faire ici ???    
+	return;
+      }
+    
         double rate0=0.0;
         std::map<std::string,LCCollection*>Collections;
         Collections.clear();
@@ -945,7 +949,6 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
                 } // end if (raw_hit != nullptr)
 	      } // end for (int ihit=0; ihit < numElements; ++ihit)
 	    } // for(std::map<std::string,LCCollection*>::iterator it=Collections.begin(); it!=Collections.end(); ++it)
-    } // end if (evtP != nullptr) 
 
 
         //if(IsScinti==true)
