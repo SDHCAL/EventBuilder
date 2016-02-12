@@ -861,28 +861,6 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
     }
     
   double rate0=0.0;
-  std::map<std::string,LCCollection*>Collections;
-  Collections.clear();
-  std::vector<std::string>namesss=*evtP->getCollectionNames();
-  for(unsigned int i=0; i!=_hcalCollections.size(); i++)
-    {
-      for(unsigned int j=0; j!=namesss.size(); j++)
-	{
-	  if(namesss[j]==_hcalCollections[i])
-            {
-              if(evtP ->getCollection(namesss[j].c_str())!=nullptr)
-		{
-                
-		  Collections[namesss[j]]=evtP ->getCollection(namesss[j].c_str());
-		  //std::cout<<namesss[j]<<"  "<<Numbers[namesss[j]]<<std::endl;
-		}
-              else
-		{
-		  std::cout<<red<<namesss[j]<< "not found"<<std::endl;
-		}
-            }
-	}
-    } // end for(unsigned int i=0; i!=_hcalCollections.size(); i++)
       
   /*std::vector<std::string>names=*evtP->getCollectionNames();
     for(unsigned int i=0; i< _hcalCollections.size(); i++)
