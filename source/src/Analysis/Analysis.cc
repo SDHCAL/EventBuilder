@@ -860,7 +860,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
       return;
     }
     
-  double rate0=0.0;
+  //double rate0=0.0;
       
   /*std::vector<std::string>names=*evtP->getCollectionNames();
     for(unsigned int i=0; i< _hcalCollections.size(); i++)
