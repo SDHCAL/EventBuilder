@@ -811,158 +811,158 @@ void AnalysisProcessor::init()
 void AnalysisProcessor::processEvent( LCEvent * evtP )
 {
      
-    _NbrRun=evtP->getRunNumber();
- if(isFirstEvent()==true)
+  _NbrRun=evtP->getRunNumber();
+  if(isFirstEvent()==true)
     { 
-     // DBInit::init();
-    /*RunInfo* r = RunInfo::getRunInfo(int(_NbrRun));
-      cout<<r->getStartTime()<<endl;  
-      cout<<r->getStopTime()<<endl;
-      cout<<r->getDescription()<<endl;
-      Daq* d = r->getDaq();
-      cout<<red<<"ggfgfggfgfgfgfgfgfgfgfg "<<d->getConfigName()<<"   "<<d->getConfigName()<<normal<<endl;
-      cout<<d->getXML()<<endl;
-      std::string str (d->getXML());
-      std::string str2 ("<DBState xsi:type=\"xsd:string\">");
-      std::string str3 ("</DBState>");
-      std::size_t found = str.find(str2)+str2.size();
-      std::size_t found2 = str.find(str3);
-      std::string str4=str.substr(found,found2-found);
-      std::cout<<red<<"gdggdhgfgigtiogtigtgtuio "<<str4<<"     "<<normal<<std::endl;
-      delete(d);
-      delete(r);*/
-    /*State* s = State::download("GIFSPS_60"); // download the state with name 'MyState'
-    LdaConfiguration *lda_conf = s->getLdaConfiguration();
-    DccConfiguration *dcc_conf = s->getDccConfiguration();
-    DifConfiguration *dif_conf = s->getDifConfiguration();
-    AsicConfiguration *asic_conf = s->getAsicConfiguration();
+      // DBInit::init();
+      /*RunInfo* r = RunInfo::getRunInfo(int(_NbrRun));
+	cout<<r->getStartTime()<<endl;  
+	cout<<r->getStopTime()<<endl;
+	cout<<r->getDescription()<<endl;
+	Daq* d = r->getDaq();
+	cout<<red<<"ggfgfggfgfgfgfgfgfgfgfg "<<d->getConfigName()<<"   "<<d->getConfigName()<<normal<<endl;
+	cout<<d->getXML()<<endl;
+	std::string str (d->getXML());
+	std::string str2 ("<DBState xsi:type=\"xsd:string\">");
+	std::string str3 ("</DBState>");
+	std::size_t found = str.find(str2)+str2.size();
+	std::size_t found2 = str.find(str3);
+	std::string str4=str.substr(found,found2-found);
+	std::cout<<red<<"gdggdhgfgigtiogtigtgtuio "<<str4<<"     "<<normal<<std::endl;
+	delete(d);
+	delete(r);*/
+      /*State* s = State::download("GIFSPS_60"); // download the state with name 'MyState'
+	LdaConfiguration *lda_conf = s->getLdaConfiguration();
+	DccConfiguration *dcc_conf = s->getDccConfiguration();
+	DifConfiguration *dif_conf = s->getDifConfiguration();
+	AsicConfiguration *asic_conf = s->getAsicConfiguration();
 
-    vector<ConfigObject*> ldas = lda_conf->getVector();
-    vector<ConfigObject*> dccs = dcc_conf->getVector();
-    vector<ConfigObject*> difs = dif_conf->getVector();
-    vector<ConfigObject*> asics = asic_conf->getVector();
+	vector<ConfigObject*> ldas = lda_conf->getVector();
+	vector<ConfigObject*> dccs = dcc_conf->getVector();
+	vector<ConfigObject*> difs = dif_conf->getVector();
+	vector<ConfigObject*> asics = asic_conf->getVector();
 
-    cout<<"Found :"<<endl;
-    cout<<"  "<<ldas.size()<<" LDA"<<endl;
-    cout<<"  "<<dccs.size()<<" DCC"<<endl;
-    cout<<"  "<<difs.size()<<" DIF"<<endl;
-    cout<<"  "<<asics.size()<<" ASIC"<<endl;
-    s->saveToXML("./xmlFile.xml");
-    delete(s); // this will delete the state object along with the configurations objects*/
+	cout<<"Found :"<<endl;
+	cout<<"  "<<ldas.size()<<" LDA"<<endl;
+	cout<<"  "<<dccs.size()<<" DCC"<<endl;
+	cout<<"  "<<difs.size()<<" DIF"<<endl;
+	cout<<"  "<<asics.size()<<" ASIC"<<endl;
+	s->saveToXML("./xmlFile.xml");
+	delete(s); // this will delete the state object along with the configurations objects*/
       //DBInit::terminate();
     } // end if(isFirstEvent()==true)
-    Planss.clear();
-    //Plans.clear();
-    //PlansScintillator.clear();
-    if (evtP == nullptr) 
-      {
-	PrintStatShort();  // utile à faire ici ???    
-	return;
-      }
+  Planss.clear();
+  //Plans.clear();
+  //PlansScintillator.clear();
+  if (evtP == nullptr) 
+    {
+      PrintStatShort();  // utile à faire ici ???    
+      return;
+    }
     
-        double rate0=0.0;
-        std::map<std::string,LCCollection*>Collections;
-        Collections.clear();
-        std::vector<std::string>namesss=*evtP->getCollectionNames();
-        for(unsigned int i=0; i!=_hcalCollections.size(); i++)
-        {
-          for(unsigned int j=0; j!=namesss.size(); j++)
-          {
-            if(namesss[j]==_hcalCollections[i])
+  double rate0=0.0;
+  std::map<std::string,LCCollection*>Collections;
+  Collections.clear();
+  std::vector<std::string>namesss=*evtP->getCollectionNames();
+  for(unsigned int i=0; i!=_hcalCollections.size(); i++)
+    {
+      for(unsigned int j=0; j!=namesss.size(); j++)
+	{
+	  if(namesss[j]==_hcalCollections[i])
             {
               if(evtP ->getCollection(namesss[j].c_str())!=nullptr)
-              {
+		{
                 
-                Collections[namesss[j]]=evtP ->getCollection(namesss[j].c_str());
-                Numbers[namesss[j]]++;
-                Progress(_skip,_GlobalEvents,_maxRecord,Numbers[namesss[j]]);
-                //std::cout<<namesss[j]<<"  "<<Numbers[namesss[j]]<<std::endl;
-              }
+		  Collections[namesss[j]]=evtP ->getCollection(namesss[j].c_str());
+		  Numbers[namesss[j]]++;
+		  Progress(_skip,_GlobalEvents,_maxRecord,Numbers[namesss[j]]);
+		  //std::cout<<namesss[j]<<"  "<<Numbers[namesss[j]]<<std::endl;
+		}
               else
-              {
-                std::cout<<red<<namesss[j]<< "not found"<<std::endl;
-              }
+		{
+		  std::cout<<red<<namesss[j]<< "not found"<<std::endl;
+		}
             }
-          }
-        } // end for(unsigned int i=0; i!=_hcalCollections.size(); i++)
+	}
+    } // end for(unsigned int i=0; i!=_hcalCollections.size(); i++)
       
-        /*std::vector<std::string>names=*evtP->getCollectionNames();
-        for(unsigned int i=0; i< _hcalCollections.size(); i++)
-        {
-            IsScinti=false;
-            LCCollection* col=nullptr;
-            for(unsigned int i=0;i<names.size();++i)
-            {
-              if(names[i]=="SDHCAL_HIT")
-              {
-                col = evtP ->getCollection(names[i].c_str());
-                _eventNr=evtP->getEventNumber();
-                //eventnbrr=_eventNr;
-                Progress(_skip,_GlobalEvents,_maxRecord,_eventNr);
-              }
-              else if(names[i]=="SDHCAL_HIT_SC")
-              {
-                //std::cout<<"SC one"<<std::endl;
-                col = evtP ->getCollection(names[i].c_str());
-                _eventNrSC=evtP->getEventNumber();
-                if(_eventNrSC %1000 ==0)std::cout<<"Event Number Scintillator : "<<_eventNrSC<<std::endl;
-                IsScinti=true;
-              }
-            }
-            if(col == nullptr)
-            {
-                if(IsScinti==true) std::cout<< red << "TRIGGER WITH SCINTILLATOR SKIPED ..."<< normal <<std::endl;
-                else  std::cout<< red << "TRIGGER WITH SKIPED ..."<< normal <<std::endl;
-                break;
-            }*/
-            for(std::map<std::string,LCCollection*>::iterator it=Collections.begin(); it!=Collections.end(); ++it)
-            {
-              CellIDDecoder<CalorimeterHit> cd(it->second);
-              int numElements = (it->second)->getNumberOfElements();
-              for (int ihit=0; ihit < numElements; ++ihit)
-              {
-                CalorimeterHit *raw_hit = dynamic_cast<CalorimeterHit*>( (it->second)->getElementAt(ihit)) ;
-                if (raw_hit != nullptr)
-                {
-                    /*if(it->first=="SDHCAL_HIT_SC")
-                    {
-                      rate->Fill(raw_hit->getTime()*200-rate0);
-                      rate0=raw_hit->getTime()*200;
-                    }*/
-                    int dif_id=cd(raw_hit)["Dif_id"];
-                    //int I=cd(raw_hit)["I"];
-                    //int J=cd(raw_hit)["J"];
-                    RealNumberPlane[dif_id]++;
-                    Planss[it->first][geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit,it->first);
-                    Planss[it->first][geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
-                    //std::cout<<red<<"ttttt"<<normal<<std::endl;
-                    /*if(IsScinti==true)
-                    {
-                      PlansScintillator[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
-                      PlansScintillator[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
-                    }
-                    else
-                    {
-                      Plans[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
-                      Plans[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
-                    }*/
-                } // end if (raw_hit != nullptr)
-	      } // end for (int ihit=0; ihit < numElements; ++ihit)
-	    } // for(std::map<std::string,LCCollection*>::iterator it=Collections.begin(); it!=Collections.end(); ++it)
+  /*std::vector<std::string>names=*evtP->getCollectionNames();
+    for(unsigned int i=0; i< _hcalCollections.size(); i++)
+    {
+    IsScinti=false;
+    LCCollection* col=nullptr;
+    for(unsigned int i=0;i<names.size();++i)
+    {
+    if(names[i]=="SDHCAL_HIT")
+    {
+    col = evtP ->getCollection(names[i].c_str());
+    _eventNr=evtP->getEventNumber();
+    //eventnbrr=_eventNr;
+    Progress(_skip,_GlobalEvents,_maxRecord,_eventNr);
+    }
+    else if(names[i]=="SDHCAL_HIT_SC")
+    {
+    //std::cout<<"SC one"<<std::endl;
+    col = evtP ->getCollection(names[i].c_str());
+    _eventNrSC=evtP->getEventNumber();
+    if(_eventNrSC %1000 ==0)std::cout<<"Event Number Scintillator : "<<_eventNrSC<<std::endl;
+    IsScinti=true;
+    }
+    }
+    if(col == nullptr)
+    {
+    if(IsScinti==true) std::cout<< red << "TRIGGER WITH SCINTILLATOR SKIPED ..."<< normal <<std::endl;
+    else  std::cout<< red << "TRIGGER WITH SKIPED ..."<< normal <<std::endl;
+    break;
+    }*/
+  for(std::map<std::string,LCCollection*>::iterator it=Collections.begin(); it!=Collections.end(); ++it)
+    {
+      CellIDDecoder<CalorimeterHit> cd(it->second);
+      int numElements = (it->second)->getNumberOfElements();
+      for (int ihit=0; ihit < numElements; ++ihit)
+	{
+	  CalorimeterHit *raw_hit = dynamic_cast<CalorimeterHit*>( (it->second)->getElementAt(ihit)) ;
+	  if (raw_hit != nullptr)
+	    {
+	      /*if(it->first=="SDHCAL_HIT_SC")
+		{
+		rate->Fill(raw_hit->getTime()*200-rate0);
+		rate0=raw_hit->getTime()*200;
+		}*/
+	      int dif_id=cd(raw_hit)["Dif_id"];
+	      //int I=cd(raw_hit)["I"];
+	      //int J=cd(raw_hit)["J"];
+	      RealNumberPlane[dif_id]++;
+	      Planss[it->first][geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit,it->first);
+	      Planss[it->first][geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
+	      //std::cout<<red<<"ttttt"<<normal<<std::endl;
+	      /*if(IsScinti==true)
+		{
+		PlansScintillator[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
+		PlansScintillator[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
+		}
+		else
+		{
+		Plans[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
+		Plans[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
+		}*/
+	    } // end if (raw_hit != nullptr)
+	} // end for (int ihit=0; ihit < numElements; ++ihit)
+    } // for(std::map<std::string,LCCollection*>::iterator it=Collections.begin(); it!=Collections.end(); ++it)
 
 
-        //if(IsScinti==true)
-        //{
-          // for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(PlansScintillator,true,testedPlanList);
-        //}
-        //else for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans,false,testedPlanList);
+  //if(IsScinti==true)
+  //{
+  // for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(PlansScintillator,true,testedPlanList);
+  //}
+  //else for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans,false,testedPlanList);
 
 
-    // NB si Planss est vide, Tracks ne fait rien.
-        Tracks(Planss,geom,geometryplans,useforrealrate);
-    // NB si Planss est vide, testedPlan::testYou ne fait rien
-        for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Planss,testedPlanList);
-	PrintStatShort();      
+  // NB si Planss est vide, Tracks ne fait rien.
+  Tracks(Planss,geom,geometryplans,useforrealrate);
+  // NB si Planss est vide, testedPlan::testYou ne fait rien
+  for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Planss,testedPlanList);
+  PrintStatShort();      
 }
 
 void AnalysisProcessor::processRunHeader( LCRunHeader* run)
