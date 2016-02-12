@@ -1,0 +1,289 @@
+# This is a simple elogd configuration file to work with MIDAS
+# 
+[global]
+# port under which elogd should run
+port = 8080                             
+# password file, created under 'logbook dir'
+password file = elog.pwd                
+#directory under which elog was installed (themes etc.)
+Resource dir = /usr/share/elog    
+#directory where the password file will end up
+Logbook dir = /var/lib/elog/logbooks   
+# anyone can create it's own account
+self register = 1                      
+Admin user = user
+
+
+[GIF]
+Time format =%d-%m-%Y %X
+
+Theme = default
+Comment = GIF++ Test Beams
+
+#Liste des attributs
+Attributes= Author,Run,DAQ Name,Good,Problem Type, Beam ,Energy, Particles, Attenuator upstream,  Attenuator downstream, Source,Gaz,Scintillator,Dif_Scintillator,Tcherenkov,Dif_Tcherenkov,Position Bati X,Position Bati Z, Number Dif,Dif_Id1,Position1 Z,Type1, HV1 , Gas Channel1,HV Channel1,Dif_Id2,Position2 Z,Type2, HV2 , Gas Channel2,HV Channel2,Dif_Id3,Position3 Z,Type3, HV3 , Gas Channel3,HV Channel3,Dif_Id4,Position4 Z,Type4, HV4 , Gas Channel4,HV Channel4,Dif_Id5,Position5 Z,Type5, HV5 , Gas Channel5,HV Channel5,Dif_Id6,Position6 Z,Type6, HV6 , Gas Channel6,HV Channel6,Dif_Id7,Position7 Z,Type7, HV7 , Gas Channel7,HV Channel7,Dif_Id8,Position8 Z,Type8, HV8 , Gas Channel8,HV Channel8,Dif_Id9,Position9 Z,Type9, HV9 , Gas Channel9, HV Channel9
+
+
+#Attributs visible dans la page 
+List display = Run , Date,DAQ Name, Good,Problem Type, Beam ,Energy, Particles, Attenuator upstream,  Attenuator downstream, Source,Gaz,Scintillator, Tcherenkov,Position Bati X,Position Bati Z,HV1 , HV2 ,HV3 ,  HV4 , HV5 , HV6 , HV7 , HV8 , HV9 
+Required Attributes =Source,Beam,Gaz,Scintillator,Number Dif, Good
+
+Top text =<div style="padding:5px; background-color:#ffaca3; border:2px solid #ff3924; -moz-border-radius:9px; -khtml-border-radius:9px; -webkit-border-radius:9px; border-radius:9px;"><center><strong>Warning</strong>: If you see orange cells please fill them !!!!.</center></div>
+Bottom text =<div style="padding:5px; background-color:#ffaca3; border:2px solid #ff3924; -moz-border-radius:9px; -khtml-border-radius:9px; -webkit-border-radius:9px; border-radius:9px;"><center><strong>Warning</strong>: If you see orange cells please fill them !!!!.</center></div>
+
+#Preselection des Options
+Preset Gaz =  CMS
+Preset Tcherenkov =  No
+Preset Author =  $long_name
+Preset Scintillator =  Not Set
+Preset Number Dif =  Six
+Preset Good =  Not Set
+Preset Beam =  Not Set
+Preset Source =  Not Set
+
+
+Cell Style Good Yes = background-color:green
+Cell Style Good No  = background-color:red
+Cell Style Good Not Set  = background-color:orange
+Cell Style Source ON = background-color:green
+Cell Style Source OFF  = background-color:red
+Cell Style Source Not Set = background-color:orange
+Cell Style Beam ON = background-color:green
+Cell Style Beam OFF  = background-color:red
+Cell Style Beam INSTABLE  = background-color:yellow
+Cell Style Beam Not Set  = background-color:orange
+Cell Style HV1 Not Set = background-color:orange
+Cell Style HV2 Not Set = background-color:orange
+Cell Style HV3 Not Set = background-color:orange
+Cell Style HV4 Not Set = background-color:orange
+Cell Style HV5 Not Set = background-color:orange
+Cell Style HV6 Not Set = background-color:orange
+Cell Style HV7 Not Set = background-color:orange
+Cell Style HV8 Not Set = background-color:orange
+Cell Style HV9 Not Set = background-color:orange
+Cell Style Scintillator Unknown = background-color:red
+Cell Style Scintillator Not Set = background-color:orange
+#Format des Options
+Format Author =0,attribname, attribvalue, 14, 25
+Format Run =1,attribname, attribvalue, 14, 20
+Format DAQ Name =1,attribname, attribvalue, 14, 30
+Format Attenuator upstream =0,attribname, attribvalue, 3, 10
+Format Attenuator downstream =1,attribname, attribvalue, 3, 10
+Format Problem Type =0,attribname, attribvalue, 20, 30
+Format Energy =0,attribname, attribvalue, 14, 30
+Format Particles =1,attribname, attribvalue, 14, 30
+Format Gas Channel1 =1,attribname, attribvalue, 3, 10
+Format Gas Channel2 =1,attribname, attribvalue, 3, 10
+Format Gas Channel3 =1,attribname, attribvalue, 3, 10
+Format Gas Channel4 =1,attribname, attribvalue, 3, 10
+Format Gas Channel5 =1,attribname, attribvalue, 3, 10
+Format Gas Channel6 =1,attribname, attribvalue, 3, 10
+Format Gas Channel7 =1,attribname, attribvalue, 3, 10
+Format Gas Channel8 =1,attribname, attribvalue, 3, 10
+Format Gas Channel9 =1,attribname, attribvalue, 3, 10
+Format HV Channel1 =1,attribname, attribvalue, 3, 10
+Format HV Channel2 =1,attribname, attribvalue, 3, 10
+Format HV Channel3 =1,attribname, attribvalue, 3, 10
+Format HV Channel4 =1,attribname, attribvalue, 3, 10
+Format HV Channel5 =1,attribname, attribvalue, 3, 10
+Format HV Channel6 =1,attribname, attribvalue, 3, 10
+Format HV Channel7 =1,attribname, attribvalue, 3, 10
+Format HV Channel8 =1,attribname, attribvalue, 3, 10
+Format HV Channel9 =1,attribname, attribvalue, 3, 10
+Format Position1 Z =1,attribname, attribvalue, 6, 15
+Format Position2 Z=1,attribname, attribvalue, 6, 15
+Format Position3 Z=1,attribname, attribvalue, 6, 15
+Format Position4 Z=1,attribname, attribvalue, 6, 15
+Format Position5 Z=1,attribname, attribvalue, 6, 15
+Format Position6 Z=1,attribname, attribvalue, 6, 15
+Format Position7 Z=1,attribname, attribvalue, 6, 15
+Format Position8 Z=1,attribname, attribvalue, 6, 15
+Format Position9 Z=1,attribname, attribvalue, 6, 15
+Format Scintillator=0,attribname, attribvalue, 3, 3
+Format Tcherenkov=0,attribname, attribvalue, 3, 3
+Format Dif_Scintillator=1,attribname, attribvalue, 3, 3
+Format Dif_Tcherenkov=1,attribname, attribvalue, 3, 3
+Format HV1 =1,attribname, attribvalue, 10, 50
+Format HV2 =1,attribname, attribvalue, 10, 50
+Format HV3 =1,attribname, attribvalue, 10, 50
+Format HV4 =1,attribname, attribvalue, 10, 50
+Format HV5 =1,attribname, attribvalue, 10, 50
+Format HV6 =1,attribname, attribvalue, 10, 50
+Format HV7 =1,attribname, attribvalue, 10, 50
+Format HV8 =1,attribname, attribvalue, 10, 50
+Format HV9 =1,attribname, attribvalue, 10, 50
+Format Type1 =1
+Format Type2 =1
+Format Type3 =1
+Format Type4 =1
+Format Type5 =1
+Format Type6 =1
+Format Type7 =1
+Format Type8 =1
+Format Type9 =1
+Format Dif_Id1 =0,attribname, attribvalue, 3, 3
+Format Dif_Id2 =0,attribname, attribvalue, 3, 3
+Format Dif_Id3 =0,attribname, attribvalue, 3, 3
+Format Dif_Id4 =0,attribname, attribvalue, 3, 3
+Format Dif_Id5 =0,attribname, attribvalue, 3, 3
+Format Dif_Id6 =0,attribname, attribvalue, 3, 3
+Format Dif_Id7 =0,attribname, attribvalue, 3, 3
+Format Dif_Id8 =0,attribname, attribvalue, 3, 3
+Format Dif_Id9 =0,attribname, attribvalue, 3, 3
+Format Number Dif =0,
+Format Tcherenkov =1,
+Format Position Bati X =0, attribname, attribvalue, 14, 50
+Format Position Bati Z =1, attribname, attribvalue, 14, 50
+Format Run =0, attribname, attribvalue, 14, 50
+Format Attenuator downstream =1,
+
+
+
+#Commentaires
+Comment Dif_Id1 = from the beam
+Comment Dif_Id2 = from the beam
+Comment Dif_Id3 = from the beam
+Comment Dif_Id4 = from the beam
+Comment Dif_Id5 = from the beam
+Comment Dif_Id6 = from the beam
+Comment Dif_Id7 = from the beam
+Comment Dif_Id8 = from the beam
+Comment Dif_Id9 = from the beam
+
+#Option des Attributs
+Options Attenuator upstream = 111,112,113,121,122,123,131, 132, 133,211,212,213,221,222,223,231,232,233,311,312,313,321,322,323,331,332,333
+Options Attenuator downstream = 111,112,113,121,122,123,131, 132, 133,211,212,213,221,222,223,231,232,233,311,312,313,321,322,323,331,332,333
+Options Type1 = Standard,  Chineese, Unknown, Plastic, Not Set
+Options Type2 = Standard, Chineese, Unknown, Plastic,Not Set
+Options Type3 = Standard,  Chineese, Unknown, Plastic, Not Set
+Options Type4 = Standard,  Chineese, Unknown,Plastic, Not Set
+Options Type5 = Standard,  Chineese, Unknown,Plastic, Not Set
+Options Type6 = Standard,  Chineese, Unknown,Plastic, Not Set
+Options Type7 = Standard,  Chineese, Unknown,Plastic, Not Set
+Options Type8 = Standard,  Chineese, Unknown,Plastic, Not Set
+Options Type9 = Standard,  Chineese, Unknown,Plastic, Not Set
+Options Tcherenkov = Yes, No
+Options Dif_Tcherenkov = 3,
+Options Dif_Scintillator = 3,
+Options Scintillator = Intern,Extern, Both, False,Unknow,Ours,None
+Extendable options = HV1,HV2,HV3,HV4,HV5,HV6,HV7,HV8,HV9,Problem Type,Gaz,Dif_Scintillator,Dif_Tcherenkov,Dif_Id1,Dif_Id2,Dif_Id3,Dif_Id4,Dif_Id5,Dif_Id6,Dif_Id7,Dif_Id8,Dif_Id9,Energy,Particles
+Options HV1 = 5500,5600,5700,5800,5900,6000,6100,6200,6300,6400,6500,6600,6700,6800,6900,7000,7100,7200,Not Set
+Options HV2 = 5500,5600,5700,5800,5900,6000,6100,6200,6300,6400,6500,6600,6700,6800,6900,7000,7100,7200,Not Set
+Options HV3 = 5500,5600,5700,5800,5900,6000,6100,6200,6300,6400,6500,6600,6700,6800,6900,7000,7100,7200,Not Set
+Options HV4 = 5500,5600,5700,5800,5900,6000,6100,6200,6300,6400,6500,6600,6700,6800,6900,7000,7100,7200,Not Set
+Options HV5 = 5500,5600,5700,5800,5900,6000,6100,6200,6300,6400,6500,6600,6700,6800,6900,7000,7100,7200,Not Set
+Options HV6 = 5500,5600,5700,5800,5900,6000,6100,6200,6300,6400,6500,6600,6700,6800,6900,7000,7100,7200,Not Set
+Options HV7 = 5500,5600,5700,5800,5900,6000,6100,6200,6300,6400,6500,6600,6700,6800,6900,7000,7100,7200,Not Set
+Options HV8 = 5500,5600,5700,5800,5900,6000,6100,6200,6300,6400,6500,6600,6700,6800,6900,7000,7100,7200,Not Set
+Options HV9 = 5500,5600,5700,5800,5900,6000,6100,6200,6300,6400,6500,6600,6700,6800,6900,7000,7100,7200,Not Set
+Options Dif_Id1 = 32,6,142,16,28,216,125,3
+Options Dif_Id2 = 32,6,142,16,28,216,125,3
+Options Dif_Id3 = 32,6,142,16,28,216,125,3
+Options Dif_Id4 = 32,6,142,16,28,216,125,3
+Options Dif_Id5 = 32,6,142,16,28,216,125,3
+Options Dif_Id6 = 32,6,142,16,28,216,125,3
+Options Dif_Id7 = 32,6,142,16,28,216,125,3
+Options Dif_Id8 = 32,6,142,16,28,216,125,3
+Options Dif_Id9 = 32,6,142,16,28,216,125,3
+Options Energy = 150GeV
+Options Particles = Muons,Pions
+Options Gaz = CMS
+Options Problem Type = Gaz, Beam, Source, HV
+Options Good = Yes{a} , No{b}, Not Set{c}
+Options Source = ON{d}, OFF{e}, Not Set{f}
+Options Beam = ON{x} , OFF{y}, INSTABLE{z}, Not Set{w}
+{a&d&x}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Attenuator upstream,Attenuator downstream,Energy, Particles
+{a&d&y}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Attenuator upstream,Attenuator downstream,
+{a&d&z}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Attenuator upstream,Attenuator downstream,Energy, Particles
+{a&d&w}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Attenuator upstream,Attenuator downstream,
+{a&e&x}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Energy, Particles
+{a&e&y}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,
+{a&e&z}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Energy, Particles
+{a&e&w}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,
+{a&f&x}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Energy, Particles
+{a&f&y}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,
+{a&f&z}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Energy, Particles
+{a&f&w}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,
+{b&d&x}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Problem Type,Attenuator upstream,Attenuator downstream,Energy, Particles
+{b&d&y}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Problem Type,Attenuator upstream,Attenuator downstream,
+{b&d&z}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Problem Type,Attenuator upstream,Attenuator downstream,Energy, Particles
+{b&d&w}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Problem Type,Attenuator upstream,Attenuator downstream,
+{b&e&x}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Problem Type,Energy, Particles
+{b&e&y}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Problem Type
+{b&e&z}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Problem Type,Energy, Particles
+{b&e&w}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Problem Type
+{b&f&x}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Problem Type,Energy, Particles
+{b&f&y}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Problem Type
+{b&f&z}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Problem Type,Energy, Particles
+{b&f&w}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Problem Type
+{c&d&x}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Attenuator upstream,Attenuator downstream,Energy, Particles
+{c&d&y}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Attenuator upstream,Attenuator downstream
+{c&d&z}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Attenuator upstream,Attenuator downstream,Energy, Particles
+{c&d&w}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Attenuator upstream,Attenuator downstream
+{c&e&x}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Energy, Particles
+{c&e&y}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,
+{c&e&z}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Energy, Particles
+{c&e&w}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,
+{c&f&x}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Energy, Particles
+{c&f&y}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,
+{c&f&z}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,Energy, Particles
+{c&f&w}Required Attributes=Source,Beam,Gaz,Scintillator,Number Dif, Good,
+
+Options Number Dif = One{1}, Two{2}, Three{3},Four{4},Five{5}, Six{6},Seven{7},Eight{8},Nine{9}
+Show Attributes Edit = Author ,Run, Daq Name,Good,Problem Type, Source , Attenuator upstream,Attenuator downstream ,Beam,Energy, Particles,Gaz,Scintillator,Dif_Scintillator,Tcherenkov,Dif_Tcherenkov,Position Bati X,Position Bati Z, Number Dif,Dif_Scintillator,Dif_Cherenkov
+
+{1} Show Attributes Edit = Author ,Run, Daq Name,Good,Problem Type, Source , Attenuator upstream,Attenuator downstream ,Beam,Energy, Particles,Gaz,Scintillator,Dif_Scintillator,Tcherenkov,Dif_Tcherenkov,Position Bati X,Position Bati Z, Number Dif,Dif_Id1,Position1 Z,Type1, HV1 , Gas Channel1,HV Channel1
+{1} Preset HV1= Not Set
+{2} Show Attributes Edit = Author ,Run, Daq Name,Good,Problem Type, Source , Attenuator upstream,Attenuator downstream ,Beam,Energy, Particles,Gaz,Scintillator,Dif_Scintillator,Tcherenkov,Dif_Tcherenkov,Position Bati X,Position Bati Z, Number Dif,Dif_Id1,Position1 Z,Type1, HV1 , Gas Channel1,HV Channel1,Dif_Id2,Position2 Z,Type2, HV2 , Gas Channel2,HV Channel2
+{2} Preset HV1= Not Set 
+{2} Preset HV2= Not Set
+{3} Show Attributes Edit = Author ,Run, Daq Name,Good,Problem Type, Source , Attenuator upstream,Attenuator downstream ,Beam,Energy, Particles,Gaz,Scintillator,Dif_Scintillator,Tcherenkov,Dif_Tcherenkov,Position Bati X,Position Bati Z, Number Dif,Dif_Id1,Position1 Z,Type1, HV1 , Gas Channel1,HV Channel1,Dif_Id2,Position2 Z,Type2, HV2 , Gas Channel2,HV Channel2,Dif_Id3,Position3 Z,Type3, HV3 , Gas Channel3,HV Channel3
+{3} Preset HV1= Not Set 
+{3} Preset HV2= Not Set
+{3} Preset HV3= Not Set
+{4} Show Attributes Edit = Author ,Run, Daq Name,Good,Problem Type, Source , Attenuator upstream,Attenuator downstream ,Beam,Energy, Particles,Gaz,Scintillator,Dif_Scintillator,Tcherenkov,Dif_Tcherenkov,Position Bati X,Position Bati Z, Number Dif,Dif_Id1,Position1 Z,Type1, HV1 , Gas Channel1,HV Channel1,Dif_Id2,Position2 Z,Type2, HV2 , Gas Channel2,HV Channel2,Dif_Id3,Position3 Z,Type3, HV3 , Gas Channel3,HV Channel3,Dif_Id4,Position4 Z,Type4, HV4 , Gas Channel4,HV Channel4
+{4} Preset HV1= Not Set 
+{4} Preset HV2= Not Set
+{4} Preset HV3= Not Set
+{4} Preset HV4= Not Set
+{5} Show Attributes Edit = Author ,Run, Daq Name,Good,Problem Type, Source , Attenuator upstream,Attenuator downstream ,Beam,Energy, Particles,Gaz,Scintillator,Dif_Scintillator,Tcherenkov,Dif_Tcherenkov,Position Bati X,Position Bati Z, Number Dif,Dif_Id1,Position1 Z,Type1, HV1 , Gas Channel1,HV Channel1,Dif_Id2,Position2 Z,Type2, HV2 , Gas Channel2,HV Channel2,Dif_Id3,Position3 Z,Type3, HV3 , Gas Channel3,HV Channel3,Dif_Id4,Position4 Z,Type4, HV4 , Gas Channel4,HV Channel4,Dif_Id5,Position5 Z,Type5, HV5 , Gas Channel5,HV Channel5
+{5} Preset HV1= Not Set 
+{5} Preset HV2= Not Set
+{5} Preset HV3= Not Set
+{5} Preset HV4= Not Set
+{5} Preset HV5= Not Set
+{6} Show Attributes Edit = Author ,Run, Daq Name,Good,Problem Type, Source , Attenuator upstream,Attenuator downstream ,Beam,Energy, Particles,Gaz,Scintillator,Dif_Scintillator,Tcherenkov,Dif_Tcherenkov,Position Bati X,Position Bati Z, Number Dif,Dif_Id1,Position1 Z,Type1, HV1 , Gas Channel1,HV Channel1,Dif_Id2,Position2 Z,Type2, HV2 , Gas Channel2,HV Channel2,Dif_Id3,Position3 Z,Type3, HV3 , Gas Channel3,HV Channel3,Dif_Id4,Position4 Z,Type4, HV4 , Gas Channel4,HV Channel4,Dif_Id5,Position5 Z,Type5, HV5 , Gas Channel5,HV Channel5,Dif_Id6,Position6 Z,Type6, HV6 , Gas Channel6,HV Channel6
+{6} Preset HV1= Not Set 
+{6} Preset HV2= Not Set
+{6} Preset HV3= Not Set
+{6} Preset HV4= Not Set
+{6} Preset HV5= Not Set
+{6} Preset HV6= Not Set
+{7} Show Attributes Edit = Author ,Run, Daq Name,Good,Problem Type, Source , Attenuator upstream,Attenuator downstream ,Beam,Energy, Particles,Gaz,Scintillator,Dif_Scintillator,Tcherenkov,Dif_Tcherenkov,Position Bati X,Position Bati Z, Number Dif,Dif_Id1,Position1 Z,Type1, HV1 , Gas Channel1,HV Channel1,Dif_Id2,Position2 Z,Type2, HV2 , Gas Channel2,HV Channel2,Dif_Id3,Position3 Z,Type3, HV3 , Gas Channel3,HV Channel3,Dif_Id4,Position4 Z,Type4, HV4 , Gas Channel4,HV Channel4,Dif_Id5,Position5 Z,Type5, HV5 , Gas Channel5,HV Channel5,Dif_Id6,Position6 Z,Type6, HV6 , Gas Channel6,HV Channel6,Dif_Id7,Position7 Z,Type7, HV7 , Gas Channel7,HV Channel7
+{7} Preset HV1= Not Set 
+{7} Preset HV2= Not Set
+{7} Preset HV3= Not Set
+{7} Preset HV4= Not Set
+{7} Preset HV5= Not Set
+{7} Preset HV6= Not Set
+{7} Preset HV7= Not Set
+{8} Show Attributes Edit = Author ,Run, Daq Name,Good,Problem Type, Source , Attenuator upstream,Attenuator downstream ,Beam,Energy, Particles,Gaz,Scintillator,Dif_Scintillator,Tcherenkov,Dif_Tcherenkov,Position Bati X,Position Bati Z, Number Dif,Dif_Id1,Position1 Z,Type1, HV1 , Gas Channel1,HV Channel1,Dif_Id2,Position2 Z,Type2, HV2 , Gas Channel2,HV Channel2,Dif_Id3,Position3 Z,Type3, HV3 , Gas Channel3,HV Channel3,Dif_Id4,Position4 Z,Type4, HV4 , Gas Channel4,HV Channel4,Dif_Id5,Position5 Z,Type5, HV5 , Gas Channel5,HV Channel5,Dif_Id6,Position6 Z,Type6, HV6 , Gas Channel6,HV Channel6,Dif_Id7,Position7 Z,Type7, HV7 , Gas Channel7,HV Channel7,Dif_Id8,Position8 Z,Type8, HV8 , Gas Channel8,HV Channel8
+{8} Preset HV1= Not Set 
+{8} Preset HV2= Not Set
+{8} Preset HV3= Not Set
+{8} Preset HV4= Not Set
+{8} Preset HV5= Not Set
+{8} Preset HV6= Not Set
+{8} Preset HV7= Not Set
+{8} Preset HV8= Not Set
+{9} Show Attributes Edit = Author ,Run, Daq Name,Good,Problem Type, Source , Attenuator upstream,Attenuator downstream ,Beam,Energy, Particles,Gaz,Scintillator,Dif_Scintillator,Tcherenkov,Dif_Tcherenkov,Position Bati X,Position Bati Z, Number Dif,Dif_Id1,Position1 Z,Type1, HV1 , Gas Channel1,HV Channel1,Dif_Id2,Position2 Z,Type2, HV2 , Gas Channel2,HV Channel2,Dif_Id3,Position3 Z,Type3, HV3 , Gas Channel3,HV Channel3,Dif_Id4,Position4 Z,Type4, HV4 , Gas Channel4,HV Channel4,Dif_Id5,Position5 Z,Type5, HV5 , Gas Channel5,HV Channel5,Dif_Id6,Position6 Z,Type6, HV6 , Gas Channel6,HV Channel6,Dif_Id7,Position7 Z,Type7, HV7 , Gas Channel7,HV Channel7,Dif_Id8,Position8 Z,Type8, HV8 , Gas Channel8,HV Channel8,Dif_Id9,Position9 Z,Type9, HV9 , Gas Channel9,HV Channel9
+{8} Preset HV1= Not Set 
+{8} Preset HV2= Not Set
+{8} Preset HV3= Not Set
+{8} Preset HV4= Not Set
+{8} Preset HV5= Not Set
+{8} Preset HV6= Not Set
+{8} Preset HV7= Not Set
+{8} Preset HV8= Not Set
+{9} Preset HV9= Not Set
+
