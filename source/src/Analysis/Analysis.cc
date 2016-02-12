@@ -874,8 +874,6 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 		{
                 
 		  Collections[namesss[j]]=evtP ->getCollection(namesss[j].c_str());
-		  Numbers[namesss[j]]++;
-		  Progress(_skip,_GlobalEvents,_maxRecord,Numbers[namesss[j]]);
 		  //std::cout<<namesss[j]<<"  "<<Numbers[namesss[j]]<<std::endl;
 		}
               else
@@ -921,6 +919,10 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
       LCCollection* currentCollection=nullptr;
       try { currentCollection= evtP ->getCollection(currentCollectionName); }
       catch (DataNotAvailableException &e){ std::cout<<red<<currentCollectionName<< "not found"<<std::endl; break; }
+
+      Numbers[currentCollectionName]++;
+      Progress(_skip,_GlobalEvents,_maxRecord,Numbers[currentCollectionName]);
+
 
       CellIDDecoder<CalorimeterHit> cd(currentCollection);
       int numElements = currentCollection->getNumberOfElements();
