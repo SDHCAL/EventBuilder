@@ -915,10 +915,13 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
     else  std::cout<< red << "TRIGGER WITH SKIPED ..."<< normal <<std::endl;
     break;
     }*/
-  for(std::map<std::string,LCCollection*>::iterator ith=Collections.begin(); ith!=Collections.end(); ++ith)
+  for (std::vector<std::string>::iterator itcol=_hcalCollections.begin(); itcol!= _hcalCollections.end(); ++itcol)
     {
-      LCCollection* currentCollection=ith->second;
-      std::string currentCollectionName=ith->first;
+      std::string currentCollectionName=*itcol;
+      LCCollection* currentCollection=nullptr;
+      try { currentCollection= evtP ->getCollection(currentCollectionName); }
+      catch (DataNotAvailableException &e){ std::cout<<red<<currentCollectionName<< "not found"<<std::endl; break; }
+
       CellIDDecoder<CalorimeterHit> cd(currentCollection);
       int numElements = currentCollection->getNumberOfElements();
       for (int ihit=0; ihit < numElements; ++ihit)
