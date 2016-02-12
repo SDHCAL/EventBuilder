@@ -457,6 +457,7 @@ public:
     AnalysisProcessor();
     ~AnalysisProcessor();
     void PrintStat(std::string);
+    void PrintStatShort();
     void PrintStatShort(std::string);
     void operator=(const AnalysisProcessor&);
     virtual marlin::Processor* newProcessor() {
