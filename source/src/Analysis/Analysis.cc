@@ -114,6 +114,24 @@ std::map<std::string,TGraph2D*> Distribution_hits_tgraph;
 std::vector<std::string>Maketracks{"SDHCAL_HIT","SDHCAL_HIT_SC"};
 std::vector<std::string>Makeeffi{"NOISE_ESTIMATION_BEFORE","NOISE_ESTIMATION_AFTER"};
 
+void AnalysisProcessor::PrintStatShort()
+{
+  for(unsigned f=0;f!=_hcalCollections.size();++f)
+    {
+      if(_ShortEfficiency!=0)
+	{
+	  if(Numbers[_hcalCollections[f]]%_ShortEfficiency==0&&Numbers[_hcalCollections[f]]!=0)
+	    {
+	      PrintStatShort(_hcalCollections[f]);
+	      for(unsigned int i=0; i!=testedPlanList.size(); ++i)
+		{
+		  testedPlanList[i].ClearShort(_hcalCollections[f]);
+		}
+            }
+	}
+    }
+}
+
 void AnalysisProcessor::PrintStatShort(std::string name)
 {
   static std::map<std::string,std::string>Mess;
@@ -941,22 +959,9 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
         Tracks(Planss,geom,geometryplans,useforrealrate);
     // NB si Planss est vide, testedPlan::testYou ne fait rien
         for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Planss,testedPlanList);
-        for(unsigned f=0;f!=_hcalCollections.size();++f)
-        {
-          if(_ShortEfficiency!=0)
-          {
-        	  if(Numbers[_hcalCollections[f]]%_ShortEfficiency==0&&Numbers[_hcalCollections[f]]!=0)
-        	  {
-        	    PrintStatShort(_hcalCollections[f]);
-        	    for(unsigned int i=0; i!=testedPlanList.size(); ++i)
-		          {
-                testedPlanList[i].ClearShort(_hcalCollections[f]);
-              }
-            }
-    	    }
-	}
-      
+	PrintStatShort();      
 }
+
 void AnalysisProcessor::processRunHeader( LCRunHeader* run)
 {
     LCTOOLS::dumpRunHeader(run);

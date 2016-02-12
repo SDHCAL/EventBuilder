@@ -502,6 +502,7 @@ public:
     AnalysisProcessor();
     ~AnalysisProcessor();
     void PrintStat(std::string);
+    void PrintStatShort();
     void PrintStatShort(std::string);
     marlin::Processor *newProcessor(){return new AnalysisProcessor();}
     void init();
