@@ -75,6 +75,24 @@ class Geometry
   inline double GetGazNumber(const unsigned int& i){return Plates[i].GetGazNumber();};
   inline std::string GetHVChannel(const unsigned int& i){return Plates[i].GetHVChannel();};
   inline std::string GetGazChannel(const unsigned int& i){return Plates[i].GetGazChannel();};
+  inline int GetXMax()
+  {
+    int max=-999999;
+    for(unsigned int i=0;i!=Plates.size();++i)
+    {
+      if(Plates[i].GetSizeX()>max) max=Plates[i].GetSizeX();
+    }
+    return max;
+  }
+  inline int GetYMax()
+  {
+    int max=-999999;
+    for(unsigned int i=0;i!=Plates.size();++i)
+    {
+      if(Plates[i].GetSizeY()>max) max=Plates[i].GetSizeY();
+    }
+    return max;
+  }
   void PrintGeom(); 
  private:
   std::vector<Plate> Plates;
