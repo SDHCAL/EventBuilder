@@ -866,145 +866,15 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 	DifConfiguration *dif_conf = s->getDifConfiguration();
 	AsicConfiguration *asic_conf = s->getAsicConfiguration();*/
     }
-    Planss.clear();
-    if (evtP != nullptr) 
-    {
-        double rate0=0.0;
-        std::map<std::string,LCCollection*>Collections;
-        Collections.clear();
-        std::vector<std::string>namesss=*evtP->getCollectionNames();
-        for(unsigned int i=0; i!=_hcalCollections.size(); i++)
-        {
-          for(unsigned int j=0; j!=namesss.size(); j++)
-          {
-            if(namesss[j]==_hcalCollections[i])
-            {
-              if(evtP ->getCollection(namesss[j].c_str())!=nullptr)
-              {
-                
-                Collections[namesss[j]]=evtP ->getCollection(namesss[j].c_str());
-                Numbers[namesss[j]]++;
-                Progress(_skip,_GlobalEvents,_maxRecord,Numbers[namesss[j]]);
-                //std::cout<<namesss[j]<<"  "<<Numbers[namesss[j]]<<std::endl;
-              }
-              else
-              {
-                std::cout<<red<<namesss[j]<< "not found"<<std::endl;
-              }
-            }
-          }
-        }
-            for(std::map<std::string,LCCollection*>::iterator it=Collections.begin(); it!=Collections.end(); ++it)
-            {
-              CellIDDecoder<CalorimeterHit> cd(it->second);
-              int numElements = (it->second)->getNumberOfElements();
-              for (int ihit=0; ihit < numElements; ++ihit)
-              {
-                CalorimeterHit *raw_hit = dynamic_cast<CalorimeterHit*>( (it->second)->getElementAt(ihit)) ;
-                if (raw_hit != nullptr)
-                {
-                   ////////////////////////ALL Hits from Trivent /////////////////////////
-                   int dif_id=cd(raw_hit)["Dif_id"];
-                 /*  int nbrplaall=geom.GetDifNbrPlate(dif_id)-1;
-                   double xall=raw_hit->getPosition()[0];
-                   double yall=raw_hit->getPosition()[1];
-                    double ca=geometryplans[nbrplaall].get_ca();
-        double sa=geometryplans[nbrplaall].get_sa();
-        double cb=geometryplans[nbrplaall].get_cb();
-        double sb=geometryplans[nbrplaall].get_sb();
-        double cg=geometryplans[nbrplaall].get_cg();
-        double sg=geometryplans[nbrplaall].get_sg();
-                    double I=cg*cb*1.0/size_pad*(xall-geometryplans[nbrplaall].GetX0())+sg*cb*1.0/size_pad*(yall-geometryplans[nbrplaall].GetY0())+-sb*geometryplans[nbrplaall].GetZ0();
-        double J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(xall-geometryplans[nbrplaall].GetX0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(yall-geometryplans[nbrplaall].GetY0())+cb*sa*geometryplans[nbrplaall].GetZ0();
-                    int Threshold_Hit=raw_hit->getEnergy();
-                    std::cout<<I<<"  "<<J<<"  "<<Threshold_Hit<<std::endl;
-                    if(Threshold_Hit==Threshold_3)
-                    {
-                      Efficiency_pads[Threshold3][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
-                      Efficiency_pads[Threshold23][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
-                      Efficiency_pads[Thresholdall][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
-                      std::cout<<"ggggg"<<std::endl;
-                    }
-                    else if(Threshold_Hit==Threshold_2)
-                    {
-                      Efficiency_pads[Threshold2][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
-                      Efficiency_pads[Threshold12][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
-                      Efficiency_pads[Threshold23][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
-                      Efficiency_pads[Thresholdall][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
-                    }
-                    else if(Threshold_Hit==Threshold_1)
-                    {
-                      Efficiency_pads[Threshold1][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
-                      Efficiency_pads[Threshold12][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
-                      Efficiency_pads[Thresholdall][it->first][nbrplaall]->Fill(ceil(I),ceil(J),1);
-                    }*/
-                
-                    //////////////////////////////////////////////////////////////////////
-                    
-                    RealNumberPlane[dif_id]++;
-                    Planss[it->first][geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit,it->first);
-                    Planss[it->first][geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
-                }
-            }
-           }
-        }
-        Tracks(Planss,geom,geometryplans,useforrealrate);
-        for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Planss,testedPlanList);
-        for(unsigned f=0;f!=_hcalCollections.size();++f)
-        {
-          if(_ShortEfficiency!=0)
-          {
-        	  if(Numbers[_hcalCollections[f]]%_ShortEfficiency==0&&Numbers[_hcalCollections[f]]!=0)
-        	  {
-        	    PrintStatShort(_hcalCollections[f]);
-        	    for(unsigned int i=0; i!=testedPlanList.size(); ++i)
-		          {
-                testedPlanList[i].ClearShort(_hcalCollections[f]);
-              }
-            }
-    	    }
-    	  }
-    } // end if(isFirstEvent()==true)
+
   Planss.clear();
-  //Plans.clear();
-  //PlansScintillator.clear();
+
   if (evtP == nullptr) 
     {
       PrintStatShort();  // utile à faire ici ???    
       return;
     }
-    
-  //double rate0=0.0;
-      
-  /*std::vector<std::string>names=*evtP->getCollectionNames();
-    for(unsigned int i=0; i< _hcalCollections.size(); i++)
-    {
-    IsScinti=false;
-    LCCollection* col=nullptr;
-    for(unsigned int i=0;i<names.size();++i)
-    {
-    if(names[i]=="SDHCAL_HIT")
-    {
-    col = evtP ->getCollection(names[i].c_str());
-    _eventNr=evtP->getEventNumber();
-    //eventnbrr=_eventNr;
-    Progress(_skip,_GlobalEvents,_maxRecord,_eventNr);
-    }
-    else if(names[i]=="SDHCAL_HIT_SC")
-    {
-    //std::cout<<"SC one"<<std::endl;
-    col = evtP ->getCollection(names[i].c_str());
-    _eventNrSC=evtP->getEventNumber();
-    if(_eventNrSC %1000 ==0)std::cout<<"Event Number Scintillator : "<<_eventNrSC<<std::endl;
-    IsScinti=true;
-    }
-    }
-    if(col == nullptr)
-    {
-    if(IsScinti==true) std::cout<< red << "TRIGGER WITH SCINTILLATOR SKIPED ..."<< normal <<std::endl;
-    else  std::cout<< red << "TRIGGER WITH SKIPED ..."<< normal <<std::endl;
-    break;
-    }*/
+
   for (std::vector<std::string>::iterator itcol=_hcalCollections.begin(); itcol!= _hcalCollections.end(); ++itcol)
     {
       std::string currentCollectionName=*itcol;
@@ -1061,7 +931,8 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
   Tracks(Planss,geom,geometryplans,useforrealrate);
   // NB si Planss est vide, testedPlan::testYou ne fait rien
   for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Planss,testedPlanList);
-  PrintStatShort();      
+  PrintStatShort();     
+ 
 }
 
 void AnalysisProcessor::processRunHeader( LCRunHeader* run)
