@@ -915,13 +915,15 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
     else  std::cout<< red << "TRIGGER WITH SKIPED ..."<< normal <<std::endl;
     break;
     }*/
-  for(std::map<std::string,LCCollection*>::iterator it=Collections.begin(); it!=Collections.end(); ++it)
+  for(std::map<std::string,LCCollection*>::iterator ith=Collections.begin(); ith!=Collections.end(); ++ith)
     {
-      CellIDDecoder<CalorimeterHit> cd(it->second);
-      int numElements = (it->second)->getNumberOfElements();
+      LCCollection* currentCollection=ith->second;
+      std::string currentCollectionName=ith->first;
+      CellIDDecoder<CalorimeterHit> cd(currentCollection);
+      int numElements = currentCollection->getNumberOfElements();
       for (int ihit=0; ihit < numElements; ++ihit)
 	{
-	  CalorimeterHit *raw_hit = dynamic_cast<CalorimeterHit*>( (it->second)->getElementAt(ihit)) ;
+	  CalorimeterHit *raw_hit = dynamic_cast<CalorimeterHit*>( currentCollection->getElementAt(ihit)) ;
 	  if (raw_hit != nullptr)
 	    {
 	      /*if(it->first=="SDHCAL_HIT_SC")
@@ -933,8 +935,8 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 	      //int I=cd(raw_hit)["I"];
 	      //int J=cd(raw_hit)["J"];
 	      RealNumberPlane[dif_id]++;
-	      Planss[it->first][geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit,it->first);
-	      Planss[it->first][geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
+	      Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit,currentCollectionName);
+	      Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
 	      //std::cout<<red<<"ttttt"<<normal<<std::endl;
 	      /*if(IsScinti==true)
 		{
