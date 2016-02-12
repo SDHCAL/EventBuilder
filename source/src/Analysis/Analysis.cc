@@ -505,7 +505,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
     delete myfityz;
     delete myfitxz;
     }
-    }
+  }
     ///////////////////////////////////////////////////////////////////////////////////////////
 }
 
@@ -832,7 +832,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
     s->saveToXML("./xmlFile.xml");
     delete(s); // this will delete the state object along with the configurations objects*/
       //DBInit::terminate();
-    }
+    } // end if(isFirstEvent()==true)
     Planss.clear();
     //Plans.clear();
     //PlansScintillator.clear();
@@ -862,7 +862,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
               }
             }
           }
-        }
+        } // end for(unsigned int i=0; i!=_hcalCollections.size(); i++)
       
         /*std::vector<std::string>names=*evtP->getCollectionNames();
         for(unsigned int i=0; i< _hcalCollections.size(); i++)
@@ -924,16 +924,22 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
                       Plans[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
                       Plans[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
                     }*/
-                }
-            }
-           }
-        }
+                } // end if (raw_hit != nullptr)
+	      } // end for (int ihit=0; ihit < numElements; ++ihit)
+	    } // for(std::map<std::string,LCCollection*>::iterator it=Collections.begin(); it!=Collections.end(); ++it)
+    } // end if (evtP != nullptr) 
+
+
         //if(IsScinti==true)
         //{
           // for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(PlansScintillator,true,testedPlanList);
         //}
         //else for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans,false,testedPlanList);
+
+
+    // NB si Planss est vide, Tracks ne fait rien.
         Tracks(Planss,geom,geometryplans,useforrealrate);
+    // NB si Planss est vide, testedPlan::testYou ne fait rien
         for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Planss,testedPlanList);
         for(unsigned f=0;f!=_hcalCollections.size();++f)
         {
@@ -948,7 +954,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
               }
             }
     	    }
-    	  }
+	}
       
 }
 void AnalysisProcessor::processRunHeader( LCRunHeader* run)
