@@ -279,7 +279,7 @@ void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,s
         int notinPlanNbr=1;
         for(unsigned int j=0;j!=PlaneNbr.size();++j)
         {
-          if(PlaneNbr[j]==i) 
+          if(PlaneNbr[j]==(int)i) 
           {
             notinPlanNbr=0;
           }
@@ -426,7 +426,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
       }
 
       for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((*it)->nHits(itt->first)>=_NbrHitPerPlaneMax ) return;
-      if(plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
+      if((int)plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
       for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][NOTOOMUCHHITSINPLAN]++;
       ////////////////////////////////////////////////////////////////////////////////////
       TGraphErrors grxz(plansUsedForTrackMaking.size());
@@ -731,7 +731,7 @@ void AnalysisProcessor::init()
         Gain[names[0]].push_back(new TH2F(hh.c_str(),hh.c_str(),X,0,X,Y,0,Y));
         if(_Config_xml!="")
         {
-          for(int j=0;j<ThresholdMap.size();++j)
+          for(unsigned int j=0;j<ThresholdMap.size();++j)
           {
             ThresholdMap[j]["SDHCAL_HIT"].push_back(new TH2F((h+"_"+Thresholds_name[j]).c_str(),(h+"_"+Thresholds_name[j]).c_str(),X,0,X,Y,0,Y));
           }
@@ -747,7 +747,7 @@ void AnalysisProcessor::init()
             difr[names[i]].push_back(new TH1D((ndifr+names[i]).c_str(),(ndifr+names[i]).c_str(),346,-50,50));
             Distribution_hits[names[i]].push_back(new TH2F((a+names[i]).c_str(),(a+names[i]).c_str(),X,0,X,Y,0,Y));
             Distribution_exp[names[i]].push_back(new TH2F((b+names[i]).c_str(),(b+names[i]).c_str(),X,0,X,Y,0,Y));
-            for(int j=0;j<Efficiency_pads.size();++j)
+            for(unsigned int j=0;j<Efficiency_pads.size();++j)
             {
               All_The_Hits_From_Trivent[j][names[i]].push_back(new TH2F((AllTheHits+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(AllTheHits+names[i]).c_str(),X,0,X,Y,0,Y));
               Efficiency_pads[j][names[i]].push_back(new TH2F((c+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(c+names[i]).c_str(),X,0,X,Y,0,Y));
@@ -764,7 +764,7 @@ void AnalysisProcessor::init()
             difr[names[i]].push_back(new TH1D((ndifr+names[i]).c_str(),(ndifr+names[i]).c_str(),346,-50,50));
             Distribution_hits[names[i]].push_back(new TH2F((a+names[i]).c_str(),(a+names[i]).c_str(),X,0,X,Y,0,Y));
             Distribution_exp[names[i]].push_back(new TH2F((b+names[i]).c_str(),(b+names[i]).c_str(),X,0,X,Y,0,Y));
-            for(int j=0;j<Efficiency_pads.size();++j)
+            for(unsigned int j=0;j<Efficiency_pads.size();++j)
             {
             //All_The_Hits_From_Trivent[j][names[i]].push_back(new TH2F((AllTheHits+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(AllTheHits+names[i]).c_str(),X,0,X,Y,0,Y));
             Efficiency_pads[j][names[i]].push_back(new TH2F((c+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(c+names[i]).c_str(),X,0,X,Y,0,Y));
@@ -992,7 +992,7 @@ void AnalysisProcessor::end()
     {*/
      for(unsigned int i=0;i!=useforrealrate/*[it->first]*/.size();++i)
      {
-      double inbin=1.0;int II=0;int JJ=0;int ZZ=0;double x=0;double y=0;double z=0;unsigned int number_touched=0;
+       double inbin=1.0;int II=0;int JJ=0;int ZZ=0;/*double x=0;double y=0;double z=0;*/unsigned int number_touched=0;
       for(unsigned int j=0;j!=useforrealrate/*[it->first]*/[i].size();++j)
       {
         static int numberrrr=0;
@@ -1000,9 +1000,9 @@ void AnalysisProcessor::end()
         II=int(useforrealrate/*[it->first]*/[i][j][0]);
         JJ=int(useforrealrate/*[it->first]*/[i][j][1]);
         ZZ=int(useforrealrate/*[it->first]*/[i][j][2]);
-        x=useforrealrate/*[it->first]*/[i][j][4];
-        y=useforrealrate/*[it->first]*/[i][j][5];
-        z=useforrealrate/*[it->first]*/[i][j][6];
+        //x=useforrealrate/*[it->first]*/[i][j][4];
+        //y=useforrealrate/*[it->first]*/[i][j][5];
+        //z=useforrealrate/*[it->first]*/[i][j][6];
         
         RateSeen3D["SDHCAL_HIT"]->SetPoint(numberrrr,II,JJ,ZZ);
         numberrrr++;
@@ -1034,16 +1034,16 @@ void AnalysisProcessor::end()
         II=int(useforrealrate/*[it->first]*/[i][j][0]);
         JJ=int(useforrealrate/*[it->first]*/[i][j][1]);
         ZZ=int(useforrealrate/*[it->first]*/[i][j][2]);
-        double fillr[3]={II,JJ,ZZ};
+        double fillr[3]={double(II),double(JJ),double(ZZ)};
         hss2->Fill(fillr,1);
         hss->Fill(fillr,1.0/inbin);
         for(std::map<int,TH2F*>::iterator it=RealRateWithSelectedZonemin[ZZ].begin();it!=RealRateWithSelectedZonemin[ZZ].end();++it)
         {
-          if(number_touched>=it->first)RealRateWithSelectedZonemin[ZZ][it->first]->Fill(II,JJ,1.0/inbin);
+          if((int)number_touched>=it->first)RealRateWithSelectedZonemin[ZZ][it->first]->Fill(II,JJ,1.0/inbin);
           RateSeen[ZZ]->Fill(II,JJ,1.0);
           RateSeenPon[ZZ]->Fill(II,JJ,1.0/inbin);
         }
-        if(number_touched>=_NbrPlaneUseForTrackingRate)
+        if((int)number_touched>=_NbrPlaneUseForTrackingRate)
         {
           RealRateWithSelectedZone[ZZ][number_touched]->Fill(II,JJ,1.0/inbin);
           Nbrviewedtracks[ZZ][number_touched]->Fill(II,JJ,1);
@@ -1112,7 +1112,7 @@ void AnalysisProcessor::end()
         hfile->mkdir(SlowControl.c_str(),SlowControl.c_str());
         hfile->cd(SlowControl.c_str());
         Gain[names[0]][o]->Write();
-        for(int j=0;j<ThresholdMap.size();++j)
+        for(unsigned int j=0;j<ThresholdMap.size();++j)
         {
           ThresholdMap[j][names[0]][o]->Write();
         }
@@ -1198,7 +1198,7 @@ void AnalysisProcessor::end()
         Distribution_exp[names[naa]][i]->Write();
         if(naa==0)hfile->mkdir((plate+"/Efficiency_Multiplicity_Maps").c_str());
         hfile->cd((plate+"/Efficiency_Multiplicity_Maps").c_str());
-        for(int j=0;j<Efficiency_pads.size();++j)
+        for(unsigned int j=0;j<Efficiency_pads.size();++j)
         {
         
         Efficiency_pads[j][names[naa]][i]->Write();
@@ -1216,7 +1216,7 @@ void AnalysisProcessor::end()
           delete Distribution_exp[names[naa]][i];
           delete HowLongFromExpectedX[names[naa]][i];
           delete HowLongFromExpectedY[names[naa]][i];
-          for(int j=0;j<Efficiency_pads.size();++j)
+          for(unsigned int j=0;j<Efficiency_pads.size();++j)
           {
             delete Efficiency_pads[j][names[naa]][i];
             delete Multiplicity_pads[j][names[naa]][i];

@@ -34,12 +34,12 @@ class Plate
   double _AngleXY;
   double _AngleXZ;
   double _AngleYZ;
+  std::vector<int> _DifInPlate;
   double _SizeX;
   double _SizeY;
-  std::string m_HV_channel;
-  std::string m_Gaz_channel;
   double m_glass_type;
   double m_Gaz_number;
-  std::vector<int> _DifInPlate;
+  std::string m_HV_channel;
+  std::string m_Gaz_channel;
 };
 #endif

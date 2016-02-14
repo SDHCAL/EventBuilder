@@ -46,7 +46,7 @@ void Progress(unsigned int& _skip,unsigned int& _GlobalEvents, unsigned int& _ma
   unsigned int _rolling=Every(_maxRecord);
   unsigned int skip=0;
   if(_skip!=0)skip=_skip+1;
-  int maxRecordplusskip=0;
+  unsigned int maxRecordplusskip=0;
   if(_maxRecord+skip>=_GlobalEvents) 
   {
      maxRecordplusskip=_GlobalEvents;  
@@ -55,7 +55,8 @@ void Progress(unsigned int& _skip,unsigned int& _GlobalEvents, unsigned int& _ma
   if(_maxRecord>=_GlobalEvents)_maxRecord=_GlobalEvents ;
   if(_eventNr %_rolling ==0 || _eventNr==_GlobalEvents || _eventNr==maxRecordplusskip )
   {
-    	if(_maxRecord==-1)
+    //This is a bug : an unsigned int can't be equal to a negative value
+    if(_maxRecord==-1)  
 	{
     int percent=int((_eventNr-skip)*100.0/(_GlobalEvents-skip));
     if(percent<100) 

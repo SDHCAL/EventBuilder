@@ -21,7 +21,7 @@ void FillDelimiter(std::string &ToParse,int size,std::map<int ,std::vector<doubl
         pos=ToParse.find(delimiter_Dif);
         a.push_back(ToParse.substr(0, pos));
         std::vector<double> tab(4);
-        int Dif=0;
+        //int Dif=0;
         int j =0;
         size_t posi =0;
         while ((posi = a[0].find(delimiter_others)) != std::string::npos) {
@@ -36,7 +36,7 @@ void FillDelimiter(std::string &ToParse,int size,std::map<int ,std::vector<doubl
         }
         tab[3]=atof(a[0].c_str());
         //std::cout<<green<<tab[3]<<normal<<std::endl;
-        for(unsigned int i=0; i<size; ++i) Delimiter[i+1]=tab;
+        for(/*unsigned*/ int i=0; i<size; ++i) Delimiter[i+1]=tab;
     } else {
         while ((pos = ToParse.find(delimiter_Dif)) != std::string::npos) {
             token = ToParse.substr(0, pos);
@@ -66,7 +66,7 @@ void FillDelimiter(std::string &ToParse,int size,std::map<int ,std::vector<doubl
         }
     }
     if(a.size()==0)std::cout<<red<<"Warning:No Delimiters given "<<normal<<std::endl;
-    if(a.size()!=size&&a.size()!=0&&!findstar) {
+    if(a.size()!=(unsigned int)size&&a.size()!=0&&!findstar) {
         std::cout<<red<<"Error:Delimiters no well set ! "<<normal<<std::endl;
         std::exit(2);
     }
@@ -78,7 +78,7 @@ void FillDelimiter(std::string &ToParse,int size,std::map<int ,std::vector<doubl
     for(std::map<int,std::vector<double>>::iterator it=Delimiter.begin(); it!=Delimiter.end(); ++it) {
 
         std::cout<<green<<"Plane "<<it->first<<" : "<<normal;
-        for(int i=0; i<it->second.size(); ++i) {
+        for(unsigned int i=0; i<it->second.size(); ++i) {
             std::cout<<green<<word[i]<<(it->second)[i]<<normal;
         }
         std::cout<<normal<<std::endl;

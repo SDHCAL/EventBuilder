@@ -78,9 +78,9 @@ class DifInfo
    }
    std::map<unsigned int,AsicInfo> ReturnMe(){return AsicInfos;};
    private:
-   std::string DIF_TYPE, NAME;
-   bool ENABLED;
+   std::string NAME, DIF_TYPE;
    unsigned int ID;
+   bool ENABLED;
    std::map<unsigned int,AsicInfo> AsicInfos;
 };
 
