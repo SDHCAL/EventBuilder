@@ -880,7 +880,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
       std::string currentCollectionName=*itcol;
       LCCollection* currentCollection=nullptr;
       try { currentCollection= evtP ->getCollection(currentCollectionName); }
-      catch (DataNotAvailableException &e){ std::cout<<red<<currentCollectionName<< "not found"<<std::endl; break; }
+      catch (DataNotAvailableException &e){ std::cout<<red<<currentCollectionName<< "not found"<<std::endl; continue; }
 
       Numbers[currentCollectionName]++;
       Progress(_skip,_GlobalEvents,_maxRecord,Numbers[currentCollectionName]);
