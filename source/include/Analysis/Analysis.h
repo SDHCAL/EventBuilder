@@ -395,12 +395,6 @@ public:
     {
       ;
     }
-    inline void addHit(CalorimeterHit* a,std::string name)
-    {
-      _plan[name].addHit(a);
-    }
-    
-
     inline std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,std::string);
     inline std::map<std::string,int> countHitAtStrip(double& x, double dlim,std::string);
 
