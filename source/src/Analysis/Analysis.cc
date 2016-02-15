@@ -174,13 +174,13 @@ void AnalysisProcessor::PrintStatShort(std::string name)
   }
 }
 
-std::array<double,6> plan::countHitAt(double& x, double& y, double dlim,int Iexpected,int Jexpected,int Kexpected,double Imax,double Imin,double Jmax,double Jmin,std::string type)
+std::array<double,6> hitsInPlan::countHitAt(double& x, double& y, double dlim,int Iexpected,int Jexpected,int Kexpected,double Imax,double Imin,double Jmax,double Jmin,std::string type)
 {
   static std::map<std::string,unsigned int>Number_hits;
   std::array<double,6>Threshold_Counters;
   for(unsigned int i=0;i!=Threshold_Counters.size();++i)Threshold_Counters[i]=0;
   std::vector<int>IJKexpected={Iexpected,Jexpected,Kexpected};
-  std::vector<CalorimeterHit*>Hits=getPlan(type).GetHits();
+  std::vector<CalorimeterHit*>Hits=GetHits();
   for (std::vector<CalorimeterHit*>::iterator it=Hits.begin(); it!=Hits.end(); ++it)
   {
     CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
@@ -222,12 +222,12 @@ std::array<double,6> plan::countHitAt(double& x, double& y, double dlim,int Iexp
   return Threshold_Counters;
 }
 
-std::map<std::string,int> plan::countHitAtStrip(double& x, double dlim,std::string type)
+std::map<std::string,int> hitsInPlan::countHitAtStrip(double& x, double dlim,std::string type)
 {
   std::array<double,6>Threshold_Counters;
   for(unsigned int i=0;i!=Threshold_Counters.size();++i)Threshold_Counters[i]=0;
   //std::vector<int>IJKexpected={Iexpected,Jexpected,Kexpected};
-  std::vector<CalorimeterHit*>Hits=getPlan(type).GetHits();
+  std::vector<CalorimeterHit*>Hits=GetHits();
   std::map<std::string,int>N;
   N.clear();
   static std::map<std::string,unsigned int>Number_hits;

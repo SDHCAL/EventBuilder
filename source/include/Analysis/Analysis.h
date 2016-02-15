@@ -354,6 +354,11 @@ class hitsInPlan
 
   std::vector<CalorimeterHit*>& GetHits() { return hits; }
 
+  //analysis
+  std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,std::string);
+  std::map<std::string,int> countHitAtStrip(double& x, double dlim,std::string);
+
+
 
   //Error functions
   inline double ErrorX()
@@ -395,8 +400,10 @@ public:
     {
       ;
     }
-    inline std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,std::string);
-    inline std::map<std::string,int> countHitAtStrip(double& x, double dlim,std::string);
+    inline std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,std::string name)
+      {return getPlan(name).countHitAt( x, y, dlim, Xexpected, Yexpected, Kexpected, Imin, Imax, Jmin, Jmax, name);}
+    inline std::map<std::string,int> countHitAtStrip(double& x, double dlim,std::string name)
+    {return getPlan(name).countHitAtStrip( x, dlim, name); }
 
     hitsInPlan& getPlan(std::string name) {return _plan[name];}
 
