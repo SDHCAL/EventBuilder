@@ -247,13 +247,13 @@ std::map<std::string,int> hitsInPlan::countHitAtStrip(double& x, double dlim,std
   return N;  
 }
 
-//class plan 
-void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,std::map<int,geometryplan> geometryplans,std::vector<std::vector<std::array<double,7>>>& useforrealrate)
+
+void Tracks(std::map<std::string,std::map<int,hitsInPlan>>& mapDIFplan,Geometry geom,std::map<int,geometryplan> geometryplans,std::vector<std::vector<std::array<double,7>>>& useforrealrate)
 {
   
   double NbrPlateTotal=geom.GetNumberPlates();
   
-  for(std::map<std::string,std::map<int,plan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
+  for(std::map<std::string,std::map<int,hitsInPlan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
   {
     std::vector<std::array<double,7>>XYZExpected;
     bool Doit=false;
@@ -265,18 +265,16 @@ void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,s
     }
     if(Doit==true)
     {
-      //class plan used
-      std::vector<plan*> plansUsedForTrackMaking;
+      std::vector<hitsInPlan*> plansUsedForTrackMaking;
       std::vector<int>PlaneNbr;
       std::vector<int>othersNbr;
-      //class plan used
-      for (std::map<int,plan>::iterator it=mapDIFplan[itt->first].begin(); it!=mapDIFplan[itt->first].end(); ++it)
+      for (std::map<int,hitsInPlan>::iterator it=mapDIFplan[itt->first].begin(); it!=mapDIFplan[itt->first].end(); ++it)
       {
         plansUsedForTrackMaking.push_back(&(it->second));
         PlaneNbr.push_back(it->first);
       }
       //class plan used
-      for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((int)(*it)->getPlan(itt->first).nHits()>=_NbrHitPerPlaneMax ) return;
+      for (std::vector<hitsInPlan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((int)(*it)->nHits()>=_NbrHitPerPlaneMax ) return;
       if(plansUsedForTrackMaking.size()<(unsigned int )(_NbrPlaneUseForTrackingRate)) return;
       for(unsigned int i=0;i!=NbrPlateTotal-1;++i)
       {
@@ -298,9 +296,7 @@ void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,s
       TGraphErrors gryz(plansUsedForTrackMaking.size());
       for (unsigned int i=0; i < plansUsedForTrackMaking.size(); ++i)
       {
-	//class plan used
-        plan &p=*(plansUsedForTrackMaking[i]);
-	hitsInPlan &hp=p.getPlan(itt->first);
+        hitsInPlan &hp=*(plansUsedForTrackMaking[i]);
         hp.computeBarycentre();
         double ca=geometryplans[PlaneNbr[i]].get_ca();
         double sa=geometryplans[PlaneNbr[i]].get_sa();
@@ -949,8 +945,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 
 
   // NB si Planss est vide, Tracks ne fait rien.
-  //class plan used
-  Tracks(Planss,geom,geometryplans,useforrealrate);
+  Tracks(PlanssReplacement,geom,geometryplans,useforrealrate);
   // NB si Planss est vide, testedPlan::testYou ne fait rien
   //class plan used
   for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Planss,testedPlanList);
