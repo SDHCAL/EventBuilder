@@ -397,22 +397,22 @@ public:
     }
     inline void addHit(CalorimeterHit* a,std::string name)
     {
-      hits[name].push_back(a);
       _plan[name].addHit(a);
+      hits[name]=_plan[name].GetHits();
     }
     
 
     inline void Clear(std::string name)
     {
-      hits[name].clear();
       _plan[name].Clear();
+      hits[name]=_plan[name].GetHits();
     }
     inline std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,std::string);
     inline std::map<std::string,int> countHitAtStrip(double& x, double dlim,std::string);
     std::vector<CalorimeterHit*>& GetHits(std::string name) 
     {
-      return hits[name];
-      //return _plan[name].GetHits();
+      //return hits[name];
+      return _plan[name].GetHits();
     }
 
     hitsInPlan& getPlan(std::string name) {return _plan[name];}
