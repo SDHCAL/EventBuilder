@@ -417,10 +417,6 @@ public:
       hits[name].clear();
       _plan[name].Clear();
     }
-    inline int GetType()
-    {
-      return  _plan.begin()->second.GetType();
-    }
     inline std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,std::string);
     inline std::map<std::string,int> countHitAtStrip(double& x, double dlim,std::string);
     std::vector<CalorimeterHit*>& GetHits(std::string name) 

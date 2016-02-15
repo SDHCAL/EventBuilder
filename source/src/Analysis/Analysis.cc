@@ -310,7 +310,7 @@ void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,s
         XYZExpected.push_back({ceil(I),ceil(J),double(K),double(istouched),hp.barycentreX(),hp.barycentreY(),geometryplans[PlaneNbr[i]].GetZ0()});
         p.computeMaxima(itt->first);
         grxz.SetPoint(i,hp.barycentreZ(),hp.barycentreX());
-        if(p.GetType()==pad)
+        if(hp.GetType()==pad)
         {
             gryz.SetPoint(i,hp.barycentreZ(),hp.barycentreY());
             gryz.SetPointError(i,hp.ErrorZ(),hp.ErrorY());
@@ -439,7 +439,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
         hp.computeBarycentre();
         p.computeMaxima(itt->first);
         grxz.SetPoint(i,hp.barycentreZ(),hp.barycentreX());
-        if(p.GetType()==pad)
+        if(hp.GetType()==pad)
         {
           gryz.SetPoint(i,hp.barycentreZ(),hp.barycentreY());
           gryz.SetPointError(i,hp.ErrorZ(),hp.ErrorY());
