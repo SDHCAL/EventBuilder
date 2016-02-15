@@ -313,9 +313,9 @@ void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,s
         if(p.GetType()==pad)
         {
             gryz.SetPoint(i,hp.barycentreZ(),hp.barycentreY());
-            gryz.SetPointError(i,p.ErrorZ(),p.ErrorY());
+            gryz.SetPointError(i,hp.ErrorZ(),hp.ErrorY());
         }
-        grxz.SetPointError(i,p.ErrorZ(),p.ErrorX());
+        grxz.SetPointError(i,hp.ErrorZ(),hp.ErrorX());
       }
       grxz.Fit("pol1","QRO","",-50000.0,50000.0);
       TF1 *myfitxz = (TF1*) grxz.GetFunction("pol1");
@@ -442,9 +442,9 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
         if(p.GetType()==pad)
         {
           gryz.SetPoint(i,hp.barycentreZ(),hp.barycentreY());
-          gryz.SetPointError(i,p.ErrorZ(),p.ErrorY());
+          gryz.SetPointError(i,hp.ErrorZ(),hp.ErrorY());
         }
-        grxz.SetPointError(i,p.ErrorZ(),p.ErrorX());
+        grxz.SetPointError(i,hp.ErrorZ(),hp.ErrorX());
       }
       grxz.Fit("pol1","QRO","",-50000.0,50000.0);
       TF1 *myfitxz = (TF1*) grxz.GetFunction("pol1");

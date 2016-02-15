@@ -355,6 +355,29 @@ class hitsInPlan
   std::vector<CalorimeterHit*>& GetHits() { return hits; }
 
 
+  //Error functions
+  inline double ErrorX()
+  {
+        //double e=fabs(maxX()-minX());
+        //return (e<1 ? 1 : e);
+        return 10;
+  }
+  inline double ErrorY()
+  {
+    //double e=fabs(maxY()-minY());
+    //if(this->GetType()==pad)return (e<1 ? 1 : e);
+    //else return 0;
+    //return 2.5;
+    return 10;
+    if(this->GetType()==pad)return 0;
+    
+  }
+  inline double ErrorZ()
+  {
+    return 10;
+  }
+  
+  
  private:
   int _type;
   std::vector<CalorimeterHit*> hits;
@@ -389,26 +412,6 @@ public:
     }
 
 
-    inline double ErrorX()
-    {
-        //double e=fabs(maxX()-minX());
-        //return (e<1 ? 1 : e);
-        return 10;
-    }
-    inline double ErrorY()
-    {
-        //double e=fabs(maxY()-minY());
-        //if(this->GetType()==pad)return (e<1 ? 1 : e);
-        //else return 0;
-        //return 2.5;
-        return 10;
-        if(this->GetType()==pad)return 0;
-
-    }
-    inline double ErrorZ()
-    {
-        return 10;
-    }
     inline void Clear(std::string name)
     {
       hits[name].clear();
