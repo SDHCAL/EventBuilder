@@ -326,6 +326,26 @@ public:
 
 
 
+class hitsInPlan
+{
+ public:
+  hitsInPlan() {;}
+
+  //modifier
+  inline void addHit(CalorimeterHit* a) { hits.push_back(a);}
+
+  //getters
+  inline unsigned int nHits() { return hits.size();}
+
+ private:
+  int _type;
+  std::vector<CalorimeterHit*> hits;
+  double barycentre[3];
+  double min[3];
+  double max[3];
+  
+};
+
 
 class plan
 {
@@ -337,10 +357,11 @@ public:
     inline void addHit(CalorimeterHit* a,std::string name)
     {
         hits[name].push_back(a);
+	_plan[name].addHit(a);
     }
     inline int nHits(std::string name)
     {
-        return hits[name].size();
+      return _plan[name].nHits();
     }
     void computeBarycentre(std::string);
     
@@ -433,6 +454,8 @@ private:
     std::map<std::string,std::array<double,3>>barycentre;
     std::map<std::string,std::array<double,3>>min;
     std::map<std::string,std::array<double,3>>max;
+
+    std::map<std::string, hitsInPlan> _plan;
 
 };
 
