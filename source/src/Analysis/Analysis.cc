@@ -308,7 +308,7 @@ void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,s
         double J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(hp.barycentreX()-geometryplans[PlaneNbr[i]].GetX0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(hp.barycentreY()-geometryplans[PlaneNbr[i]].GetY0())+cb*sa*geometryplans[PlaneNbr[i]].GetZ0();
         int K=geometryplans[PlaneNbr[i]].NbrPlate();
         XYZExpected.push_back({ceil(I),ceil(J),double(K),double(istouched),hp.barycentreX(),hp.barycentreY(),geometryplans[PlaneNbr[i]].GetZ0()});
-        p.computeMaxima(itt->first);
+        hp.computeMaxima(); //NB : computation results are not used
         grxz.SetPoint(i,hp.barycentreZ(),hp.barycentreX());
         if(hp.GetType()==pad)
         {
@@ -437,7 +437,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
         plan &p=*(plansUsedForTrackMaking[i]);
 	hitsInPlan &hp=p.getPlan(itt->first);
         hp.computeBarycentre();
-        p.computeMaxima(itt->first);
+        hp.computeMaxima(); // NB : computation results not used after
         grxz.SetPoint(i,hp.barycentreZ(),hp.barycentreX());
         if(hp.GetType()==pad)
         {

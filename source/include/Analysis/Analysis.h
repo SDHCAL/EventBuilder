@@ -405,7 +405,6 @@ public:
       return _plan[name].nHits();
     }
     
-    inline void computeMaxima(std::string name) {_plan[name].computeMaxima();}
     inline void SetType(int i )
     {
       _plan.begin()->second.SetType(i);
