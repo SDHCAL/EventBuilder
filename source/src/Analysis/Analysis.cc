@@ -885,6 +885,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 
   //class plan used
   Planss.clear();
+  PlanssReplacement.clear();
 
   if (evtP == nullptr) 
     {
@@ -922,6 +923,8 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 	      //class plan used
 	      Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].getPlan(currentCollectionName).addHit(raw_hit);
 	      Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].getPlan(currentCollectionName).SetType(geom.GetDifType(dif_id));
+	      PlanssReplacement[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
+	      PlanssReplacement[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
 	      //std::cout<<red<<"ttttt"<<normal<<std::endl;
 	      /*if(IsScinti==true)
 		{
