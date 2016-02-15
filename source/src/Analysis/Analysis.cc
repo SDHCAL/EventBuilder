@@ -272,7 +272,7 @@ void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,s
         plansUsedForTrackMaking.push_back(&(it->second));
         PlaneNbr.push_back(it->first);
       }
-      for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((*it)->nHits(itt->first)>=_NbrHitPerPlaneMax ) return;
+      for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((int)(*it)->getPlan(itt->first).nHits()>=_NbrHitPerPlaneMax ) return;
       if(plansUsedForTrackMaking.size()<(unsigned int )(_NbrPlaneUseForTrackingRate)) return;
       for(unsigned int i=0;i!=NbrPlateTotal-1;++i)
       {
@@ -417,7 +417,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
       {
         if (geomplan.NbrPlate()!=it->first) 
         {
-          if((it->second).nHits(itt->first)>0)//Verify is hits are present
+          if((it->second).getPlan(itt->first).nHits()>0)//Verify is hits are present
           {
             plansUsedForTrackMaking.push_back(&(it->second));
             PlaneNbr.push_back(it->first);
@@ -426,7 +426,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
         else thisPlan=&(it->second);
       }
 
-      for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((*it)->nHits(itt->first)>=_NbrHitPerPlaneMax ) return;
+      for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((int)(*it)->getPlan(itt->first).nHits()>=_NbrHitPerPlaneMax ) return;
       if((int)plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
       for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][NOTOOMUCHHITSINPLAN]++;
       ////////////////////////////////////////////////////////////////////////////////////

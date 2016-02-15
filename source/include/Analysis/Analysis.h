@@ -400,10 +400,6 @@ public:
       hits[name].push_back(a);
       _plan[name].addHit(a);
     }
-    inline int nHits(std::string name)
-    {
-      return _plan[name].nHits();
-    }
     
 
     inline void Clear(std::string name)
