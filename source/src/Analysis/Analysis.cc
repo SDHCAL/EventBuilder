@@ -363,17 +363,17 @@ void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,s
    
 }
 
-void plan::computeBarycentre(std::string name)
+void hitsInPlan::computeBarycentre()
 {
-    for (int i=0; i<3; i++) barycentre[name][i]=0;
-    for (std::vector<CalorimeterHit*>::iterator it=hits[name].begin(); it!=hits[name].end(); ++it) 
+    for (int i=0; i<3; i++) barycentre[i]=0;
+    for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!=hits.end(); ++it) 
     {
         for (int i=0; i<3; i++) 
         {
-            barycentre[name][i]+=(*it)->getPosition()[i];
+            barycentre[i]+=(*it)->getPosition()[i];
         }
     }
-    if (nHits(name) != 0) for (int i=0; i<3; i++) barycentre[name][i]/=nHits(name);
+    if (nHits() != 0) for (int i=0; i<3; i++) barycentre[i]/=nHits();
 }
 
 void plan::computeMaxima(std::string name)

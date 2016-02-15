@@ -333,9 +333,16 @@ class hitsInPlan
 
   //modifier
   inline void addHit(CalorimeterHit* a) { hits.push_back(a);}
+  inline void Clear() { hits.clear(); }
+  void computeBarycentre();
+
 
   //getters
   inline unsigned int nHits() { return hits.size();}
+  inline double barycentreX() { return barycentre[0];}
+  inline double barycentreY() { return barycentre[1];}
+  inline double barycentreZ() { return barycentre[2];}
+
 
  private:
   int _type;
@@ -363,19 +370,19 @@ public:
     {
       return _plan[name].nHits();
     }
-    void computeBarycentre(std::string);
+    void computeBarycentre(std::string name) {_plan[name].computeBarycentre();}
     
     inline double barycentreX(std::string name)
     {
-        return barycentre[name][0];
+      return _plan[name].barycentreX();
     }
     inline double barycentreY(std::string name)
     {
-        return barycentre[name][1];
+        return _plan[name].barycentreY();
     }
     inline double barycentreZ(std::string name)
     {
-        return barycentre[name][2];
+        return _plan[name].barycentreZ();
     }
     inline void computeMaxima(std::string name);
     inline double minX(std::string name)
@@ -428,11 +435,11 @@ public:
     }
     inline bool operator==(plan b);
     inline bool operator!=(plan b);
-    void printBarycentre(std::string name);
     void printMaxima(std::string name);
     inline void Clear(std::string name)
     {
         hits[name].clear();
+	_plan[name].Clear();
     }
     inline int GetType()
     {
@@ -451,7 +458,6 @@ public:
 private:
     int _type;
     std::map<std::string,std::vector<CalorimeterHit*>> hits;
-    std::map<std::string,std::array<double,3>>barycentre;
     std::map<std::string,std::array<double,3>>min;
     std::map<std::string,std::array<double,3>>max;
 
