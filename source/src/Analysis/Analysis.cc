@@ -376,19 +376,19 @@ void hitsInPlan::computeBarycentre()
     if (nHits() != 0) for (int i=0; i<3; i++) barycentre[i]/=nHits();
 }
 
-void plan::computeMaxima(std::string name)
+void hitsInPlan::computeMaxima()
 {
     for (int i=0; i<3; i++) 
     {
-        min[name][i]=10000000;
-        max[name][i]=-10000000;
+        min[i]=10000000;
+        max[i]=-10000000;
     }
-    for(std::vector<CalorimeterHit*>::iterator it=hits[name].begin(); it!=hits[name].end(); ++it) 
+    for(std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!=hits.end(); ++it) 
     {
       for (int i=0; i<3; i++) 
       {
-        if((*it)->getPosition()[i]<min[name][i])min[name][i]=(*it)->getPosition()[i];
-        if((*it)->getPosition()[i]>max[name][i])max[name][i]=(*it)->getPosition()[i];
+        if((*it)->getPosition()[i]<min[i])min[i]=(*it)->getPosition()[i];
+        if((*it)->getPosition()[i]>max[i])max[i]=(*it)->getPosition()[i];
       }
     }
 }

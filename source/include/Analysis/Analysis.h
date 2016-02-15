@@ -335,6 +335,7 @@ class hitsInPlan
   inline void addHit(CalorimeterHit* a) { hits.push_back(a);}
   inline void Clear() { hits.clear(); }
   void computeBarycentre();
+  void computeMaxima();
 
 
   //getters
@@ -342,6 +343,13 @@ class hitsInPlan
   inline double barycentreX() { return barycentre[0];}
   inline double barycentreY() { return barycentre[1];}
   inline double barycentreZ() { return barycentre[2];}
+  inline double minX() { return min[0];}
+  inline double minY() { return min[1];}
+  inline double minZ() { return min[2];}
+  inline double maxX() { return max[0];}
+  inline double maxY() { return max[1];}
+  inline double maxZ() { return max[2];}
+
 
 
  private:
@@ -384,10 +392,10 @@ public:
     {
         return _plan[name].barycentreZ();
     }
-    inline void computeMaxima(std::string name);
+    inline void computeMaxima(std::string name) {_plan[name].computeMaxima();}
     inline double minX(std::string name)
     {
-        return min[name][0];
+      return _plan[name].minX();
     }
     inline void SetType(int i )
     {
@@ -395,23 +403,23 @@ public:
     }
     inline double minY(std::string name)
     {
-        return min[name][1];
+      return _plan[name].minY();
     }
     inline double minZ(std::string name)
     {
-        return min[name][2];
+      return _plan[name].minZ();
     }
     inline double maxX(std::string name)
     {
-        return max[name][0];
+      return _plan[name].maxX();
     }
     inline double maxY(std::string name)
     {
-        return max[name][1];
+      return _plan[name].maxY();
     }
     inline double maxZ(std::string name)
     {
-        return max[name][2];
+      return _plan[name].maxZ();
     }
     inline double ErrorX()
     {
@@ -435,7 +443,6 @@ public:
     }
     inline bool operator==(plan b);
     inline bool operator!=(plan b);
-    void printMaxima(std::string name);
     inline void Clear(std::string name)
     {
         hits[name].clear();
@@ -458,8 +465,6 @@ public:
 private:
     int _type;
     std::map<std::string,std::vector<CalorimeterHit*>> hits;
-    std::map<std::string,std::array<double,3>>min;
-    std::map<std::string,std::array<double,3>>max;
 
     std::map<std::string, hitsInPlan> _plan;
 
