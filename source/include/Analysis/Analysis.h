@@ -454,6 +454,7 @@ protected:
     ConfigInfos conf;
     Geometry geom;
     std::string _ReaderType;
+    //class plan used
     std::map<std::string,std::map<int,plan>>Planss;
     std::map<int,geometryplan> geometryplans;
     std::vector<testedPlan> testedPlanList;
