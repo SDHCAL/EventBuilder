@@ -352,6 +352,7 @@ class hitsInPlan
   inline double maxY() { return max[1];}
   inline double maxZ() { return max[2];}
 
+  std::vector<CalorimeterHit*>& GetHits() { return hits; }
 
 
  private:
@@ -373,8 +374,8 @@ public:
     }
     inline void addHit(CalorimeterHit* a,std::string name)
     {
-        hits[name].push_back(a);
-	_plan[name].addHit(a);
+      hits[name].push_back(a);
+      _plan[name].addHit(a);
     }
     inline int nHits(std::string name)
     {
@@ -395,34 +396,12 @@ public:
         return _plan[name].barycentreZ();
     }
     inline void computeMaxima(std::string name) {_plan[name].computeMaxima();}
-    inline double minX(std::string name)
-    {
-      return _plan[name].minX();
-    }
     inline void SetType(int i )
     {
       _plan.begin()->second.SetType(i);
     }
-    inline double minY(std::string name)
-    {
-      return _plan[name].minY();
-    }
-    inline double minZ(std::string name)
-    {
-      return _plan[name].minZ();
-    }
-    inline double maxX(std::string name)
-    {
-      return _plan[name].maxX();
-    }
-    inline double maxY(std::string name)
-    {
-      return _plan[name].maxY();
-    }
-    inline double maxZ(std::string name)
-    {
-      return _plan[name].maxZ();
-    }
+
+
     inline double ErrorX()
     {
         //double e=fabs(maxX()-minX());
@@ -443,12 +422,10 @@ public:
     {
         return 10;
     }
-    inline bool operator==(plan b);
-    inline bool operator!=(plan b);
     inline void Clear(std::string name)
     {
-        hits[name].clear();
-	_plan[name].Clear();
+      hits[name].clear();
+      _plan[name].Clear();
     }
     inline int GetType()
     {
@@ -456,13 +433,10 @@ public:
     }
     inline std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,std::string);
     inline std::map<std::string,int> countHitAtStrip(double& x, double dlim,std::string);
-    inline std::map<std::string,std::vector<CalorimeterHit*>> GetHits() 
-    {
-      return hits;
-    }
     std::vector<CalorimeterHit*>& GetHits(std::string name) 
     {
       return hits[name];
+      //return _plan[name].GetHits();
     }
 private:
     std::map<std::string,std::vector<CalorimeterHit*>> hits;
