@@ -303,15 +303,15 @@ void Tracks(std::map<std::string,std::map<int,plan>>& mapDIFplan,Geometry geom,s
         double cg=geometryplans[PlaneNbr[i]].get_cg();
         double sg=geometryplans[PlaneNbr[i]].get_sg();
         int istouched=1;
-        double I=cg*cb*1.0/size_pad*(p.barycentreX(itt->first)-geometryplans[PlaneNbr[i]].GetX0())+sg*cb*1.0/size_pad*(p.barycentreY(itt->first)-geometryplans[PlaneNbr[i]].GetY0())+-sb*geometryplans[PlaneNbr[i]].GetZ0();
-        double J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(p.barycentreX(itt->first)-geometryplans[PlaneNbr[i]].GetX0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(p.barycentreY(itt->first)-geometryplans[PlaneNbr[i]].GetY0())+cb*sa*geometryplans[PlaneNbr[i]].GetZ0();
+        double I=cg*cb*1.0/size_pad*(p.getPlan(itt->first).barycentreX()-geometryplans[PlaneNbr[i]].GetX0())+sg*cb*1.0/size_pad*(p.getPlan(itt->first).barycentreY()-geometryplans[PlaneNbr[i]].GetY0())+-sb*geometryplans[PlaneNbr[i]].GetZ0();
+        double J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(p.getPlan(itt->first).barycentreX()-geometryplans[PlaneNbr[i]].GetX0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(p.getPlan(itt->first).barycentreY()-geometryplans[PlaneNbr[i]].GetY0())+cb*sa*geometryplans[PlaneNbr[i]].GetZ0();
         int K=geometryplans[PlaneNbr[i]].NbrPlate();
-        XYZExpected.push_back({ceil(I),ceil(J),double(K),double(istouched),p.barycentreX(itt->first),p.barycentreY(itt->first),geometryplans[PlaneNbr[i]].GetZ0()});
+        XYZExpected.push_back({ceil(I),ceil(J),double(K),double(istouched),p.getPlan(itt->first).barycentreX(),p.getPlan(itt->first).barycentreY(),geometryplans[PlaneNbr[i]].GetZ0()});
         p.computeMaxima(itt->first);
-        grxz.SetPoint(i,p.barycentreZ(itt->first),p.barycentreX(itt->first));
+        grxz.SetPoint(i,p.getPlan(itt->first).barycentreZ(),p.getPlan(itt->first).barycentreX());
         if(p.GetType()==pad)
         {
-            gryz.SetPoint(i,p.barycentreZ(itt->first),p.barycentreY(itt->first));
+            gryz.SetPoint(i,p.getPlan(itt->first).barycentreZ(),p.getPlan(itt->first).barycentreY());
             gryz.SetPointError(i,p.ErrorZ(),p.ErrorY());
         }
         grxz.SetPointError(i,p.ErrorZ(),p.ErrorX());
@@ -436,10 +436,10 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
         plan &p=*(plansUsedForTrackMaking[i]);
         p.computeBarycentre(itt->first);
         p.computeMaxima(itt->first);
-        grxz.SetPoint(i,p.barycentreZ(itt->first),p.barycentreX(itt->first));
+        grxz.SetPoint(i,p.getPlan(itt->first).barycentreZ(),p.getPlan(itt->first).barycentreX());
         if(p.GetType()==pad)
         {
-          gryz.SetPoint(i,p.barycentreZ(itt->first),p.barycentreY(itt->first));
+          gryz.SetPoint(i,p.getPlan(itt->first).barycentreZ(),p.getPlan(itt->first).barycentreY());
           gryz.SetPointError(i,p.ErrorZ(),p.ErrorY());
         }
         grxz.SetPointError(i,p.ErrorZ(),p.ErrorX());

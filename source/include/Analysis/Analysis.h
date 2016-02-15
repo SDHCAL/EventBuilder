@@ -383,18 +383,6 @@ public:
     }
     void computeBarycentre(std::string name) {_plan[name].computeBarycentre();}
     
-    inline double barycentreX(std::string name)
-    {
-      return _plan[name].barycentreX();
-    }
-    inline double barycentreY(std::string name)
-    {
-        return _plan[name].barycentreY();
-    }
-    inline double barycentreZ(std::string name)
-    {
-        return _plan[name].barycentreZ();
-    }
     inline void computeMaxima(std::string name) {_plan[name].computeMaxima();}
     inline void SetType(int i )
     {
@@ -438,6 +426,9 @@ public:
       return hits[name];
       //return _plan[name].GetHits();
     }
+
+    hitsInPlan& getPlan(std::string name) {return _plan[name];}
+
 private:
     std::map<std::string,std::vector<CalorimeterHit*>> hits;
 
