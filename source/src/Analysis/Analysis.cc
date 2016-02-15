@@ -502,11 +502,11 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
         	  J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(Projectioni-this->GetX0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(Projectionj-this->GetY0())+cb*sa*this->GetZ0();
         	  K=this->NbrPlate()+1;
             Distribution_exp[itt->first][this->NbrPlate()]->Fill(ceil(I),ceil(J));
-            Thresholds=thisPlan->countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
+            Thresholds=thisPlan->getPlan(ToComputeEffi[i]).countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
           }
           else
           {
-              nhit=thisPlan->countHitAtStrip(Projectioni,_dlimforStrip,ToComputeEffi[i]);
+              nhit=thisPlan->getPlan(ToComputeEffi[i]).countHitAtStrip(Projectioni,_dlimforStrip,ToComputeEffi[i]);
               Thresholds[5]=nhit[itt->first];
           }
           
