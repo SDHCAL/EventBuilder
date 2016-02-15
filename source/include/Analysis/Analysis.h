@@ -355,8 +355,8 @@ class hitsInPlan
   std::vector<CalorimeterHit*>& GetHits() { return hits; }
 
   //analysis
-  std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,std::string);
-  std::map<std::string,int> countHitAtStrip(double& x, double dlim,std::string);
+  std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,std::string collectionName);
+  std::map<std::string,int> countHitAtStrip(double& x, double dlim,std::string collectionName);
 
 
 

@@ -174,7 +174,7 @@ void AnalysisProcessor::PrintStatShort(std::string name)
   }
 }
 
-std::array<double,6> hitsInPlan::countHitAt(double& x, double& y, double dlim,int Iexpected,int Jexpected,int Kexpected,double Imax,double Imin,double Jmax,double Jmin,std::string type)
+std::array<double,6> hitsInPlan::countHitAt(double& x, double& y, double dlim,int Iexpected,int Jexpected,int Kexpected,double Imax,double Imin,double Jmax,double Jmin,std::string collectionName)
 {
   static std::map<std::string,unsigned int>Number_hits;
   std::array<double,6>Threshold_Counters;
@@ -184,11 +184,11 @@ std::array<double,6> hitsInPlan::countHitAt(double& x, double& y, double dlim,in
   for (std::vector<CalorimeterHit*>::iterator it=Hits.begin(); it!=Hits.end(); ++it)
   {
     CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
-    difxy[type][cd(*it)["K"]-1]->Fill(x-(*it)->getPosition()[0],y-(*it)->getPosition()[1]);
-    difr[type][cd(*it)["K"]-1]->Fill(sqrt((x-(*it)->getPosition()[0])*(x-(*it)->getPosition()[0])+(y-(*it)->getPosition()[1])*(y-(*it)->getPosition()[1])));
+    difxy[collectionName][cd(*it)["K"]-1]->Fill(x-(*it)->getPosition()[0],y-(*it)->getPosition()[1]);
+    difr[collectionName][cd(*it)["K"]-1]->Fill(sqrt((x-(*it)->getPosition()[0])*(x-(*it)->getPosition()[0])+(y-(*it)->getPosition()[1])*(y-(*it)->getPosition()[1])));
     if(fabs(x-(*it)->getPosition()[0])<dlim&&fabs(y-(*it)->getPosition()[1])<dlim)
     {
-      Number_hits[type]++;
+      Number_hits[collectionName]++;
       int Threshold_Hit=(*it)->getEnergy();
       if(Threshold_Hit==Threshold_3)
       {
@@ -209,20 +209,20 @@ std::array<double,6> hitsInPlan::countHitAt(double& x, double& y, double dlim,in
         Threshold_Counters[Threshold12]++;
         Threshold_Counters[Thresholdall]++;
       }
-      Distribution_hits[type][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
-      Distribution_hits_tgraph[type]->SetPoint(Number_hits[type],(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
-      HowLongFromExpectedX[type][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
-      HowLongFromExpectedY[type][cd(*it)["K"]-1]->Fill((*it)->getPosition()[1]-y);
+      Distribution_hits[collectionName][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
+      Distribution_hits_tgraph[collectionName]->SetPoint(Number_hits[collectionName],(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
+      HowLongFromExpectedX[collectionName][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
+      HowLongFromExpectedY[collectionName][cd(*it)["K"]-1]->Fill((*it)->getPosition()[1]-y);
     }
   }
   for(int i=0;i!=Threshold_Counters.size();++i)
   {
-    Efficiency_per_pad[type][i][IJKexpected].push_back(Threshold_Counters[i]);
+    Efficiency_per_pad[collectionName][i][IJKexpected].push_back(Threshold_Counters[i]);
   }
   return Threshold_Counters;
 }
 
-std::map<std::string,int> hitsInPlan::countHitAtStrip(double& x, double dlim,std::string type)
+std::map<std::string,int> hitsInPlan::countHitAtStrip(double& x, double dlim,std::string collectionName)
 {
   std::array<double,6>Threshold_Counters;
   for(unsigned int i=0;i!=Threshold_Counters.size();++i)Threshold_Counters[i]=0;
@@ -236,12 +236,12 @@ std::map<std::string,int> hitsInPlan::countHitAtStrip(double& x, double dlim,std
   {
     if(fabs(x-(*it)->getPosition()[0])<dlim) 
     {
-      N[type]++;
-      Number_hits[type]++;
-      Distribution_hits[type][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
-      Distribution_hits_tgraph[type]->SetPoint(Number_hits[type],(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
-      HowLongFromExpectedX[type][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
-      HowLongFromExpectedY[type][cd(*it)["K"]-1]->Fill(0);
+      N[collectionName]++;
+      Number_hits[collectionName]++;
+      Distribution_hits[collectionName][cd(*it)["K"]-1]->Fill(cd(*it)["I"],cd(*it)["J"]);
+      Distribution_hits_tgraph[collectionName]->SetPoint(Number_hits[collectionName],(*it)->getPosition()[0],(*it)->getPosition()[1],(*it)->getPosition()[2]);
+      HowLongFromExpectedX[collectionName][cd(*it)["K"]-1]->Fill((*it)->getPosition()[0]-x);
+      HowLongFromExpectedY[collectionName][cd(*it)["K"]-1]->Fill(0);
     }
   }
   return N;  
