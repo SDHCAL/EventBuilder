@@ -398,14 +398,12 @@ public:
     inline void addHit(CalorimeterHit* a,std::string name)
     {
       _plan[name].addHit(a);
-      hits[name]=_plan[name].GetHits();
     }
     
 
     inline void Clear(std::string name)
     {
       _plan[name].Clear();
-      hits[name]=_plan[name].GetHits();
     }
     inline std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,std::string);
     inline std::map<std::string,int> countHitAtStrip(double& x, double dlim,std::string);
@@ -413,8 +411,6 @@ public:
     hitsInPlan& getPlan(std::string name) {return _plan[name];}
 
 private:
-    std::map<std::string,std::vector<CalorimeterHit*>> hits;
-
     std::map<std::string, hitsInPlan> _plan;
 
 };
