@@ -334,12 +334,14 @@ class hitsInPlan
   //modifier
   inline void addHit(CalorimeterHit* a) { hits.push_back(a);}
   inline void Clear() { hits.clear(); }
+  inline void SetType(int i ) { _type=i; }
   void computeBarycentre();
   void computeMaxima();
 
 
   //getters
   inline unsigned int nHits() { return hits.size();}
+  inline int GetType() { return _type; }
   inline double barycentreX() { return barycentre[0];}
   inline double barycentreY() { return barycentre[1];}
   inline double barycentreZ() { return barycentre[2];}
@@ -399,7 +401,7 @@ public:
     }
     inline void SetType(int i )
     {
-        _type=i;
+      _plan.begin()->second.SetType(i);
     }
     inline double minY(std::string name)
     {
@@ -450,7 +452,7 @@ public:
     }
     inline int GetType()
     {
-        return _type;
+      return  _plan.begin()->second.GetType();
     }
     inline std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,std::string);
     inline std::map<std::string,int> countHitAtStrip(double& x, double dlim,std::string);
@@ -463,7 +465,6 @@ public:
       return hits[name];
     }
 private:
-    int _type;
     std::map<std::string,std::vector<CalorimeterHit*>> hits;
 
     std::map<std::string, hitsInPlan> _plan;
