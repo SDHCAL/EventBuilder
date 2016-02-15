@@ -180,7 +180,7 @@ std::array<double,6> plan::countHitAt(double& x, double& y, double dlim,int Iexp
   std::array<double,6>Threshold_Counters;
   for(unsigned int i=0;i!=Threshold_Counters.size();++i)Threshold_Counters[i]=0;
   std::vector<int>IJKexpected={Iexpected,Jexpected,Kexpected};
-  std::vector<CalorimeterHit*>Hits=GetHits(type);
+  std::vector<CalorimeterHit*>Hits=getPlan(type).GetHits();
   for (std::vector<CalorimeterHit*>::iterator it=Hits.begin(); it!=Hits.end(); ++it)
   {
     CellIDDecoder<CalorimeterHit>cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" );
@@ -227,7 +227,7 @@ std::map<std::string,int> plan::countHitAtStrip(double& x, double dlim,std::stri
   std::array<double,6>Threshold_Counters;
   for(unsigned int i=0;i!=Threshold_Counters.size();++i)Threshold_Counters[i]=0;
   //std::vector<int>IJKexpected={Iexpected,Jexpected,Kexpected};
-  std::vector<CalorimeterHit*>Hits=GetHits(type);
+  std::vector<CalorimeterHit*>Hits=getPlan(type).GetHits();
   std::map<std::string,int>N;
   N.clear();
   static std::map<std::string,unsigned int>Number_hits;
