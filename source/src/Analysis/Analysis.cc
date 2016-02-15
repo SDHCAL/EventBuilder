@@ -905,7 +905,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 	      //int J=cd(raw_hit)["J"];
 	      RealNumberPlane[dif_id]++;
 	      Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit,currentCollectionName);
-	      Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
+	      Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].getPlan(currentCollectionName).SetType(geom.GetDifType(dif_id));
 	      //std::cout<<red<<"ttttt"<<normal<<std::endl;
 	      /*if(IsScinti==true)
 		{

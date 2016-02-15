@@ -405,11 +405,6 @@ public:
       return _plan[name].nHits();
     }
     
-    inline void SetType(int i )
-    {
-      _plan.begin()->second.SetType(i);
-    }
-
 
     inline void Clear(std::string name)
     {
