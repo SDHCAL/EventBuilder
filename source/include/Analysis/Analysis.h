@@ -381,7 +381,6 @@ public:
     {
       return _plan[name].nHits();
     }
-    void computeBarycentre(std::string name) {_plan[name].computeBarycentre();}
     
     inline void computeMaxima(std::string name) {_plan[name].computeMaxima();}
     inline void SetType(int i )
