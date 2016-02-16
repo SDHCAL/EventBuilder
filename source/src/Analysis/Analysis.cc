@@ -511,6 +511,13 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
         	  K=this->NbrPlate()+1;
             Distribution_exp[itt->first][this->NbrPlate()]->Fill(ceil(I),ceil(J));
 	    //class plan used
+	    ////////////////////////////////////////////////////////////////////////////////
+	    //
+	    // This reuse of class plan with a loop on ToComputeEffi strings prevents 
+	    // the actual removal of the class plan.
+	    // temporary dead end in refactoring.
+	    //
+	    ///////////////////////////////////////////////////////////////////////////////
             Thresholds=thisPlan->getPlan(ToComputeEffi[i]).countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
           }
           else
