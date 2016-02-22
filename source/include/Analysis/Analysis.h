@@ -7,10 +7,13 @@
 #include "EVENT/CalorimeterHit.h"
 #include "Geometry/Geometry.h"
 #include <cmath>
+#include <assert.h>
 #include "UTIL/CellIDDecoder.h"
 #include <map>
 #include <array>
 #include <TF1.h>
+#include <TFitResult.h>
+#include <TFitResultPtr.h>
 #include <vector>
 #include "Config/Config.h"
 #define degtorad 0.0174532925
@@ -173,6 +176,21 @@ class geometryplan
 
 
 
+/*
+class trackFitter
+{
+ public:
+  trackFitter() : _trackFound(false) {}
+  //class plan used
+  bool Find(std::vector<plan*>& hitsByPlan,double MaxChi2,int planType,std::string collectionName);
+  double getXZChisquare() {assert(_trackFound); return _xzFit->Chi2();}
+  double getYZChisquare() {assert(_trackFound); return _yzFit->Chi2();}
+
+ private:
+  bool _trackFound;
+  TFitResultPtr _xzFit,_yzFit;
+};
+*/
 
 class testedPlan
 {
@@ -329,10 +347,10 @@ public:
 class hitsInPlan
 {
  public:
-  hitsInPlan() {;}
+ hitsInPlan() : _oldDataBarycenter(false) ,_oldDataExtrema(false) {;}
 
   //modifier
-  inline void addHit(CalorimeterHit* a) { hits.push_back(a);}
+  inline void addHit(CalorimeterHit* a) { hits.push_back(a);_oldDataBarycenter=_oldDataExtrema=false;}
   inline void Clear() { hits.clear(); }
   inline void SetType(int i ) { _type=i; }
   void computeBarycentre();
@@ -390,6 +408,8 @@ class hitsInPlan
   double min[3];
   double max[3];
   
+  bool _oldDataBarycenter,_oldDataExtrema;
+
 };
 
 

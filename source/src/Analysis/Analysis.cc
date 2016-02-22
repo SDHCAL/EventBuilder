@@ -367,6 +367,7 @@ void Tracks(std::map<std::string,std::map<int,hitsInPlan>>& mapDIFplan,Geometry 
 
 void hitsInPlan::computeBarycentre()
 {
+  if (_oldDataBarycenter) return;
     for (int i=0; i<3; i++) barycentre[i]=0;
     for (std::vector<CalorimeterHit*>::iterator it=hits.begin(); it!=hits.end(); ++it) 
     {
@@ -376,10 +377,12 @@ void hitsInPlan::computeBarycentre()
         }
     }
     if (nHits() != 0) for (int i=0; i<3; i++) barycentre[i]/=nHits();
+    _oldDataBarycenter=true; 
 }
 
 void hitsInPlan::computeMaxima()
 {
+  if (_oldDataExtrema) return;
     for (int i=0; i<3; i++) 
     {
         min[i]=10000000;
@@ -393,7 +396,40 @@ void hitsInPlan::computeMaxima()
         if((*it)->getPosition()[i]>max[i])max[i]=(*it)->getPosition()[i];
       }
     }
+    _oldDataExtrema=true;
 }
+
+
+//class plan used
+/*
+bool trackFitter:: Find(std::vector<plan*>& hitsByPlan,double MaxChi2,int planType,std::string collectionName)
+{
+  _trackFound=false;
+  TGraphErrors grxz(hitsByPlan.size());
+  TGraphErrors gryz(hitsByPlan.size());
+  for (unsigned int i=0; i < hitsByPlan.size(); ++i)
+      {
+	//class plan used
+        plan &p=*(hitsByPlan[i]);
+	hitsInPlan &hp=p.getPlan(collectionName);
+        hp.computeBarycentre();
+        hp.computeMaxima(); // NB : computation results not used after
+        grxz.SetPoint(i,hp.barycentreZ(),hp.barycentreX());
+        if(hp.GetType()==pad)
+        {
+          gryz.SetPoint(i,hp.barycentreZ(),hp.barycentreY());
+          gryz.SetPointError(i,hp.ErrorZ(),hp.ErrorY());
+        }
+        grxz.SetPointError(i,hp.ErrorZ(),hp.ErrorX());
+      }
+      _xzFit=grxz.Fit("pol1","SQRO","",-50000.0,50000.0);
+      if (_xzFit->Chi2() > MaxChi2) return false;
+      _yzFit=gryz.Fit("pol1","SQRO","",-50000.0,50000.0);
+      if (_yzFit->Chi2() > MaxChi2 && planType!=positional) return false;
+      _trackFound=true;
+      return true;
+}
+*/
 
 //class plan used
 void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,std::vector<testedPlan>& tested)
@@ -436,6 +472,8 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
       if((int)plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
       for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][NOTOOMUCHHITSINPLAN]++;
       ////////////////////////////////////////////////////////////////////////////////////
+      //trackFitter tfit;
+      //tfit.Find(plansUsedForTrackMaking,_Chi2,this->GetType(),itt->first);
       TGraphErrors grxz(plansUsedForTrackMaking.size());
       TGraphErrors gryz(plansUsedForTrackMaking.size());
       for (unsigned int i=0; i < plansUsedForTrackMaking.size(); ++i)
