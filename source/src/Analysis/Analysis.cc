@@ -401,10 +401,8 @@ void hitsInPlan::computeMaxima()
 
 
 //class plan used
-/*
 bool trackFitter:: Find(std::vector<plan*>& hitsByPlan,double MaxChi2,int planType,std::string collectionName)
 {
-  _trackFound=false;
   TGraphErrors grxz(hitsByPlan.size());
   TGraphErrors gryz(hitsByPlan.size());
   for (unsigned int i=0; i < hitsByPlan.size(); ++i)
@@ -422,14 +420,22 @@ bool trackFitter:: Find(std::vector<plan*>& hitsByPlan,double MaxChi2,int planTy
         }
         grxz.SetPointError(i,hp.ErrorZ(),hp.ErrorX());
       }
-      _xzFit=grxz.Fit("pol1","SQRO","",-50000.0,50000.0);
-      if (_xzFit->Chi2() > MaxChi2) return false;
-      _yzFit=gryz.Fit("pol1","SQRO","",-50000.0,50000.0);
-      if (_yzFit->Chi2() > MaxChi2 && planType!=positional) return false;
-      _trackFound=true;
-      return true;
+  return Find(grxz,gryz,MaxChi2,planType);
+
 }
-*/
+
+bool trackFitter::Find(TGraphErrors &grxz,TGraphErrors &gryz,double MaxChi2,int planType)
+{
+  _XZpassed=_YZpassed=false;
+  _xzFit=grxz.Fit("pol1","SQRO","",-50000.0,50000.0);
+  if (_xzFit->Chi2() > MaxChi2) return false;
+  _XZpassed=true;
+  _yzFit=gryz.Fit("pol1","SQRO","",-50000.0,50000.0);
+  if (_yzFit->Chi2() > MaxChi2 && planType!=positional) return false;
+  _YZpassed=true;
+  return true;
+}
+
 
 //class plan used
 void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,std::vector<testedPlan>& tested)
@@ -472,7 +478,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
       if((int)plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
       for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][NOTOOMUCHHITSINPLAN]++;
       ////////////////////////////////////////////////////////////////////////////////////
-      //trackFitter tfit;
+      trackFitter tfit;
       //tfit.Find(plansUsedForTrackMaking,_Chi2,this->GetType(),itt->first);
       TGraphErrors grxz(plansUsedForTrackMaking.size());
       TGraphErrors gryz(plansUsedForTrackMaking.size());
@@ -491,21 +497,20 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
         }
         grxz.SetPointError(i,hp.ErrorZ(),hp.ErrorX());
       }
-      grxz.Fit("pol1","QRO","",-50000.0,50000.0);
-      TF1 *myfitxz = (TF1*) grxz.GetFunction("pol1");
-      double  kxz = myfitxz->GetChisquare();
-      if (kxz>= _Chi2) return;
-      double pxz0 = myfitxz->GetParameter(0);
-      double  pxz1 = myfitxz->GetParameter(1);
+      bool trackfound=tfit.Find(grxz,gryz,_Chi2,this->GetType());
+      if (! tfit.foundTracksXZ() ) return;
       for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][XZTRACKFITPASSED]++;
-      gryz.Fit("pol1","QRO","",-50000.0,50000.0);
-      TF1 *myfityz = (TF1*) gryz.GetFunction("pol1");
-      double  kyz = myfityz->GetChisquare();
-      if(this->GetType()==positional) kyz=0;
-      if (kyz>= _Chi2) return;
-      double pyz0 = myfityz->GetParameter(0);
-      double  pyz1 = myfityz->GetParameter(1);
+      if (! trackfound) return;
       for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][YZTRACKFITPASSED]++;
+
+      double  kxz = tfit.getXZChisquare();
+      double pxz0 = tfit.getXZParameter(0);
+      double  pxz1 = tfit.getXZParameter(1);
+      double  kyz = tfit.getYZChisquare();
+      if(this->GetType()==positional) kyz=0;
+      double pyz0 = tfit.getYZParameter(0);
+      double  pyz1 = tfit.getYZParameter(1);
+
       double Zexp=this->GetZexp(pxz0,pyz0,pxz1,pyz1);
       //xzaxis.push_back(grxz);
       //yzaxis.push_back(gryz);
@@ -590,8 +595,6 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
         totreee.OrdYZ=pyz0;
         tt->Fill();
     }
-    delete myfityz;
-    delete myfitxz;
     }
   }
     ///////////////////////////////////////////////////////////////////////////////////////////

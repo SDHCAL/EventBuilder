@@ -14,6 +14,7 @@
 #include <TF1.h>
 #include <TFitResult.h>
 #include <TFitResultPtr.h>
+#include <TGraphErrors.h>
 #include <vector>
 #include "Config/Config.h"
 #define degtorad 0.0174532925
@@ -176,21 +177,27 @@ class geometryplan
 
 
 
-/*
+
 class trackFitter
 {
  public:
-  trackFitter() : _trackFound(false) {}
+ trackFitter() : _XZpassed(false),_YZpassed(false)  {}
   //class plan used
   bool Find(std::vector<plan*>& hitsByPlan,double MaxChi2,int planType,std::string collectionName);
-  double getXZChisquare() {assert(_trackFound); return _xzFit->Chi2();}
-  double getYZChisquare() {assert(_trackFound); return _yzFit->Chi2();}
+  bool Find(TGraphErrors &grxz,TGraphErrors &gryz,double MaxChi2,int planType);
+  double getXZParameter(int i) {assert(_XZpassed); return _xzFit->Parameter(i);}
+  double getYZParameter(int i) {assert(_YZpassed); return _yzFit->Parameter(i);}
+  double getXZChisquare() {assert(_XZpassed); return _xzFit->Chi2();}
+  double getYZChisquare() {assert(_YZpassed); return _yzFit->Chi2();}
+
+  bool foundTracksXZ() {return _XZpassed;}
+  bool foundTracksYZ() {return _YZpassed;}
 
  private:
-  bool _trackFound;
+  bool _XZpassed,_YZpassed;
   TFitResultPtr _xzFit,_yzFit;
 };
-*/
+
 
 class testedPlan
 {
