@@ -479,25 +479,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
       for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][NOTOOMUCHHITSINPLAN]++;
       ////////////////////////////////////////////////////////////////////////////////////
       trackFitter tfit;
-      //tfit.Find(plansUsedForTrackMaking,_Chi2,this->GetType(),itt->first);
-      TGraphErrors grxz(plansUsedForTrackMaking.size());
-      TGraphErrors gryz(plansUsedForTrackMaking.size());
-      for (unsigned int i=0; i < plansUsedForTrackMaking.size(); ++i)
-      {
-	//class plan used
-        plan &p=*(plansUsedForTrackMaking[i]);
-	hitsInPlan &hp=p.getPlan(itt->first);
-        hp.computeBarycentre();
-        hp.computeMaxima(); // NB : computation results not used after
-        grxz.SetPoint(i,hp.barycentreZ(),hp.barycentreX());
-        if(hp.GetType()==pad)
-        {
-          gryz.SetPoint(i,hp.barycentreZ(),hp.barycentreY());
-          gryz.SetPointError(i,hp.ErrorZ(),hp.ErrorY());
-        }
-        grxz.SetPointError(i,hp.ErrorZ(),hp.ErrorX());
-      }
-      bool trackfound=tfit.Find(grxz,gryz,_Chi2,this->GetType());
+      bool trackfound=tfit.Find(plansUsedForTrackMaking,_Chi2,this->GetType(),itt->first);
       if (! tfit.foundTracksXZ() ) return;
       for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][XZTRACKFITPASSED]++;
       if (! trackfound) return;
