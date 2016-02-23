@@ -21,6 +21,7 @@
 
 enum Threshold{Threshold_2=1,Threshold_1,Threshold_3};
 class plan;
+class hitsInPlan;
 
 
 class geometryplan
@@ -334,7 +335,7 @@ public:
     inline float get_sb(){return geomplan.get_sb();};
     inline float get_cg(){return geomplan.get_cg();};
     inline float get_sg(){return geomplan.get_sg();};
-    void testYou(std::map<std::string,std::map<int,plan>>&mapDIFplan,std::vector<testedPlan>& tested);
+    void testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFplanNew,std::map<std::string,std::map<int,plan>>&mapDIFplan,std::vector<testedPlan>& tested);
     
     private:
     
@@ -431,7 +432,7 @@ public:
     hitsInPlan& getPlan(std::string name) {
       if (_plan.find(name)==_plan.end()) 
 	{
-	  //std::cout << "ASKING MISSING " << name << std::endl;
+	  std::cout << "ASKING MISSING " << name << " give fake at adress " << &_missingPlan << std::endl;
 	  _missingPlan.Clear();
 	  return _missingPlan;
 	} 
@@ -440,7 +441,7 @@ public:
 
 private:
     std::map<std::string, hitsInPlan*> _plan;
-    friend void TryingToUnderstand(std::map<std::string,std::map<int,plan>>& mapDIFplan);
+    friend void TryingToUnderstand(std::map<std::string,std::map<int,plan>>& mapDIFplan,std::map<std::string,std::map<int,hitsInPlan>>& mapDIFplanB);
 
     hitsInPlan _missingPlan;
     

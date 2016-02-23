@@ -437,7 +437,7 @@ bool trackFitter::Find(TGraphErrors &grxz,TGraphErrors &gryz,double MaxChi2,int 
 }
 
 
-void TryingToUnderstand(std::map<std::string,std::map<int,plan>>& mapDIFplan)
+void TryingToUnderstand(std::map<std::string,std::map<int,plan>>& mapDIFplan,std::map<std::string,std::map<int,hitsInPlan>>& mapDIFplanB)
 {
   for (std::map<std::string,std::map<int,plan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
     {
@@ -453,10 +453,22 @@ void TryingToUnderstand(std::map<std::string,std::map<int,plan>>& mapDIFplan)
 	    std::cout << "\t \t key in plan " << ithp->first << "  at  " <<  ithp->second << std::endl;
 	}
     }
+  for (std::map<std::string,std::map<int,hitsInPlan>>::iterator itt=mapDIFplanB.begin();itt!=mapDIFplanB.end();++itt)
+    {
+      std::string mapKey=itt->first;
+      std::cout << "MapDIFPlanB entry : " << mapKey << std::endl;
+      std::map<int,hitsInPlan>& planMap=itt->second;
+      for (std::map<int,hitsInPlan>::iterator it=planMap.begin(); it!=planMap.end(); ++it)
+	{
+	  int mapIntKey=it->first;
+	  hitsInPlan& leplan=it->second;
+	  std::cout << "\t [int key,hitsInPlan adress]= [" << mapIntKey <<","<<&leplan << "]" << std::endl;
+	}
+    }
 }
 
 //class plan used
-void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,std::vector<testedPlan>& tested)
+void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFplanNew,std::map<std::string,std::map<int,plan>>& mapDIFplan,std::vector<testedPlan>& tested)
 {
   for(std::map<std::string,std::map<int,plan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
     {
@@ -564,8 +576,9 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
 		      Thresholds=thisPlan->getPlan(ToComputeEffi[i]).countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
 		      hitsInPlan *oldStyle=&(thisPlan->getPlan(ToComputeEffi[i]));
 		      hitsInPlan *newStyle=& (mapDIFplan[itt->first][geomplan.NbrPlate()].getPlan(ToComputeEffi[i]));
-		      //std::cout << "CHECK " << ToComputeEffi[i] << ": "  << oldStyle
-		      //	<< " et " << newStyle  << std::endl;
+		      hitsInPlan *verynewStyle=& (mapDIFplanNew[ToComputeEffi[i]][geomplan.NbrPlate()]);
+		      std::cout << "CHECK " << ToComputeEffi[i] << ": "  << oldStyle
+				<< " et " << newStyle  << " et " << verynewStyle << std::endl;
 		      if (oldStyle != newStyle) abort();
 		    }
 		  else
@@ -998,14 +1011,14 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
   //}
   //else for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans,false,testedPlanList);
 
-  //TryingToUnderstand(Planss);
+  TryingToUnderstand(Planss,PlanssReplacement);
 
 
   // NB si Planss est vide, Tracks ne fait rien.
   Tracks(PlanssReplacement,geom,geometryplans,useforrealrate);
   // NB si Planss est vide, testedPlan::testYou ne fait rien
   //class plan used
-  for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Planss,testedPlanList);
+  for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(PlanssReplacement,Planss,testedPlanList);
   PrintStatShort();     
  
 }
