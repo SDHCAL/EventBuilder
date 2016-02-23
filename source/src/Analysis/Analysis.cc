@@ -399,14 +399,12 @@ void hitsInPlan::computeMaxima()
 }
 
 
-//class plan used
 bool trackFitter:: Find(std::vector<hitsInPlan*>& hitsByPlan,double MaxChi2,int planType,std::string collectionName)
 {
   TGraphErrors grxz(hitsByPlan.size());
   TGraphErrors gryz(hitsByPlan.size());
   for (unsigned int i=0; i < hitsByPlan.size(); ++i)
       {
-	//class plan used
 	hitsInPlan &hp=*(hitsByPlan[i]);
         hp.computeBarycentre();
         hp.computeMaxima(); // NB : computation results not used after
@@ -465,10 +463,9 @@ void TryingToUnderstand(std::map<std::string,std::map<int,plan>>& mapDIFplan,std
     }
 }
 
-//class plan used
-void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFplanNew,std::map<std::string,std::map<int,plan>>& mapDIFplan,std::vector<testedPlan>& tested)
+void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFplanNew,std::vector<testedPlan>& tested)
 {
-  for(std::map<std::string,std::map<int,plan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
+  for(std::map<std::string,std::map<int,hitsInPlan>>::iterator itt=mapDIFplanNew.begin();itt!=mapDIFplanNew.end();++itt)
     {
       bool Doit=false;
       for(unsigned int mm=0;mm!=Maketracks.size();++mm)
@@ -498,7 +495,6 @@ void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFpl
 	      else thisPlan=&(it->second);
 	    }
 
-	  //class plan used
 	  for (std::vector<hitsInPlan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((int)(*it)->nHits()>=_NbrHitPerPlaneMax ) return;
 	  if((int)plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
 	  for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][NOTOOMUCHHITSINPLAN]++;
@@ -537,7 +533,6 @@ void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFpl
 	      //std::cout<<nombreTests[itt->first]<<"  "<<itt->first<<std::endl;
 	      for(unsigned int i=0;i!=ToComputeEffi.size();++i) nombreTestsShort[ToComputeEffi[i]]++;
 
-	      //class plan used
 	      if (nullptr==thisPlan) return;
 	      int I,J,K;
 	      double ca=this->get_ca();
@@ -574,7 +569,6 @@ void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFpl
 		    }
 		  else
 		    {
-		      //class plan used
 		      nhit=planLookedFor->countHitAtStrip(Projectioni,_dlimforStrip,ToComputeEffi[i]);
 		      Thresholds[5]=nhit[itt->first];
 		    }
@@ -1009,7 +1003,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
   Tracks(PlanssReplacement,geom,geometryplans,useforrealrate);
   // NB si Planss est vide, testedPlan::testYou ne fait rien
   //class plan used
-  for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(PlanssReplacement,Planss,testedPlanList);
+  for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(PlanssReplacement,testedPlanList);
   PrintStatShort();     
  
 }

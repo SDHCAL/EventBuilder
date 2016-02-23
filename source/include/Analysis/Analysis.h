@@ -335,7 +335,7 @@ public:
     inline float get_sb(){return geomplan.get_sb();};
     inline float get_cg(){return geomplan.get_cg();};
     inline float get_sg(){return geomplan.get_sg();};
-    void testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFplanNew,std::map<std::string,std::map<int,plan>>&mapDIFplan,std::vector<testedPlan>& tested);
+    void testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFplanNew,std::vector<testedPlan>& tested);
     
     private:
     
