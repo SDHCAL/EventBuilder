@@ -409,7 +409,7 @@ bool trackFitter:: Find(std::vector<plan*>& hitsByPlan,double MaxChi2,int planTy
       {
 	//class plan used
         plan &p=*(hitsByPlan[i]);
-	hitsInPlan &hp=p.getPlan(collectionName);
+	hitsInPlan &hp=*(p.getPlan(collectionName));
         hp.computeBarycentre();
         hp.computeMaxima(); // NB : computation results not used after
         grxz.SetPoint(i,hp.barycentreZ(),hp.barycentreX());
@@ -494,7 +494,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFpl
 	    {
 	      if (geomplan.NbrPlate()!=it->first) 
 		{
-		  if((it->second).getPlan(itt->first).nHits()>0)//Verify is hits are present
+		  if((it->second).getPlan(itt->first)->nHits()>0)//Verify is hits are present
 		    {
 		      plansUsedForTrackMaking.push_back(&(it->second));
 		      PlaneNbr.push_back(it->first);
@@ -504,7 +504,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFpl
 	    }
 
 	  //class plan used
-	  for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((int)(*it)->getPlan(itt->first).nHits()>=_NbrHitPerPlaneMax ) return;
+	  for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((int)(*it)->getPlan(itt->first)->nHits()>=_NbrHitPerPlaneMax ) return;
 	  if((int)plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
 	  for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][NOTOOMUCHHITSINPLAN]++;
 	  ////////////////////////////////////////////////////////////////////////////////////
@@ -573,18 +573,38 @@ void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFpl
 		      // temporary dead end in refactoring.
 		      //
 		      ///////////////////////////////////////////////////////////////////////////////
-		      Thresholds=thisPlan->getPlan(ToComputeEffi[i]).countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
-		      hitsInPlan *oldStyle=&(thisPlan->getPlan(ToComputeEffi[i]));
-		      hitsInPlan *newStyle=& (mapDIFplan[itt->first][geomplan.NbrPlate()].getPlan(ToComputeEffi[i]));
-		      hitsInPlan *verynewStyle=& (mapDIFplanNew[ToComputeEffi[i]][geomplan.NbrPlate()]);
+		      if (thisPlan->getPlan(ToComputeEffi[i]))
+			Thresholds=thisPlan->getPlan(ToComputeEffi[i])->countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
+		      else
+			{
+			  //countHitAt fills some counters and need to be called anyway
+			  hitsInPlan dummy;
+			  Thresholds=dummy.countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
+			  std::cout << "creating dummy at " << &dummy << std::endl;
+			}
+		      std::cout << "TryingToUnderstand at inner loop for "<<i<<"="<<ToComputeEffi[i]<<" inside main loop for "<<itt->first<<" and geomplan.NbrPlate=" <<geomplan.NbrPlate() << std::endl;
+		      TryingToUnderstand(mapDIFplan,mapDIFplanNew);
+
+		      hitsInPlan *oldStyle=thisPlan->getPlan(ToComputeEffi[i]);
+		      hitsInPlan *newStyle=mapDIFplan[itt->first][geomplan.NbrPlate()].getPlan(ToComputeEffi[i]);
+		      hitsInPlan *verynewStyle;
+		      //if (mapDIFplanNew.find(ToComputeEffi[i])!=mapDIFplanNew.end() && 
+		      // mapDIFplanNew[ToComputeEffi[i]].find(geomplan.NbrPlate()) != mapDIFplanNew[ToComputeEffi[i]].end())
+		      if (ToComputeEffi[i]==itt->first)
+			verynewStyle=&(mapDIFplanNew[ToComputeEffi[i]][geomplan.NbrPlate()]);
+		      else
+			verynewStyle=NULL; 
+		      std::cout << "second TryingToUnderstand at inner loop for "<<i<<"="<<ToComputeEffi[i]<<" inside main loop for "<<itt->first<<std::endl;
+		      TryingToUnderstand(mapDIFplan,mapDIFplanNew);
 		      std::cout << "CHECK " << ToComputeEffi[i] << ": "  << oldStyle
 				<< " et " << newStyle  << " et " << verynewStyle << std::endl;
-		      if (oldStyle != newStyle) abort();
+		      if (newStyle==NULL && verynewStyle!= NULL) std::cout << verynewStyle->nHits() << " hits" << std::endl;
+		      if (oldStyle != verynewStyle) abort();
 		    }
 		  else
 		    {
 		      //class plan used
-		      nhit=thisPlan->getPlan(ToComputeEffi[i]).countHitAtStrip(Projectioni,_dlimforStrip,ToComputeEffi[i]);
+		      nhit=thisPlan->getPlan(ToComputeEffi[i])->countHitAtStrip(Projectioni,_dlimforStrip,ToComputeEffi[i]);
 		      Thresholds[5]=nhit[itt->first];
 		    }
           

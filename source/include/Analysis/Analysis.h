@@ -429,21 +429,18 @@ public:
       ;
     }
 
-    hitsInPlan& getPlan(std::string name) {
+    hitsInPlan* getPlan(std::string name) {
       if (_plan.find(name)==_plan.end()) 
 	{
-	  std::cout << "ASKING MISSING " << name << " give fake at adress " << &_missingPlan << std::endl;
-	  _missingPlan.Clear();
-	  return _missingPlan;
+	  std::cout << "ASKING MISSING " << name << std::endl;
+	  return NULL;
 	} 
-      return *(_plan[name]);}  
+      return _plan[name];}  
     void setPlan(std::string name,hitsInPlan& aPlan) { _plan[name]=&aPlan;}
 
 private:
     std::map<std::string, hitsInPlan*> _plan;
     friend void TryingToUnderstand(std::map<std::string,std::map<int,plan>>& mapDIFplan,std::map<std::string,std::map<int,hitsInPlan>>& mapDIFplanB);
-
-    hitsInPlan _missingPlan;
     
 };
 
