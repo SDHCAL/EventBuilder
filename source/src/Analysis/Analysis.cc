@@ -433,35 +433,6 @@ bool trackFitter::Find(TGraphErrors &grxz,TGraphErrors &gryz,double MaxChi2,int 
 }
 
 
-void TryingToUnderstand(std::map<std::string,std::map<int,plan>>& mapDIFplan,std::map<std::string,std::map<int,hitsInPlan>>& mapDIFplanB)
-{
-  for (std::map<std::string,std::map<int,plan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
-    {
-      std::string mapKey=itt->first;
-      std::cout << "MapDIFPlan entry : " << mapKey << std::endl;
-      std::map<int,plan>& planMap=itt->second;
-      for (std::map<int,plan>::iterator it=planMap.begin(); it!=planMap.end(); ++it)
-	{
-	  int mapIntKey=it->first;
-	  plan& leplan=it->second;
-	  std::cout << "\t [int key,plan adress]= [" << mapIntKey <<","<<&leplan << "]" << std::endl;
-	  for (std::map<std::string, hitsInPlan*>::iterator ithp=leplan._plan.begin(); ithp !=leplan._plan.end(); ++ithp)
-	    std::cout << "\t \t key in plan " << ithp->first << "  at  " <<  ithp->second << std::endl;
-	}
-    }
-  for (std::map<std::string,std::map<int,hitsInPlan>>::iterator itt=mapDIFplanB.begin();itt!=mapDIFplanB.end();++itt)
-    {
-      std::string mapKey=itt->first;
-      std::cout << "MapDIFPlanB entry : " << mapKey << std::endl;
-      std::map<int,hitsInPlan>& planMap=itt->second;
-      for (std::map<int,hitsInPlan>::iterator it=planMap.begin(); it!=planMap.end(); ++it)
-	{
-	  int mapIntKey=it->first;
-	  hitsInPlan& leplan=it->second;
-	  std::cout << "\t [int key,hitsInPlan adress]= [" << mapIntKey <<","<<&leplan << "]" << std::endl;
-	}
-    }
-}
 
 void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFplan,std::vector<testedPlan>& tested)
 {

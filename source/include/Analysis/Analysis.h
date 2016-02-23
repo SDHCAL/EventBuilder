@@ -20,7 +20,6 @@
 #define degtorad 0.0174532925
 
 enum Threshold{Threshold_2=1,Threshold_1,Threshold_3};
-class plan;
 class hitsInPlan;
 
 
@@ -421,28 +420,6 @@ class hitsInPlan
 };
 
 
-class plan
-{
-public:
- plan() 
-    {
-      ;
-    }
-
-    hitsInPlan* getPlan(std::string name) {
-      if (_plan.find(name)==_plan.end()) 
-	{
-	  //std::cout << "ASKING MISSING " << name << std::endl;
-	  return NULL;
-	} 
-      return _plan[name];}  
-    void setPlan(std::string name,hitsInPlan& aPlan) { _plan[name]=&aPlan;}
-
-private:
-    std::map<std::string, hitsInPlan*> _plan;
-    friend void TryingToUnderstand(std::map<std::string,std::map<int,plan>>& mapDIFplan,std::map<std::string,std::map<int,hitsInPlan>>& mapDIFplanB);
-    
-};
 
 
 std::map<std::string,std::array<std::map<std::vector<int>,std::vector<int>>,6>>Efficiency_per_pad;
