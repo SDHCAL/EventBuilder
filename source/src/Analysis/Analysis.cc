@@ -580,25 +580,16 @@ void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFpl
 			  //countHitAt fills some counters and need to be called anyway
 			  hitsInPlan dummy;
 			  Thresholds=dummy.countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
-			  std::cout << "creating dummy at " << &dummy << std::endl;
 			}
-		      std::cout << "TryingToUnderstand at inner loop for "<<i<<"="<<ToComputeEffi[i]<<" inside main loop for "<<itt->first<<" and geomplan.NbrPlate=" <<geomplan.NbrPlate() << std::endl;
-		      TryingToUnderstand(mapDIFplan,mapDIFplanNew);
-
 		      hitsInPlan *oldStyle=thisPlan->getPlan(ToComputeEffi[i]);
-		      hitsInPlan *newStyle=mapDIFplan[itt->first][geomplan.NbrPlate()].getPlan(ToComputeEffi[i]);
+		      //hitsInPlan *newStyle=mapDIFplan[itt->first][geomplan.NbrPlate()].getPlan(ToComputeEffi[i]);
 		      hitsInPlan *verynewStyle;
-		      //if (mapDIFplanNew.find(ToComputeEffi[i])!=mapDIFplanNew.end() && 
-		      // mapDIFplanNew[ToComputeEffi[i]].find(geomplan.NbrPlate()) != mapDIFplanNew[ToComputeEffi[i]].end())
 		      if (ToComputeEffi[i]==itt->first)
 			verynewStyle=&(mapDIFplanNew[ToComputeEffi[i]][geomplan.NbrPlate()]);
 		      else
 			verynewStyle=NULL; 
-		      std::cout << "second TryingToUnderstand at inner loop for "<<i<<"="<<ToComputeEffi[i]<<" inside main loop for "<<itt->first<<std::endl;
-		      TryingToUnderstand(mapDIFplan,mapDIFplanNew);
-		      std::cout << "CHECK " << ToComputeEffi[i] << ": "  << oldStyle
-				<< " et " << newStyle  << " et " << verynewStyle << std::endl;
-		      if (newStyle==NULL && verynewStyle!= NULL) std::cout << verynewStyle->nHits() << " hits" << std::endl;
+		      //std::cout << "CHECK " << ToComputeEffi[i] << ": "  << oldStyle
+		      //	<< " et " << newStyle  << " et " << verynewStyle << std::endl;
 		      if (oldStyle != verynewStyle) abort();
 		    }
 		  else
@@ -1031,7 +1022,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
   //}
   //else for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans,false,testedPlanList);
 
-  TryingToUnderstand(Planss,PlanssReplacement);
+  //TryingToUnderstand(Planss,PlanssReplacement);
 
 
   // NB si Planss est vide, Tracks ne fait rien.
