@@ -428,10 +428,11 @@ public:
       ;
     }
 
-    hitsInPlan& getPlan(std::string name) {return _plan[name];}
+    hitsInPlan& getPlan(std::string name) {return _plan[name];}  
 
 private:
     std::map<std::string, hitsInPlan> _plan;
+    friend void TryingToUnderstand(std::map<std::string,std::map<int,plan>>& mapDIFplan);
 
 };
 

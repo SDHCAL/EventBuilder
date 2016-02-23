@@ -437,9 +437,28 @@ bool trackFitter::Find(TGraphErrors &grxz,TGraphErrors &gryz,double MaxChi2,int 
 }
 
 
+void TryingToUnderstand(std::map<std::string,std::map<int,plan>>& mapDIFplan)
+{
+  for (std::map<std::string,std::map<int,plan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
+    {
+      std::string mapKey=itt->first;
+      std::cout << "MapDIFPlan entry : " << mapKey << std::endl;
+      std::map<int,plan>& planMap=itt->second;
+      for (std::map<int,plan>::iterator it=planMap.begin(); it!=planMap.end(); ++it)
+	{
+	  int mapIntKey=it->first;
+	  plan& leplan=it->second;
+	  std::cout << "\t [int key,plan adress]= [" << mapIntKey <<","<<&leplan << "]" << std::endl;
+	  for (std::map<std::string, hitsInPlan>::iterator ithp=leplan._plan.begin(); ithp !=leplan._plan.end(); ++ithp)
+	    std::cout << "\t \t key in plan " << ithp->first << std::endl;
+	}
+    }
+}
+
 //class plan used
 void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,std::vector<testedPlan>& tested)
 {
+  //TryingToUnderstand(mapDIFplan);
   for(std::map<std::string,std::map<int,plan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
     {
       bool Doit=false;
@@ -576,8 +595,8 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
 	      totreee.OrdXZ=pxz0;
 	      totreee.OrdYZ=pyz0;
 	      tt->Fill();
-	    }
-	}
+	    } //end if (Pass)
+	} //end if Doit=true
     }
   ///////////////////////////////////////////////////////////////////////////////////////////
 }
