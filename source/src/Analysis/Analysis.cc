@@ -573,11 +573,17 @@ void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFpl
 		      // temporary dead end in refactoring.
 		      //
 		      ///////////////////////////////////////////////////////////////////////////////
-		      if (thisPlan->getPlan(ToComputeEffi[i]))
-			Thresholds=thisPlan->getPlan(ToComputeEffi[i])->countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
+		      hitsInPlan *planLookedFor;
+		      if (ToComputeEffi[i]==itt->first)
+			planLookedFor=&(mapDIFplanNew[ToComputeEffi[i]][geomplan.NbrPlate()]);
+		      else
+			planLookedFor=NULL; 
+
+		      if (planLookedFor)
+			Thresholds=planLookedFor->countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
 		      else
 			{
-			  //countHitAt fills some counters and need to be called anyway
+			  //countHitAt fills some counters and need to be called anyway for the moment
 			  hitsInPlan dummy;
 			  Thresholds=dummy.countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
 			}
