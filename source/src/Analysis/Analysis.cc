@@ -463,9 +463,9 @@ void TryingToUnderstand(std::map<std::string,std::map<int,plan>>& mapDIFplan,std
     }
 }
 
-void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFplanNew,std::vector<testedPlan>& tested)
+void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFplan,std::vector<testedPlan>& tested)
 {
-  for(std::map<std::string,std::map<int,hitsInPlan>>::iterator itt=mapDIFplanNew.begin();itt!=mapDIFplanNew.end();++itt)
+  for(std::map<std::string,std::map<int,hitsInPlan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
     {
       bool Doit=false;
       for(unsigned int mm=0;mm!=Maketracks.size();++mm)
@@ -482,7 +482,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFpl
 	  std::vector<hitsInPlan*> plansUsedForTrackMaking;
 	  hitsInPlan* thisPlan=nullptr;
 	  std::vector<int>PlaneNbr;
-	  for (std::map<int,hitsInPlan>::iterator it=mapDIFplanNew[itt->first].begin(); it!=mapDIFplanNew[itt->first].end(); ++it)
+	  for (std::map<int,hitsInPlan>::iterator it=mapDIFplan[itt->first].begin(); it!=mapDIFplan[itt->first].end(); ++it)
 	    {
 	      if (geomplan.NbrPlate()!=it->first) 
 		{
@@ -551,7 +551,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFpl
 		  std::map<std::string,int> nhit;
 		  hitsInPlan *planLookedFor;
 		  if (ToComputeEffi[i]==itt->first)
-		    planLookedFor=&(mapDIFplanNew[ToComputeEffi[i]][geomplan.NbrPlate()]);
+		    planLookedFor=&(mapDIFplan[ToComputeEffi[i]][geomplan.NbrPlate()]);
 		  else
 		    planLookedFor=NULL; 
 		  //countHitAt fills some counters and need to be called anyway for the moment
