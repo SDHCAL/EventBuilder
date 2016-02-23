@@ -441,145 +441,145 @@ bool trackFitter::Find(TGraphErrors &grxz,TGraphErrors &gryz,double MaxChi2,int 
 void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,std::vector<testedPlan>& tested)
 {
   for(std::map<std::string,std::map<int,plan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
-  {
-    bool Doit=false;
-    for(unsigned int mm=0;mm!=Maketracks.size();++mm)
     {
-      if(itt->first!=Maketracks[mm]) continue;
-      else Doit=true;
-    }
-    if(Doit==true)
-    {
-      std::vector<std::string>ToComputeEffi=Makeeffi;
-      ToComputeEffi.push_back(itt->first);
-      //std::cout<<itt->first<<std::endl;
-      for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][TESTYOUCALLED]++;
-      //class plan used
-      std::vector<plan*> plansUsedForTrackMaking;
-      //class plan used
-      plan* thisPlan=nullptr;
-      std::vector<int>PlaneNbr;
-      //class plan used
-      for (std::map<int,plan>::iterator it=mapDIFplan[itt->first].begin(); it!=mapDIFplan[itt->first].end(); ++it)
-      {
-        if (geomplan.NbrPlate()!=it->first) 
-        {
-          if((it->second).getPlan(itt->first).nHits()>0)//Verify is hits are present
-          {
-            plansUsedForTrackMaking.push_back(&(it->second));
-            PlaneNbr.push_back(it->first);
-          }
-        }
-        else thisPlan=&(it->second);
-      }
+      bool Doit=false;
+      for(unsigned int mm=0;mm!=Maketracks.size();++mm)
+	{
+	  if(itt->first!=Maketracks[mm]) continue;
+	  else Doit=true;
+	}
+      if(Doit==true)
+	{
+	  std::vector<std::string>ToComputeEffi=Makeeffi;
+	  ToComputeEffi.push_back(itt->first);
+	  //std::cout<<itt->first<<std::endl;
+	  for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][TESTYOUCALLED]++;
+	  //class plan used
+	  std::vector<plan*> plansUsedForTrackMaking;
+	  //class plan used
+	  plan* thisPlan=nullptr;
+	  std::vector<int>PlaneNbr;
+	  //class plan used
+	  for (std::map<int,plan>::iterator it=mapDIFplan[itt->first].begin(); it!=mapDIFplan[itt->first].end(); ++it)
+	    {
+	      if (geomplan.NbrPlate()!=it->first) 
+		{
+		  if((it->second).getPlan(itt->first).nHits()>0)//Verify is hits are present
+		    {
+		      plansUsedForTrackMaking.push_back(&(it->second));
+		      PlaneNbr.push_back(it->first);
+		    }
+		}
+	      else thisPlan=&(it->second);
+	    }
 
-      //class plan used
-      for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((int)(*it)->getPlan(itt->first).nHits()>=_NbrHitPerPlaneMax ) return;
-      if((int)plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
-      for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][NOTOOMUCHHITSINPLAN]++;
-      ////////////////////////////////////////////////////////////////////////////////////
-      trackFitter tfit;
-      bool trackfound=tfit.Find(plansUsedForTrackMaking,_Chi2,this->GetType(),itt->first);
-      if (! tfit.foundTracksXZ() ) return;
-      for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][XZTRACKFITPASSED]++;
-      if (! trackfound) return;
-      for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][YZTRACKFITPASSED]++;
+	  //class plan used
+	  for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((int)(*it)->getPlan(itt->first).nHits()>=_NbrHitPerPlaneMax ) return;
+	  if((int)plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
+	  for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][NOTOOMUCHHITSINPLAN]++;
+	  ////////////////////////////////////////////////////////////////////////////////////
+	  trackFitter tfit;
+	  bool trackfound=tfit.Find(plansUsedForTrackMaking,_Chi2,this->GetType(),itt->first);
+	  if (! tfit.foundTracksXZ() ) return;
+	  for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][XZTRACKFITPASSED]++;
+	  if (! trackfound) return;
+	  for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][YZTRACKFITPASSED]++;
 
-      double  kxz = tfit.getXZChisquare();
-      double pxz0 = tfit.getXZParameter(0);
-      double  pxz1 = tfit.getXZParameter(1);
-      double  kyz = tfit.getYZChisquare();
-      if(this->GetType()==positional) kyz=0;
-      double pyz0 = tfit.getYZParameter(0);
-      double  pyz1 = tfit.getYZParameter(1);
+	  double  kxz = tfit.getXZChisquare();
+	  double pxz0 = tfit.getXZParameter(0);
+	  double  pxz1 = tfit.getXZParameter(1);
+	  double  kyz = tfit.getYZChisquare();
+	  if(this->GetType()==positional) kyz=0;
+	  double pyz0 = tfit.getYZParameter(0);
+	  double  pyz1 = tfit.getYZParameter(1);
 
-      double Zexp=this->GetZexp(pxz0,pyz0,pxz1,pyz1);
-      //xzaxis.push_back(grxz);
-      //yzaxis.push_back(gryz);
-      ///////////////////////////////
-      //double Xexp = pxz0+pxz1*Zexp;
-      //double Yexp = pyz0+pyz1*Zexp;
-      ///////////////////////////////
-      double Projectioni=GetProjectioni(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
-      double Projectionj=GetProjectionj(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
-      bool Pass;
-      if(Delimiter.size()==0)Pass=1;
-      else Pass=Projectioni<=this->GetIp()&&Projectioni>=this->GetIm()&&Projectionj<=this->GetJp()&&Projectionj>=this->GetJm();
-      if(Pass)
-      {
-        //std::cout<<std::endl;
-        for(unsigned int i=0;i!=ToComputeEffi.size();++i) nombreTests[ToComputeEffi[i]]++;
-        //std::cout<<nombreTests[itt->first]<<"  "<<itt->first<<std::endl;
-        for(unsigned int i=0;i!=ToComputeEffi.size();++i) nombreTestsShort[ToComputeEffi[i]]++;
+	  double Zexp=this->GetZexp(pxz0,pyz0,pxz1,pyz1);
+	  //xzaxis.push_back(grxz);
+	  //yzaxis.push_back(gryz);
+	  ///////////////////////////////
+	  //double Xexp = pxz0+pxz1*Zexp;
+	  //double Yexp = pyz0+pyz1*Zexp;
+	  ///////////////////////////////
+	  double Projectioni=GetProjectioni(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
+	  double Projectionj=GetProjectionj(pxz0+pxz1*Zexp,pyz0+pyz1*Zexp,Zexp);
+	  bool Pass;
+	  if(Delimiter.size()==0)Pass=1;
+	  else Pass=Projectioni<=this->GetIp()&&Projectioni>=this->GetIm()&&Projectionj<=this->GetJp()&&Projectionj>=this->GetJm();
+	  if(Pass)
+	    {
+	      //std::cout<<std::endl;
+	      for(unsigned int i=0;i!=ToComputeEffi.size();++i) nombreTests[ToComputeEffi[i]]++;
+	      //std::cout<<nombreTests[itt->first]<<"  "<<itt->first<<std::endl;
+	      for(unsigned int i=0;i!=ToComputeEffi.size();++i) nombreTestsShort[ToComputeEffi[i]]++;
 
-	//class plan used
-        if (nullptr==thisPlan) return;
-        int I,J,K;
-        double ca=this->get_ca();
-        double sa=this->get_sa();
-        double cb=this->get_cb();
-        double sb=this->get_sb();
-        double cg=this->get_cg();
-        double sg=this->get_sg();
-        Distribution_exp_tgraph[itt->first]->SetPoint(nombreTests[itt->first],Projectioni,Projectionj,Zexp);
+	      //class plan used
+	      if (nullptr==thisPlan) return;
+	      int I,J,K;
+	      double ca=this->get_ca();
+	      double sa=this->get_sa();
+	      double cb=this->get_cb();
+	      double sb=this->get_sb();
+	      double cg=this->get_cg();
+	      double sg=this->get_sg();
+	      Distribution_exp_tgraph[itt->first]->SetPoint(nombreTests[itt->first],Projectioni,Projectionj,Zexp);
         
-        for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][NOHITINPLAN]++;
-        //for(unsigned int i=0;i!=ToComputeEffi.size();++i) std::cout<<yellow<<ToComputeEffi[i]<<normal<<std::endl;
-        for(unsigned int i=0;i!=ToComputeEffi.size();++i)
-        {
-          std::array<double,6>Thresholds;
-          std::map<std::string,int> nhit;
-          if(this->GetType()==pad)
-          {
-            I=cg*cb*1.0/size_pad*(Projectioni-this->GetX0())+sg*cb*1.0/size_pad*(Projectionj-this->GetY0())+-sb*this->GetZ0();
-        	  J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(Projectioni-this->GetX0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(Projectionj-this->GetY0())+cb*sa*this->GetZ0();
-        	  K=this->NbrPlate()+1;
-            Distribution_exp[itt->first][this->NbrPlate()]->Fill(ceil(I),ceil(J));
-	    //class plan used
-	    ////////////////////////////////////////////////////////////////////////////////
-	    //
-	    // This reuse of class plan with a loop on ToComputeEffi strings prevents 
-	    // the actual removal of the class plan.
-	    // temporary dead end in refactoring.
-	    //
-	    ///////////////////////////////////////////////////////////////////////////////
-            Thresholds=thisPlan->getPlan(ToComputeEffi[i]).countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
-          }
-          else
-          {
-	    //class plan used
-              nhit=thisPlan->getPlan(ToComputeEffi[i]).countHitAtStrip(Projectioni,_dlimforStrip,ToComputeEffi[i]);
-              Thresholds[5]=nhit[itt->first];
-          }
+	      for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][NOHITINPLAN]++;
+	      //for(unsigned int i=0;i!=ToComputeEffi.size();++i) std::cout<<yellow<<ToComputeEffi[i]<<normal<<std::endl;
+	      for(unsigned int i=0;i!=ToComputeEffi.size();++i)
+		{
+		  std::array<double,6>Thresholds;
+		  std::map<std::string,int> nhit;
+		  if(this->GetType()==pad)
+		    {
+		      I=cg*cb*1.0/size_pad*(Projectioni-this->GetX0())+sg*cb*1.0/size_pad*(Projectionj-this->GetY0())+-sb*this->GetZ0();
+		      J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(Projectioni-this->GetX0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(Projectionj-this->GetY0())+cb*sa*this->GetZ0();
+		      K=this->NbrPlate()+1;
+		      Distribution_exp[itt->first][this->NbrPlate()]->Fill(ceil(I),ceil(J));
+		      //class plan used
+		      ////////////////////////////////////////////////////////////////////////////////
+		      //
+		      // This reuse of class plan with a loop on ToComputeEffi strings prevents 
+		      // the actual removal of the class plan.
+		      // temporary dead end in refactoring.
+		      //
+		      ///////////////////////////////////////////////////////////////////////////////
+		      Thresholds=thisPlan->getPlan(ToComputeEffi[i]).countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
+		    }
+		  else
+		    {
+		      //class plan used
+		      nhit=thisPlan->getPlan(ToComputeEffi[i]).countHitAtStrip(Projectioni,_dlimforStrip,ToComputeEffi[i]);
+		      Thresholds[5]=nhit[itt->first];
+		    }
           
-            for(int kk=0;kk!=Thresholds.size();++kk)
-            {
-              if (Thresholds[kk]==0)
-              {
-                nombreTestsOK[ToComputeEffi[i]][kk]=nombreTestsOK[ToComputeEffi[i]][kk];
-                sommeNombreHits[ToComputeEffi[i]][kk]+=Thresholds[kk];
-              }
-              if (Thresholds[kk]>0)
-	            {
-		            nombreTestsOK[ToComputeEffi[i]][kk]++;
-		            nombreTestsOKShort[ToComputeEffi[i]][kk]++;
-                sommeNombreHits[ToComputeEffi[i]][kk]+=Thresholds[kk];
-                sommeNombreHitsShort[ToComputeEffi[i]][kk]+=Thresholds[kk];
+		  for(int kk=0;kk!=Thresholds.size();++kk)
+		    {
+		      if (Thresholds[kk]==0)
+			{
+			  nombreTestsOK[ToComputeEffi[i]][kk]=nombreTestsOK[ToComputeEffi[i]][kk];
+			  sommeNombreHits[ToComputeEffi[i]][kk]+=Thresholds[kk];
+			}
+		      if (Thresholds[kk]>0)
+			{
+			  nombreTestsOK[ToComputeEffi[i]][kk]++;
+			  nombreTestsOKShort[ToComputeEffi[i]][kk]++;
+			  sommeNombreHits[ToComputeEffi[i]][kk]+=Thresholds[kk];
+			  sommeNombreHitsShort[ToComputeEffi[i]][kk]+=Thresholds[kk];
   
-              }
-            }
-        }
-        totreee.ChiXZ=kxz;
-        totreee.ChiYZ=kyz;
-        totreee.CDXZ=pxz1;
-        totreee.CDYZ=pyz1;
-        totreee.OrdXZ=pxz0;
-        totreee.OrdYZ=pyz0;
-        tt->Fill();
+			}
+		    }
+		}
+	      totreee.ChiXZ=kxz;
+	      totreee.ChiYZ=kyz;
+	      totreee.CDXZ=pxz1;
+	      totreee.CDYZ=pyz1;
+	      totreee.OrdXZ=pxz0;
+	      totreee.OrdYZ=pyz0;
+	      tt->Fill();
+	    }
+	}
     }
-    }
-  }
-    ///////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////
 }
 
 void testedPlan::print(std::string name)
