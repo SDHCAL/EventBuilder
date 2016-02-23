@@ -184,7 +184,7 @@ class trackFitter
  public:
  trackFitter() : _XZpassed(false),_YZpassed(false)  {}
   //class plan used
-  bool Find(std::vector<plan*>& hitsByPlan,double MaxChi2,int planType,std::string collectionName);
+  bool Find(std::vector<hitsInPlan*>& hitsByPlan,double MaxChi2,int planType,std::string collectionName);
   bool Find(TGraphErrors &grxz,TGraphErrors &gryz,double MaxChi2,int planType);
   double getXZParameter(int i) {assert(_XZpassed); return _xzFit->Parameter(i);}
   double getYZParameter(int i) {assert(_YZpassed); return _yzFit->Parameter(i);}

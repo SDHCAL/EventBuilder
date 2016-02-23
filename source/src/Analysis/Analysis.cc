@@ -273,7 +273,6 @@ void Tracks(std::map<std::string,std::map<int,hitsInPlan>>& mapDIFplan,Geometry 
         plansUsedForTrackMaking.push_back(&(it->second));
         PlaneNbr.push_back(it->first);
       }
-      //class plan used
       for (std::vector<hitsInPlan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((int)(*it)->nHits()>=_NbrHitPerPlaneMax ) return;
       if(plansUsedForTrackMaking.size()<(unsigned int )(_NbrPlaneUseForTrackingRate)) return;
       for(unsigned int i=0;i!=NbrPlateTotal-1;++i)
@@ -401,15 +400,14 @@ void hitsInPlan::computeMaxima()
 
 
 //class plan used
-bool trackFitter:: Find(std::vector<plan*>& hitsByPlan,double MaxChi2,int planType,std::string collectionName)
+bool trackFitter:: Find(std::vector<hitsInPlan*>& hitsByPlan,double MaxChi2,int planType,std::string collectionName)
 {
   TGraphErrors grxz(hitsByPlan.size());
   TGraphErrors gryz(hitsByPlan.size());
   for (unsigned int i=0; i < hitsByPlan.size(); ++i)
       {
 	//class plan used
-        plan &p=*(hitsByPlan[i]);
-	hitsInPlan &hp=*(p.getPlan(collectionName));
+	hitsInPlan &hp=*(hitsByPlan[i]);
         hp.computeBarycentre();
         hp.computeMaxima(); // NB : computation results not used after
         grxz.SetPoint(i,hp.barycentreZ(),hp.barycentreX());
@@ -484,17 +482,14 @@ void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFpl
 	  ToComputeEffi.push_back(itt->first);
 	  //std::cout<<itt->first<<std::endl;
 	  for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][TESTYOUCALLED]++;
-	  //class plan used
-	  std::vector<plan*> plansUsedForTrackMaking;
-	  //class plan used
-	  plan* thisPlan=nullptr;
+	  std::vector<hitsInPlan*> plansUsedForTrackMaking;
+	  hitsInPlan* thisPlan=nullptr;
 	  std::vector<int>PlaneNbr;
-	  //class plan used
-	  for (std::map<int,plan>::iterator it=mapDIFplan[itt->first].begin(); it!=mapDIFplan[itt->first].end(); ++it)
+	  for (std::map<int,hitsInPlan>::iterator it=mapDIFplanNew[itt->first].begin(); it!=mapDIFplanNew[itt->first].end(); ++it)
 	    {
 	      if (geomplan.NbrPlate()!=it->first) 
 		{
-		  if((it->second).getPlan(itt->first)->nHits()>0)//Verify is hits are present
+		  if(it->second.nHits()>0)//Verify is hits are present
 		    {
 		      plansUsedForTrackMaking.push_back(&(it->second));
 		      PlaneNbr.push_back(it->first);
@@ -504,7 +499,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFpl
 	    }
 
 	  //class plan used
-	  for (std::vector<plan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((int)(*it)->getPlan(itt->first)->nHits()>=_NbrHitPerPlaneMax ) return;
+	  for (std::vector<hitsInPlan*>::iterator it=plansUsedForTrackMaking.begin(); it != plansUsedForTrackMaking.end(); ++it) if ((int)(*it)->nHits()>=_NbrHitPerPlaneMax ) return;
 	  if((int)plansUsedForTrackMaking.size()<_NbrPlaneUseForTracking) return;
 	  for(unsigned int i=0;i!=ToComputeEffi.size();++i) Counts[ToComputeEffi[i]][NOTOOMUCHHITSINPLAN]++;
 	  ////////////////////////////////////////////////////////////////////////////////////
