@@ -358,7 +358,7 @@ class hitsInPlan
 
   //modifier
   inline void addHit(CalorimeterHit* a) { hits.push_back(a);_oldDataBarycenter=_oldDataExtrema=false;}
-  inline void Clear() { hits.clear(); }
+  inline void Clear() { hits.clear(); _oldDataBarycenter=_oldDataExtrema=false;}
   inline void SetType(int i ) { _type=i; }
   void computeBarycentre();
   void computeMaxima();
@@ -423,17 +423,27 @@ class hitsInPlan
 class plan
 {
 public:
-    plan()
+ plan() 
     {
       ;
     }
 
-    hitsInPlan& getPlan(std::string name) {return _plan[name];}  
+    hitsInPlan& getPlan(std::string name) {
+      if (_plan.find(name)==_plan.end()) 
+	{
+	  std::cout << "ASKING MISSING " << name << std::endl;
+	  _missingPlan.Clear();
+	  return _missingPlan;
+	} 
+      return *(_plan[name]);}  
+    void setPlan(std::string name,hitsInPlan& aPlan) { _plan[name]=&aPlan;}
 
 private:
-    std::map<std::string, hitsInPlan> _plan;
+    std::map<std::string, hitsInPlan*> _plan;
     friend void TryingToUnderstand(std::map<std::string,std::map<int,plan>>& mapDIFplan);
 
+    hitsInPlan _missingPlan;
+    
 };
 
 

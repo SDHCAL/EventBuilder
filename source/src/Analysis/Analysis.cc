@@ -449,8 +449,8 @@ void TryingToUnderstand(std::map<std::string,std::map<int,plan>>& mapDIFplan)
 	  int mapIntKey=it->first;
 	  plan& leplan=it->second;
 	  std::cout << "\t [int key,plan adress]= [" << mapIntKey <<","<<&leplan << "]" << std::endl;
-	  for (std::map<std::string, hitsInPlan>::iterator ithp=leplan._plan.begin(); ithp !=leplan._plan.end(); ++ithp)
-	    std::cout << "\t \t key in plan " << ithp->first << std::endl;
+	  for (std::map<std::string, hitsInPlan*>::iterator ithp=leplan._plan.begin(); ithp !=leplan._plan.end(); ++ithp)
+	    std::cout << "\t \t key in plan " << ithp->first << "  at  " <<  ithp->second << std::endl;
 	}
     }
 }
@@ -458,7 +458,6 @@ void TryingToUnderstand(std::map<std::string,std::map<int,plan>>& mapDIFplan)
 //class plan used
 void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,std::vector<testedPlan>& tested)
 {
-  //TryingToUnderstand(mapDIFplan);
   for(std::map<std::string,std::map<int,plan>>::iterator itt=mapDIFplan.begin();itt!=mapDIFplan.end();++itt)
     {
       bool Doit=false;
@@ -563,6 +562,11 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
 		      //
 		      ///////////////////////////////////////////////////////////////////////////////
 		      Thresholds=thisPlan->getPlan(ToComputeEffi[i]).countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
+		      hitsInPlan *oldStyle=&(thisPlan->getPlan(ToComputeEffi[i]));
+		      hitsInPlan *newStyle=& (mapDIFplan[itt->first][geomplan.NbrPlate()].getPlan(ToComputeEffi[i]));
+		      std::cout << "CHECK " << ToComputeEffi[i] << ": "  << oldStyle
+				<< " et " << newStyle  << std::endl;
+		      if (oldStyle != newStyle) abort();
 		    }
 		  else
 		    {
@@ -966,10 +970,12 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 	      //int J=cd(raw_hit)["J"];
 	      RealNumberPlane[dif_id]++;
 	      //class plan used
-	      Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].getPlan(currentCollectionName).addHit(raw_hit);
-	      Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].getPlan(currentCollectionName).SetType(geom.GetDifType(dif_id));
+	      //Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].getPlan(currentCollectionName).addHit(raw_hit);
+	      //Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].getPlan(currentCollectionName).SetType(geom.GetDifType(dif_id));
 	      PlanssReplacement[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
 	      PlanssReplacement[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
+	      Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].setPlan(currentCollectionName,PlanssReplacement[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1]);
+	      
 	      //std::cout<<red<<"ttttt"<<normal<<std::endl;
 	      /*if(IsScinti==true)
 		{
@@ -991,6 +997,8 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
   // for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(PlansScintillator,true,testedPlanList);
   //}
   //else for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans,false,testedPlanList);
+
+  TryingToUnderstand(Planss);
 
 
   // NB si Planss est vide, Tracks ne fait rien.
