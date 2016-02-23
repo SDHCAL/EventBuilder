@@ -901,7 +901,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 	AsicConfiguration *asic_conf = s->getAsicConfiguration();*/
     }
 
-  PlanssReplacement.clear();
+  Planss.clear();
 
   if (evtP == nullptr) 
     {
@@ -936,8 +936,8 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 	      //int I=cd(raw_hit)["I"];
 	      //int J=cd(raw_hit)["J"];
 	      RealNumberPlane[dif_id]++;
-	      PlanssReplacement[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
-	      PlanssReplacement[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
+	      Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
+	      Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
 	      
 	      //std::cout<<red<<"ttttt"<<normal<<std::endl;
 	      /*if(IsScinti==true)
@@ -964,9 +964,9 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 
 
   // NB si Planss est vide, Tracks ne fait rien.
-  Tracks(PlanssReplacement,geom,geometryplans,useforrealrate);
+  Tracks(Planss,geom,geometryplans,useforrealrate);
   // NB si Planss est vide, testedPlan::testYou ne fait rien
-  for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(PlanssReplacement,testedPlanList);
+  for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Planss,testedPlanList);
   PrintStatShort();     
  
 }

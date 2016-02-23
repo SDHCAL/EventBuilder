@@ -182,7 +182,6 @@ class trackFitter
 {
  public:
  trackFitter() : _XZpassed(false),_YZpassed(false)  {}
-  //class plan used
   bool Find(std::vector<hitsInPlan*>& hitsByPlan,double MaxChi2,int planType,std::string collectionName);
   bool Find(TGraphErrors &grxz,TGraphErrors &gryz,double MaxChi2,int planType);
   double getXZParameter(int i) {assert(_XZpassed); return _xzFit->Parameter(i);}
@@ -467,7 +466,7 @@ protected:
     ConfigInfos conf;
     Geometry geom;
     std::string _ReaderType;
-    std::map<std::string,std::map<int,hitsInPlan>> PlanssReplacement;
+    std::map<std::string,std::map<int,hitsInPlan>> Planss;
     std::map<int,geometryplan> geometryplans;
     std::vector<testedPlan> testedPlanList;
 
