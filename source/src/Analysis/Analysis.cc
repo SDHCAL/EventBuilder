@@ -564,8 +564,8 @@ void testedPlan::testYou(std::map<std::string,std::map<int,plan>>& mapDIFplan,st
 		      Thresholds=thisPlan->getPlan(ToComputeEffi[i]).countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
 		      hitsInPlan *oldStyle=&(thisPlan->getPlan(ToComputeEffi[i]));
 		      hitsInPlan *newStyle=& (mapDIFplan[itt->first][geomplan.NbrPlate()].getPlan(ToComputeEffi[i]));
-		      std::cout << "CHECK " << ToComputeEffi[i] << ": "  << oldStyle
-				<< " et " << newStyle  << std::endl;
+		      //std::cout << "CHECK " << ToComputeEffi[i] << ": "  << oldStyle
+		      //	<< " et " << newStyle  << std::endl;
 		      if (oldStyle != newStyle) abort();
 		    }
 		  else
@@ -998,7 +998,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
   //}
   //else for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans,false,testedPlanList);
 
-  TryingToUnderstand(Planss);
+  //TryingToUnderstand(Planss);
 
 
   // NB si Planss est vide, Tracks ne fait rien.

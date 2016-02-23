@@ -431,7 +431,7 @@ public:
     hitsInPlan& getPlan(std::string name) {
       if (_plan.find(name)==_plan.end()) 
 	{
-	  std::cout << "ASKING MISSING " << name << std::endl;
+	  //std::cout << "ASKING MISSING " << name << std::endl;
 	  _missingPlan.Clear();
 	  return _missingPlan;
 	} 
