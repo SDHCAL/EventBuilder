@@ -559,49 +559,28 @@ void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFpl
 		{
 		  std::array<double,6>Thresholds;
 		  std::map<std::string,int> nhit;
+		  hitsInPlan *planLookedFor;
+		  if (ToComputeEffi[i]==itt->first)
+		    planLookedFor=&(mapDIFplanNew[ToComputeEffi[i]][geomplan.NbrPlate()]);
+		  else
+		    planLookedFor=NULL; 
+		  //countHitAt fills some counters and need to be called anyway for the moment
+		  hitsInPlan dummy;
+		  if (NULL==planLookedFor) planLookedFor=&dummy; 
+
 		  if(this->GetType()==pad)
 		    {
 		      I=cg*cb*1.0/size_pad*(Projectioni-this->GetX0())+sg*cb*1.0/size_pad*(Projectionj-this->GetY0())+-sb*this->GetZ0();
 		      J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(Projectioni-this->GetX0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(Projectionj-this->GetY0())+cb*sa*this->GetZ0();
 		      K=this->NbrPlate()+1;
 		      Distribution_exp[itt->first][this->NbrPlate()]->Fill(ceil(I),ceil(J));
-		      //class plan used
-		      ////////////////////////////////////////////////////////////////////////////////
-		      //
-		      // This reuse of class plan with a loop on ToComputeEffi strings prevents 
-		      // the actual removal of the class plan.
-		      // temporary dead end in refactoring.
-		      //
-		      ///////////////////////////////////////////////////////////////////////////////
-		      hitsInPlan *planLookedFor;
-		      if (ToComputeEffi[i]==itt->first)
-			planLookedFor=&(mapDIFplanNew[ToComputeEffi[i]][geomplan.NbrPlate()]);
-		      else
-			planLookedFor=NULL; 
 
-		      if (planLookedFor)
-			Thresholds=planLookedFor->countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
-		      else
-			{
-			  //countHitAt fills some counters and need to be called anyway for the moment
-			  hitsInPlan dummy;
-			  Thresholds=dummy.countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
-			}
-		      hitsInPlan *oldStyle=thisPlan->getPlan(ToComputeEffi[i]);
-		      //hitsInPlan *newStyle=mapDIFplan[itt->first][geomplan.NbrPlate()].getPlan(ToComputeEffi[i]);
-		      hitsInPlan *verynewStyle;
-		      if (ToComputeEffi[i]==itt->first)
-			verynewStyle=&(mapDIFplanNew[ToComputeEffi[i]][geomplan.NbrPlate()]);
-		      else
-			verynewStyle=NULL; 
-		      //std::cout << "CHECK " << ToComputeEffi[i] << ": "  << oldStyle
-		      //	<< " et " << newStyle  << " et " << verynewStyle << std::endl;
-		      if (oldStyle != verynewStyle) abort();
+		      Thresholds=planLookedFor->countHitAt(Projectioni,Projectionj,_dlimforPad,ceil(I),ceil(J),K,this->GetIp(),this->GetIm(),this->GetJp(),this->GetJm(),ToComputeEffi[i]);
 		    }
 		  else
 		    {
 		      //class plan used
-		      nhit=thisPlan->getPlan(ToComputeEffi[i])->countHitAtStrip(Projectioni,_dlimforStrip,ToComputeEffi[i]);
+		      nhit=planLookedFor->countHitAtStrip(Projectioni,_dlimforStrip,ToComputeEffi[i]);
 		      Thresholds[5]=nhit[itt->first];
 		    }
           
