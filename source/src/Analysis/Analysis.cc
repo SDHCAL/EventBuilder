@@ -877,7 +877,7 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
   _NbrRun=evtP->getRunNumber();
   if(isFirstEvent()==true)
     { 
-      // DBInit::init();
+      //DBInit::init();
       /*RunInfo* r = RunInfo::getRunInfo(int(_NbrRun));
 	cout<<r->getStartTime()<<endl;  
 	cout<<r->getStopTime()<<endl;
