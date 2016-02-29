@@ -2,6 +2,8 @@
 #define GEOMETRYPLAN_H
 #include <cmath>
 #include <map>
+#include <vector>
+#include "Geometry/Geometry.h"
 #define degtorad 0.0174532925
 
 class geometryplan

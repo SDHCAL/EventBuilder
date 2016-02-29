@@ -4,13 +4,14 @@
 #include <vector>
 #include <string>
 #include <array>
+#include "Types.h"
 class hitsInPlan
 {
  public:
  hitsInPlan() : _oldDataBarycenter(false) ,_oldDataExtrema(false) {;}
 
   //modifier
-  inline void addHit(CalorimeterHit* a) { hits.push_back(a);_oldDataBarycenter=_oldDataExtrema=false;}
+  inline void addHit(EVENT::CalorimeterHit* a) { hits.push_back(a);_oldDataBarycenter=_oldDataExtrema=false;}
   inline void Clear() { hits.clear(); _oldDataBarycenter=_oldDataExtrema=false;}
   inline void SetType(int i ) { _type=i; }
   void computeBarycentre();
@@ -30,7 +31,7 @@ class hitsInPlan
   inline double maxY() { return max[1];}
   inline double maxZ() { return max[2];}
 
-  std::vector<CalorimeterHit*>& GetHits() { return hits; }
+  std::vector<EVENT::CalorimeterHit*>& GetHits() { return hits; }
 
   //analysis
   std::array<double,6> countHitAt(double& x, double& y, double dlim,int Xexpected,int Yexpected,int Kexpected,double Imin,double Imax,double Jmin,double Jmax,std::string collectionName);
@@ -63,7 +64,7 @@ class hitsInPlan
   
  private:
   int _type;
-  std::vector<CalorimeterHit*> hits;
+  std::vector<EVENT::CalorimeterHit*> hits;
   double barycentre[3];
   double min[3];
   double max[3];

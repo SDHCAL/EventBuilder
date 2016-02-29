@@ -1,13 +1,13 @@
 #ifndef TESTEDPLAN_H
 #define TESTEDPLAN_H
 #include "GeometryPlan.h"
+#include "Geometry/Geometry.h"
 #include "HitsInPlan.h"
 #include "Colors.h"
 #include <string>
 #include <map>
 #include <vector>
 #include <array>
-
 class testedPlan
 {
 
