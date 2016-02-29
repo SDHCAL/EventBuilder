@@ -297,10 +297,6 @@ void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFpl
   ///////////////////////////////////////////////////////////////////////////////////////////
 }
 
-
-
-
-
 void AnalysisProcessor::PrintStatShort(std::string name)
 {
   static std::map<std::string,std::string>Mess;
@@ -519,18 +515,10 @@ void Tracks(std::map<std::string,std::map<int,hitsInPlan>>& mapDIFplan,Geometry 
    if(itt->first=="SDHCAL_HIT")
     {
       useforrealrate.push_back(XYZExpected);
-     
     }
-    
-    //std::cout<<magenta<<useforrealrate.size()<<normal<<std::endl;
   }
    
 }
-
-
-
-
-
 
 void AnalysisProcessor::PrintStat(std::string name)
 {
@@ -867,41 +855,15 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 	  CalorimeterHit *raw_hit = dynamic_cast<CalorimeterHit*>( currentCollection->getElementAt(ihit)) ;
 	  if (raw_hit != nullptr)
 	    {
-	      /*if(it->first=="SDHCAL_HIT_SC")
-		{
-		rate->Fill(raw_hit->getTime()*200-rate0);
-		rate0=raw_hit->getTime()*200;
-		}*/
 	      int dif_id=cd(raw_hit)["Dif_id"];
 	      //int I=cd(raw_hit)["I"];
 	      //int J=cd(raw_hit)["J"];
 	      RealNumberPlane[dif_id]++;
 	      Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
 	      Planss[currentCollectionName][geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
-	      
-	      //std::cout<<red<<"ttttt"<<normal<<std::endl;
-	      /*if(IsScinti==true)
-		{
-		PlansScintillator[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
-		PlansScintillator[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
-		}
-		else
-		{
-		Plans[geom.GetDifNbrPlate(dif_id)-1].addHit(raw_hit);
-		Plans[geom.GetDifNbrPlate(dif_id)-1].SetType(geom.GetDifType(dif_id));
-		}*/
 	    } // end if (raw_hit != nullptr)
 	} // end for (int ihit=0; ihit < numElements; ++ihit)
     } // for(std::map<std::string,LCCollection*>::iterator it=Collections.begin(); it!=Collections.end(); ++it)
-
-
-  //if(IsScinti==true)
-  //{
-  // for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(PlansScintillator,true,testedPlanList);
-  //}
-  //else for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Plans,false,testedPlanList);
-
-
 
   // NB si Planss est vide, Tracks ne fait rien.
   Tracks(Planss,geom,geometryplans,useforrealrate);
