@@ -3,20 +3,9 @@
 # @author Eté Rémi,Lagarde François IPNL
 # Copyright (c) CNRS / IPNL
 #######################################################
-#find_library(LOCCI_SUPPORT NAMES occi)
-#if(LOCCI_SUPPORT)
-#  message("LOCCI XXXXXXXXXXXXXXXXXXXXXX")
-#  SET(HaveOCCI 1)
-#else()
-#  message("LOCCI NOOOOOOOOOOOOOOOOOOOOO")
-#  SET(HaveOCCI 0)
-#endif()
 
-# configure a header file to pass some of the CMake settings
-# to the source code
+# configure a header file to pass some of the CMake settings to the source code
 configure_file ("${PROJECT_SOURCE_DIR}/source/include/Version.h.in" "${PROJECT_BINARY_DIR}/Version.h")
-#configure_file ("${PROJECT_SOURCE_DIR}/source/include/HaveOCCI.h.in" "${PROJECT_BINARY_DIR}/HaveOCCI.h") 
-#add_definitions(-DOCCI_SUPPORT )
 # add the binary tree to the search path for include files
 include_directories("${PROJECT_BINARY_DIR}")
 
@@ -51,22 +40,22 @@ INSTALL( TARGETS Common LIBRARY DESTINATION lib)
 if(HaveOCCI)
   FILE (GLOB_RECURSE ANALYSIS_SRC_FILES src/Analysis/*)
   ADD_LIBRARY( Analysis SHARED ${ANALYSIS_SRC_FILES} )
-  TARGET_LINK_LIBRARIES( Analysis Common Database )
+  TARGET_LINK_LIBRARIES( Analysis Database )
   INSTALL(TARGETS Analysis LIBRARY DESTINATION lib)
 else()
   FILE (GLOB_RECURSE ANALYSIS_SRC_FILES src/Analysis/*)
   ADD_LIBRARY( Analysis SHARED ${ANALYSIS_SRC_FILES} )
-  TARGET_LINK_LIBRARIES( Analysis Common)
+  TARGET_LINK_LIBRARIES( Analysis Common )
   INSTALL(TARGETS Analysis LIBRARY  DESTINATION lib)
 endif()
 
 # -------------------------------------------------
 # build the noise library
 
-FILE (GLOB_RECURSE NOISE_SRC_FILES src/Noise/*)
-ADD_LIBRARY( Noise SHARED ${NOISE_SRC_FILES} )
-TARGET_LINK_LIBRARIES( Noise Common )
-INSTALL( TARGETS Noise LIBRARY DESTINATION lib)
+#FILE (GLOB_RECURSE NOISE_SRC_FILES src/Noise/*)
+#ADD_LIBRARY( Noise SHARED ${NOISE_SRC_FILES} )
+#TARGET_LINK_LIBRARIES( Noise Common )
+#INSTALL( TARGETS Noise LIBRARY DESTINATION lib)
 
 
 # -------------------------------------------------
@@ -84,16 +73,6 @@ FILE (GLOB_RECURSE TRIVENT_SRC_FILES src/Trivent/*)
 ADD_LIBRARY( Trivent SHARED ${TRIVENT_SRC_FILES} )
 TARGET_LINK_LIBRARIES( Trivent Common )
 INSTALL(TARGETS Trivent LIBRARY DESTINATION lib)  
-
-# -------------------------------------------------
-# build the Test library
-
-#FILE (GLOB_RECURSE Test_SRC_FILES src/Analysis/*)
-#ADD_LIBRARY( Analysis SHARED ${Test_SRC_FILES} )
-#TARGET_LINK_LIBRARIES( Analysis Common  )
-#INSTALL(TARGETS Analysis LIBRARY DESTINATION lib)  
-
-
 
 # ----- ElogFiller executable ----------------------------------------------------
 ADD_EXECUTABLE( ElogFiller ${PROJECT_SOURCE_DIR}/source/src/ElogFiller/ElogFiller.cc)
