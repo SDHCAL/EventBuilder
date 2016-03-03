@@ -1,0 +1,24 @@
+<Detector>
+
+
+  <Plate x="0" y="0" z="150" alpha="0" beta="0" gamma="0" SizeX="50" SizeY="50" >
+    <Dif DifId="16" I="0" J="0"/>
+  </Plate>
+  
+  <Plate x="0" y="0" z="160" alpha="0" beta="0" gamma="0" SizeX="50" SizeY="50" >
+    <Dif DifId="32" I="0" J="0" />  
+  </Plate>
+  
+  
+  <Plate x="0" y="0" z="180" alpha="0" beta="0" gamma="0" SizeX="50" SizeY="50">
+    <Dif DifId="216" I="0" J="0" /> 
+  </Plate> 
+
+  
+  <Plate x="0" y="0" z="200" alpha="0" beta="0" gamma="0" SizeX="50" SizeY="50">
+    <Dif DifId="28" I="0" J="0"/>
+  </Plate>
+
+ 
+  
+</Detector>

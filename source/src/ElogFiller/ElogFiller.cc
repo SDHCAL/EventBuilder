@@ -1,7 +1,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include "marlin/tinyxml.h"
+#include "tinyxml.h"
 #include <cstdlib>
 
 const std::string elogcommand="elog";
@@ -129,7 +129,7 @@ void Read(std::string& FileName,std::string& parameters)
     }
   }
   for(unsigned int i=1;i!=PlateNumber+1;++i) HVs+=" -a HV"+std::to_string(i)+"=\"Not Set\"";
-  parameters+=Types+" "+HVChannels+" "+GasChannels+" "+DifTypes+" -a \"Number Dif\"="+Numbers[PlateNumber]+" "+Dif_Ids+" "+zs+" "+HVs+" "+ Tcherenkov+" "+Scintillator+" "+ TcheScinti+" ";
+  parameters+=Types+" "+HVChannels+" "+GasChannels+" "+DifTypes+" -a \"Number Dif\"="+Numbers[PlateNumber]+" "+Dif_Ids+" "+zs+" "+HVs+" "+ Tcherenkov+" "+Scintillator+" "+TcheScinti+" " ;
 }
 
 void FillElogPlease(std::string Filename,std::string run,std::string daqname)
@@ -140,7 +140,9 @@ void FillElogPlease(std::string Filename,std::string run,std::string daqname)
   defaults+=" -a Run="+run+" -a \"DAQ Name\"="+daqname+" ";
   std::string parameters="";
   Read(FileNam,parameters);
+  std::string command=command_part+" "+defaults+" "+parameters+"\" \"";
   std::cout<<command_part+" "+defaults+" "+parameters+"\" \""<<std::endl;
+  int good =std::system(command.c_str());
 }
 
 
