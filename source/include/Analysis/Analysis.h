@@ -58,7 +58,7 @@ protected:
     unsigned int _GlobalEventsSc;
     
     std::string _Config_xml;   
-
+    std::string _Elog_xml;
     ConfigInfos conf;
     Geometry geom;
     std::string _ReaderType;

@@ -90,6 +90,15 @@ class ConfigInfos
   public:
   ConfigInfos(){};
   ~ConfigInfos(){};
+  void AddElogParam(std::string key ,std::string value)
+  {
+    ElogParams.insert(std::pair<std::string,std::string>(key,value));
+  }
+  std::string ElogParam(std::string key)
+  {
+    if(ElogParams.find(key)!=ElogParams.end()) return ElogParams[key];
+    else return "";
+  }
   void AddDif(DifInfo zz)
   {
     DifInfos.insert(std::pair<unsigned int,DifInfo>(zz.getID(),zz)); 
@@ -109,6 +118,7 @@ class ConfigInfos
   std::map<unsigned int,DifInfo> ReturnMe(){return DifInfos;};
   private:
   std::map<unsigned int,DifInfo>DifInfos;
+  std::map<std::string,std::string>ElogParams;
 
 };
 #endif

@@ -6,11 +6,6 @@
 #include "Progress.h"
 #include "marlin/Processor.h"
 #include "Utilities.h"
-#ifdef OCCI_SUPPORT
-#include "Database/db/DBInit.h"
-#include "Database/configObjects/Setup.h"
-#include "Database/daq/RunInfo.h"
-#endif
 #include "THnSparse.h"
 #include "UTIL/LCTOOLS.h"
 #include "UTIL/CellIDDecoder.h"
@@ -49,10 +44,7 @@
 #define size_strip 2.5
 #define degtorad 0.0174532925
 using namespace std;
-#ifdef OCCI_SUPPORT
-using namespace oracle::occi;
-#endif
-
+ReaderFactory readerFactory;
 std::vector<std::vector<std::array<double,7>>>useforrealrate;
 std::map<std::string,std::vector<std::vector<TH1F*>>>Short_Efficiency;
 std::map<std::string,std::vector<std::vector<TH1F*>>>Short_Multiplicity;
@@ -590,6 +582,8 @@ AnalysisProcessor::AnalysisProcessor() : Processor("AnalysisProcessorType")
     registerProcessorParameter("Config_xml" ,"Config_xml",_Config_xml,_Config_xml);
     EstimateNoiseContamination=true;
     registerProcessorParameter("NoiseContaminationEstimation" ,"Estimation Noise Contamination",EstimateNoiseContamination,EstimateNoiseContamination);
+    _Elog_xml="";
+    registerProcessorParameter("Elog_xml" ,"Elog xml",_Elog_xml,_Elog_xml);
 }
 
 AnalysisProcessor::~AnalysisProcessor() {}
@@ -617,7 +611,6 @@ void AnalysisProcessor::init()
    }
    std::cout<<_GlobalEventsSc<<"  "<<_GlobalEvents<<std::endl;
     printParameters();
-    ReaderFactory readerFactory;
     Reader* myReader = readerFactory.CreateReader(_ReaderType);
 
     if(myReader)
@@ -693,7 +686,7 @@ void AnalysisProcessor::init()
         hss2= new THnSparseD("Tracks", "Tracks", 3, bin, xmin, xmax);
         hss= new THnSparseD("TracksPon", "TracksPon", 3, bin, xmin, xmax);
         Gain[names[0]].push_back(new TH2F(hh.c_str(),hh.c_str(),X,0,X,Y,0,Y));
-        if(_Config_xml!="")
+        if(_Config_xml!=""||_Elog_xml!="")
         {
           for(unsigned int j=0;j<ThresholdMap.size();++j)
           {
@@ -770,65 +763,60 @@ void AnalysisProcessor::init()
         std::exit(1);
     }
     delete myReader;
-    std::map<unsigned int,DifInfo>ggg;
-    if(_Config_xml!="")
-    {
-      Reader* Conf =readerFactory.CreateReader("XMLReaderConfig");
-      if(Conf)
-      {
-        Conf->Read(_Config_xml,conf);
-      }
-      ggg=conf.ReturnMe();
-      delete Conf;
-    }
+   
 
-    for(std::map<unsigned int,DifInfo>::iterator it=ggg.begin();it!=ggg.end();++it)
-    {
-      int dif_id=it->first;
-      std::map<unsigned int,AsicInfo> ppp=(it->second).ReturnMe();
-      for(std::map<unsigned int,AsicInfo>::iterator itt=ppp.begin();itt!=ppp.end();++itt)
-      {
-        int asic_id=itt->first;
-        std::vector<unsigned int> thee= (itt->second).getThresholds();
-         std::array<unsigned int,64>ooo=(itt->second).ReturnMe();
-         for(unsigned int i=0;i!=ooo.size();++i)
-         {
-           if(geom.GetDifNbrPlate(it->first)-1>=0)Gain[names[0]][geom.GetDifNbrPlate(it->first)-1]->Fill((1+MapILargeHR2[i]+AsicShiftI[asic_id])+geom.GetDifPositionX(dif_id),(32-(MapJLargeHR2[i]+AsicShiftJ[asic_id]))+geom.GetDifPositionY(dif_id),ooo[i]);
-           for(unsigned int hh=0;hh!=thee.size();++hh)
-           if(geom.GetDifNbrPlate(it->first)-1>=0)ThresholdMap[hh][names[0]][geom.GetDifNbrPlate(it->first)-1]->Fill((1+MapILargeHR2[i]+AsicShiftI[asic_id])+geom.GetDifPositionX(dif_id),(32-(MapJLargeHR2[i]+AsicShiftJ[asic_id]))+geom.GetDifPositionY(dif_id),thee[hh]);
-         }
-      }
-    }
 }
 
 void AnalysisProcessor::processEvent( LCEvent * evtP )
 {
      
   _NbrRun=evtP->getRunNumber();
+
   if(isFirstEvent()==true)
     { 
-      //DBInit::init();
-      /*RunInfo* r = RunInfo::getRunInfo(int(_NbrRun));
-	cout<<r->getStartTime()<<endl;  
-	cout<<r->getStopTime()<<endl;
-	cout<<r->getDescription()<<endl;
-	Daq* d = r->getDaq();
-	cout<<red<<"ggfgfggfgfgfgfgfgfgfgfg "<<d->getConfigName()<<"   "<<d->getConfigName()<<normal<<endl;
-	cout<<d->getXML()<<endl;
-	std::string str (d->getXML());
-	std::string str2 ("<DBState xsi:type=\"xsd:string\">");
-	std::string str3 ("</DBState>");
-	std::size_t found = str.find(str2)+str2.size();
-	std::size_t found2 = str.find(str3);
-	std::string str4=str.substr(found,found2-found);
-	std::cout<<red<<"gdggdhgfgigtiogtigtgtuio "<<str4<<"     "<<normal<<std::endl;
-	delete(d);
-	delete(r);*/
-      /*State* s = State::download("GIFSPS_60"); // download the state with name 'MyState'
-	LdaConfiguration *lda_conf = s->getLdaConfiguration();
-	DccConfiguration *dcc_conf = s->getDccConfiguration();
-	DifConfiguration *dif_conf = s->getDifConfiguration();
-	AsicConfiguration *asic_conf = s->getAsicConfiguration();*/
+	if(_Elog_xml!="")
+    	{
+      		Reader* Elog =readerFactory.CreateReader("XMLReaderElog");
+      		if(Elog)
+      		{
+        		Elog->Read(_Elog_xml,conf,_NbrRun);
+      		}
+      		delete Elog;
+    	}
+	else
+	{
+		if(_Config_xml!="")
+		{
+			Reader* Conf =readerFactory.CreateReader("XMLReaderConfig");
+      			if(Conf)
+      			{
+        			Conf->Read(_Config_xml,conf);
+      			}
+			delete Conf;
+		}
+        }
+	std::map<unsigned int,DifInfo>ggg;
+      	ggg=conf.ReturnMe();
+    	for(std::map<unsigned int,DifInfo>::iterator it=ggg.begin();it!=ggg.end();++it)
+    	{
+      		int dif_id=it->first;
+		std::cout<<dif_id<<std::endl;
+      		std::map<unsigned int,AsicInfo> ppp=(it->second).ReturnMe();
+      		for(std::map<unsigned int,AsicInfo>::iterator itt=ppp.begin();itt!=ppp.end();++itt)
+      		{
+        		int asic_id=itt->first;
+        		std::vector<unsigned int> thee= (itt->second).getThresholds();
+         		std::array<unsigned int,64>ooo=(itt->second).ReturnMe();
+         		for(unsigned int i=0;i!=ooo.size();++i)
+         		{
+				if(geom.GetDifType(it->first)!=temporal&&geom.GetDifType(it->first)!=scintillator&&geom.GetDifType(it->first)!=tcherenkov)
+				{
+           			if(geom.GetDifNbrPlate(it->first)-1>=0)Gain[names[0]][geom.GetDifNbrPlate(it->first)-1]->Fill((1+MapILargeHR2[i]+AsicShiftI[asic_id])+geom.GetDifPositionX(dif_id),(32-(MapJLargeHR2[i]+AsicShiftJ[asic_id]))+geom.GetDifPositionY(dif_id),ooo[i]);
+           			for(unsigned int hh=0;hh!=thee.size();++hh)
+           				if(geom.GetDifNbrPlate(it->first)-1>=0)ThresholdMap[hh][names[0]][geom.GetDifNbrPlate(it->first)-1]->Fill((1+MapILargeHR2[i]+AsicShiftI[asic_id])+geom.GetDifPositionX(dif_id),(32-(MapJLargeHR2[i]+AsicShiftJ[asic_id]))+geom.GetDifPositionY(dif_id),thee[hh]);}
+         		}
+      		}
+    	}
     }
 
   Planss.clear();
@@ -1035,16 +1023,8 @@ void AnalysisProcessor::end()
       }
       hfile->cd("../");
     
-   
-    for(unsigned int naa=0;naa<names.size();++naa)
-    {
-      
-      Distribution_exp_tgraph[names[naa]]->Write(("Distribution_exp"+names[naa]).c_str());
-      Distribution_hits_tgraph[names[naa]]->Write(("Distribution_hits"+names[naa]).c_str());
-      
-      std::string plate="";
-      std::string SlowControl="";
-      if(_Config_xml!="")
+    std::string SlowControl="";
+      if(_Config_xml!=""||_Elog_xml!="")
      {
       for(unsigned int o=0;o!=Gain[names[0]].size();++o)
       {
@@ -1059,6 +1039,14 @@ void AnalysisProcessor::end()
         hfile->cd("../");
       }
     }
+    for(unsigned int naa=0;naa<names.size();++naa)
+    {
+      
+      Distribution_exp_tgraph[names[naa]]->Write(("Distribution_exp"+names[naa]).c_str());
+      Distribution_hits_tgraph[names[naa]]->Write(("Distribution_hits"+names[naa]).c_str());
+      
+     std::string plate="";
+    
       for(unsigned int i =0 ;i!=HowLongFromExpectedX["SDHCAL_HIT"].size();++i)
       {
         
