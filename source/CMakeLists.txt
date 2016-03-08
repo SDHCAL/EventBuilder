@@ -21,18 +21,18 @@ ADD_DEFINITIONS( "-fPIC -pedantic -Wunused-value -O3 -Wno-long-long -Wreturn-typ
 # build the database library
 if(HaveOCCI)
 FILE (GLOB_RECURSE DATABASE_SRC_FILES src/Database/*)
-ADD_LIBRARY( Database SHARED ${DATABASE_SRC_FILES} )
+ADD_LIBRARY( Database STATIC ${DATABASE_SRC_FILES} )
 TARGET_LINK_LIBRARIES( Database)
-INSTALL(TARGETS Database LIBRARY DESTINATION lib) 
+INSTALL(TARGETS Database LIBRARY DESTINATION lib ARCHIVE DESTINATION lib ) 
 endif()
 
 # -------------------------------------------------
 # build the common library
 
 FILE (GLOB_RECURSE COMMON_SRC_FILES src/Common/*)
-ADD_LIBRARY( Common SHARED ${COMMON_SRC_FILES} )
+ADD_LIBRARY( Common STATIC ${COMMON_SRC_FILES} )
 TARGET_LINK_LIBRARIES( Common )
-INSTALL( TARGETS Common LIBRARY DESTINATION lib)
+INSTALL( TARGETS Common LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 
 # -------------------------------------------------
 # build the analysis library
@@ -40,12 +40,12 @@ INSTALL( TARGETS Common LIBRARY DESTINATION lib)
 if(HaveOCCI)
   FILE (GLOB_RECURSE ANALYSIS_SRC_FILES src/Analysis/*)
   ADD_LIBRARY( Analysis SHARED ${ANALYSIS_SRC_FILES} )
-  TARGET_LINK_LIBRARIES( Analysis Database )
+  TARGET_LINK_LIBRARIES( Analysis Common Database HistoHandler)
   INSTALL(TARGETS Analysis LIBRARY DESTINATION lib)
 else()
   FILE (GLOB_RECURSE ANALYSIS_SRC_FILES src/Analysis/*)
   ADD_LIBRARY( Analysis SHARED ${ANALYSIS_SRC_FILES} )
-  TARGET_LINK_LIBRARIES( Analysis Common )
+  TARGET_LINK_LIBRARIES( Analysis Common HistoHandler)
   INSTALL(TARGETS Analysis LIBRARY  DESTINATION lib)
 endif()
 
@@ -71,7 +71,7 @@ INSTALL( TARGETS StreamOut LIBRARY  DESTINATION lib)
 
 FILE (GLOB_RECURSE TRIVENT_SRC_FILES src/Trivent/*)
 ADD_LIBRARY( Trivent SHARED ${TRIVENT_SRC_FILES} )
-TARGET_LINK_LIBRARIES( Trivent Common )
+TARGET_LINK_LIBRARIES( Trivent Common)
 INSTALL(TARGETS Trivent LIBRARY DESTINATION lib)  
 
 # ----- ElogFiller executable ----------------------------------------------------
@@ -102,4 +102,12 @@ INSTALL( TARGETS ElogFiller DESTINATION bin )
 ADD_EXECUTABLE( Simulation ${PROJECT_SOURCE_DIR}/source/src/Simulation/Simulation.cc )
 INSTALL( TARGETS Simulation DESTINATION bin )
 
+
+# -------------------------------------------------
+# build the HistoHandler library
+
+FILE (GLOB_RECURSE HistoHandler_SRC_FILES src/HistoHandler/*)
+ADD_LIBRARY( HistoHandler STATIC ${HistoHandler_SRC_FILES} )
+TARGET_LINK_LIBRARIES( HistoHandler)
+INSTALL(TARGETS HistoHandler LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 

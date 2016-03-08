@@ -1,13 +1,12 @@
 #ifndef Progress_H
 #define Progress_H
 #include <iostream> 
-#include"Colors.h"
+#include "Colors.h"
 #include <cstdlib>
-#include "marlin/Global.h"
 #include "Patch.h"
-#include<string>
+#include <string>
 
-std::string Shift(double val)
+inline std::string Shift(double val)
 {
         std::string ret="";
 	if(val<10) return ret="  "+patch::to_string(val);
@@ -15,23 +14,8 @@ std::string Shift(double val)
 	if(val>=1000&&val<10000) return ret=patch::to_string(val);
         else return ret+patch::to_string(val);
 }
-std::string Shift(int val)
-{
-        std::string ret="";
-	if(val<10) return ret="  "+patch::to_string(val);
-	if(val>=10&&val<1000) return ret=" "+patch::to_string(val);
-	if(val>=1000&&val<10000) return ret=patch::to_string(val);
-        else return ret+patch::to_string(val);
-}
-std::string Shift(unsigned int val)
-{
-        std::string ret="";
-	if(val<10) return ret="  "+patch::to_string(val);
-	if(val>=10&&val<1000) return ret=" "+patch::to_string(val);
-	if(val>=1000&&val<10000) return ret=patch::to_string(val);
-        else return ret+patch::to_string(val);
-}
-unsigned int Every(unsigned int & _maxRecord)
+
+inline unsigned int Every(unsigned int & _maxRecord)
 {
   if(_maxRecord<=0) return 1000;
   else if(_maxRecord<=10) return 1;
@@ -41,7 +25,7 @@ unsigned int Every(unsigned int & _maxRecord)
 }
 
 
-void Progress(unsigned int& _skip,unsigned int& _GlobalEvents, unsigned int& _maxRecord, unsigned int& _eventNr,std::string Perso="")
+inline void Progress(unsigned int& _skip,unsigned int& _GlobalEvents, unsigned int& _maxRecord, unsigned int& _eventNr,std::string Perso="")
 {
   unsigned int _rolling=Every(_maxRecord);
   unsigned int skip=0;
