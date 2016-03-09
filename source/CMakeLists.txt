@@ -16,13 +16,6 @@ INCLUDE_DIRECTORIES( include )
 # require proper c++
 ADD_DEFINITIONS( "-fPIC -pedantic -Wunused-value -O3 -Wno-long-long -Wreturn-type -Wall" )
 
-# -------------------------------------------------
-# build the tinyxml library
-FILE (GLOB_RECURSE tinyxml_SRC_FILES src/tinyxml/*)
-ADD_LIBRARY( tinyxml STATIC ${tinyxml_SRC_FILES} )
-INSTALL(TARGETS tinyxml LIBRARY DESTINATION lib ARCHIVE DESTINATION lib )
-
-
 
 # -------------------------------------------------
 # build the database library
@@ -37,7 +30,7 @@ endif()
 
 FILE (GLOB_RECURSE COMMON_SRC_FILES src/Common/*)
 ADD_LIBRARY( Common STATIC ${COMMON_SRC_FILES} )
-TARGET_LINK_LIBRARIES( Common tinyxml )
+TARGET_LINK_LIBRARIES( Common )
 INSTALL( TARGETS Common LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 
 # -------------------------------------------------
@@ -51,7 +44,7 @@ if(HaveOCCI)
 else()
   FILE (GLOB_RECURSE ANALYSIS_SRC_FILES src/Analysis/*)
   ADD_LIBRARY( Analysis SHARED ${ANALYSIS_SRC_FILES} )
-  TARGET_LINK_LIBRARIES( Analysis tinyxml Common HistoHandler)
+  TARGET_LINK_LIBRARIES( Analysis Common HistoHandler)
   INSTALL(TARGETS Analysis LIBRARY  DESTINATION lib)
 endif()
 
@@ -69,7 +62,7 @@ endif()
 
 FILE (GLOB_RECURSE STREAMOUT_SRC_FILES src/StreamOut/*)
 ADD_LIBRARY( StreamOut SHARED ${STREAMOUT_SRC_FILES} )
-TARGET_LINK_LIBRARIES( StreamOut Common tinyxml )
+TARGET_LINK_LIBRARIES( StreamOut Common )
 INSTALL( TARGETS StreamOut LIBRARY  DESTINATION lib)
 
 # -------------------------------------------------
@@ -77,13 +70,12 @@ INSTALL( TARGETS StreamOut LIBRARY  DESTINATION lib)
 
 FILE (GLOB_RECURSE TRIVENT_SRC_FILES src/Trivent/*)
 ADD_LIBRARY( Trivent SHARED ${TRIVENT_SRC_FILES} )
-TARGET_LINK_LIBRARIES( Trivent Common tinyxml)
+TARGET_LINK_LIBRARIES( Trivent Common )
 INSTALL(TARGETS Trivent LIBRARY DESTINATION lib)  
 
 # ----- ElogFiller executable ----------------------------------------------------
 ADD_EXECUTABLE( ElogFiller ${PROJECT_SOURCE_DIR}/source/src/ElogFiller/ElogFiller.cc)
-SET_TARGET_PROPERTIES(tinyxml PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/lib/libtinyxml)
-TARGET_LINK_LIBRARIES(ElogFiller tinyxml )
+TARGET_LINK_LIBRARIES(ElogFiller)
 INSTALL( TARGETS ElogFiller DESTINATION bin )
  
 # -------------------------------------------------

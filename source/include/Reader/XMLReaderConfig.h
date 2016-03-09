@@ -3,7 +3,7 @@
 #include"Reader.h"
 #include<iostream>
 #include<string>
-#include "tinyxml/tinyxml.h"
+#include "tinyxml.h"
 
 class XMLReaderConfig: public Reader
 {
