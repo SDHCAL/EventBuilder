@@ -58,11 +58,11 @@ class AsicInfo
 
 
 
-class DifInfo
+class DifDatabaseInfo
 {
    public:
-   DifInfo():NAME(""),DIF_TYPE(""),ID(-1),ENABLED(false){};
-   DifInfo(std::string& name,std::string& dif_type,unsigned int& id,bool& enabled):NAME(name),DIF_TYPE(dif_type),ID(id),ENABLED(enabled){};
+   DifDatabaseInfo():NAME(""),DIF_TYPE(""),ID(-1),ENABLED(false){};
+   DifDatabaseInfo(std::string& name,std::string& dif_type,unsigned int& id,bool& enabled):NAME(name),DIF_TYPE(dif_type),ID(id),ENABLED(enabled){};
    std::string getDifType(){return DIF_TYPE;};
    std::string getName(){return NAME;};
    bool getEnabled(){return ENABLED;};
@@ -99,9 +99,9 @@ class ConfigInfos
     if(ElogParams.find(key)!=ElogParams.end()) return ElogParams[key];
     else return "";
   }
-  void AddDif(DifInfo zz)
+  void AddDif(DifDatabaseInfo zz)
   {
-    DifInfos.insert(std::pair<unsigned int,DifInfo>(zz.getID(),zz)); 
+    DifInfos.insert(std::pair<unsigned int,DifDatabaseInfo>(zz.getID(),zz)); 
   }
   void AddAsic(AsicInfo zz)
   {
@@ -115,9 +115,9 @@ class ConfigInfos
   {
      return (DifInfos.find(dif_id)->second).getAsicInfo(asic_id).getGain(pad_id);
   }
-  std::map<unsigned int,DifInfo> ReturnMe(){return DifInfos;};
+  std::map<unsigned int,DifDatabaseInfo> ReturnMe(){return DifInfos;};
   private:
-  std::map<unsigned int,DifInfo>DifInfos;
+  std::map<unsigned int,DifDatabaseInfo>DifInfos;
   std::map<std::string,std::string>ElogParams;
 
 };

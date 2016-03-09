@@ -8,9 +8,11 @@
 #include <map>
 #include <vector>
 #include <array>
+#include "HistoHandler/HistoHandler.h"
 class testedPlan
 {
 
+   HistoHandler& a =HistoHandler::getInstance( );
 public:
     void print(std::string name);
     testedPlan(geometryplan geo):geomplan(geo)

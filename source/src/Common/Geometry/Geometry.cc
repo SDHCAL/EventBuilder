@@ -4,9 +4,11 @@
 #include<vector>
 #include<string>
 #include"Progress.h"
-std::vector<std::string>glass_types{"standard","chinese"};
+
+
 void Geometry::PrintGeom()
 { 
+    std::vector<std::string>glass_types{"standard","chinese"};
     for(unsigned int i=0;i<GetNumberPlates();++i)
     {
       std::cout<<"Plane : "<<Shift(i+1)<<"  "<<green<<"X : "<<Shift(GetPlatePositionX(i))<<"  Y : "<<Shift(GetPlatePositionY(i))<<"  Z : "<<Shift(GetPlatePositionZ(i))<<" Alpha : "<<Shift(GetDifPlateAlpha(i))<<" Beta : "<<Shift(GetDifPlateBeta(i))<<" Gamma : "<<Shift(GetDifPlateGamma(i))<<" SizeX : "<<Shift(GetSizeX(i))<<" SizeY : "<<Shift(GetSizeY(i))<<normal<<std::endl;

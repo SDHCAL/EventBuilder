@@ -165,7 +165,7 @@ TriventProcessor::TriventProcessor() : Processor("TriventProcessorType")
   registerProcessorParameter("IgnorebeginingSpill" ,"Ignore begining of the Spills ",_IgnorebeginningSpill,_IgnorebeginningSpill);
   _Delimiters="";
   registerProcessorParameter("Delimiters" ,"Delimiters",_Delimiters,_Delimiters);  
-  _TimeWin_Noise=2;
+  _TimeWin_Noise=1000;
   registerProcessorParameter("Time windows for exstimated noise" ,"Time windows for exstimated noise",_TimeWin_Noise,_TimeWin_Noise);
   _Time_from_Track=4;
   registerProcessorParameter("Time from track" ,"Time from track",_Time_from_Track,_Time_from_Track);
@@ -192,6 +192,11 @@ std::vector<std::string>bcidnames;
 
 void TriventProcessor::init()
 { 
+  if(_TimeWin_Noise>_Time_from_Track)
+  {
+    _Time_from_Track=_TimeWin_Noise;
+    std::cout<<red<<"WARNING : _Time_from_Track was lower than _Time_from_Track; I put _Time_from_Track = _Time_from_Track"<<normal<<std::endl;
+  }
   Intro();
   TOTALNUMBERHITSCINTI=0;
   ReaderFactory readerFactory;
@@ -670,6 +675,7 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	  //_TimeWin_Noise="2";
 	  std::map<int,std::vector<RawCalorimeterHit *> >::iterator debut_avant=std::find_if(RawHits.begin(), before, [val_middle,d,win] (const std::pair<int, std::vector<RawCalorimeterHit *>>& v)->bool { if(v.first>=val_middle-d-win)return 1;else return 0; } );
 	  if(debut_avant==RawHits.end())debut_avant=RawHits.begin();
+
 	  std::map<int,std::vector<RawCalorimeterHit *> >::iterator debut_apres=std::find_if(after, RawHits.end(), [val_middle,d,win] (const std::pair<int, std::vector<RawCalorimeterHit *>>& v)->bool { if(v.first>=val_middle+d+win)return 1;else return 0; } );
 	  if(nbrPlanestouched.size()>=(unsigned int)(_LayerCut)) 
 	    {
@@ -678,12 +684,15 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	      for(std::map<int,std::vector<RawCalorimeterHit *> >::iterator it=debut_avant;it!=before;++it) 
 		{
 		  //if(abs(it->first-(val_middle-d))<=time)std::cout<<blue<<val_middle<<"  "<<d<<" "<<it->first<<normal<<" ";
-		  if(abs(it->first-(val_middle-d))<=_TimeWin_Noise)EstimationNoiseBefore.insert(EstimationNoiseBefore.end(),middle->second.begin(),middle->second.end());
+		  if(abs(it->first-(val_middle-d))<=_TimeWin_Noise){
+		    std::cout<<it->first<<"  "<<abs(it->first-(val_middle-d))<<"  "<<std::endl;
+		    EstimationNoiseBefore.insert(EstimationNoiseBefore.end(),it->second.begin(),it->second.end());}
+	
 		}
 	      for(std::map<int,std::vector<RawCalorimeterHit *> >::iterator it=after;it!=debut_apres;++it) 
 		{
 		  //if(abs(it->first-(val_middle+d))<=time)std::cout<<red<<val_middle<<"  "<<d<<" "<<it->first<<normal<<"  ";
-		  if(abs(it->first-(val_middle-d))<=_TimeWin_Noise)EstimationNoiseAfter.insert(EstimationNoiseAfter.end(),middle->second.begin(),middle->second.end());
+		  if(abs(it->first-(val_middle-d))<=_TimeWin_Noise)EstimationNoiseAfter.insert(EstimationNoiseAfter.end(),it->second.begin(),it->second.end());
 		}
 	      /* LCEventImpl*  evt = new LCEventImpl() ;*/
 	      LCCollectionVec* col_event1 = new LCCollectionVec(LCIO::CALORIMETERHIT);
@@ -807,18 +816,11 @@ void TriventProcessor::end()
   h22->Draw("glcolz");
   if(_Spill_Study)
     {
-  //timestamp->GetXaxis()->SetTimeDisplay(1);
-  //timestamp->GetXaxis()->SetTimeOffset(d.Convert()); 
-  //timestamp->GetXaxis()->SetTimeFormat("%d\/%m\/%H\/%M\/%S");
       timestamp->Write();
       if(pdf){timestamp->Draw();
 	canvas->Print(namepdf.c_str());}
       delete timestamp;
       timestamps->Write();
-      
-      //timestamps->GetXaxis()->SetTimeDisplay(1);
-      //timestamp->GetXaxis()->SetTimeOffset(d.Convert());
-      //timestamps->GetXaxis()->SetTimeFormat("%d\/%m\/%H\/%M\/%S");
       if(pdf){timestamps->Draw();
 	canvas->Print(namepdf.c_str());}
       delete timestamps;

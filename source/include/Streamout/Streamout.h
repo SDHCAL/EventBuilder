@@ -1,5 +1,5 @@
 #ifndef Streamout_h
-#define Streamout_h 1
+#define Streamout_h
 #include "marlin/Processor.h"
 #include "lcio.h"
 #include <string>

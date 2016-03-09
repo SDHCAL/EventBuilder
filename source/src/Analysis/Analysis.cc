@@ -5,7 +5,6 @@
 #include <iomanip>
 #include "Progress.h"
 #include "marlin/Processor.h"
-#include "Utilities.h"
 #include "THnSparse.h"
 #include "UTIL/LCTOOLS.h"
 #include "UTIL/CellIDDecoder.h"
@@ -43,6 +42,9 @@
 #define size_pad 10.4125
 #define size_strip 2.5
 #define degtorad 0.0174532925
+#include "HistoHandler/HistoHandler.h"
+
+HistoHandler& hists = HistoHandler::getInstance( );
 using namespace std;
 ReaderFactory readerFactory;
 std::vector<std::vector<std::array<double,7>>>useforrealrate;
@@ -590,6 +592,9 @@ AnalysisProcessor::~AnalysisProcessor() {}
 void AnalysisProcessor::init()
 {
     Intro();
+    std::vector<std::string>a{"TH1D;ThrOn;NAME;100000;0;1.5"};
+    std::vector<std::string>b;
+    hists.RegisterHistos(a,a,a,a);
     _maxRecord= Global::parameters->getIntVal("MaxRecordNumber")-1;
     _skip= Global::parameters->getIntVal("SkipNEvents");
     if(EstimateNoiseContamination==true)
@@ -795,9 +800,9 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
 			delete Conf;
 		}
         }
-	std::map<unsigned int,DifInfo>ggg;
+	std::map<unsigned int,DifDatabaseInfo>ggg;
       	ggg=conf.ReturnMe();
-    	for(std::map<unsigned int,DifInfo>::iterator it=ggg.begin();it!=ggg.end();++it)
+    	for(std::map<unsigned int,DifDatabaseInfo>::iterator it=ggg.begin();it!=ggg.end();++it)
     	{
       		int dif_id=it->first;
 		std::cout<<dif_id<<std::endl;

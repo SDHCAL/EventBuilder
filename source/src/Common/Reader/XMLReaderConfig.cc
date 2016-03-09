@@ -38,7 +38,7 @@ void XMLReaderConfig::Read(std::string &FileName,ConfigInfos& Conf)
   }
   else
   {
-    DifInfo dif =DifInfo();
+    DifDatabaseInfo dif =DifDatabaseInfo();
     streamlog_out( MESSAGE )<<"File : "<<FileName<<std::endl;
     TiXmlHandle hdl(&doc);
     TiXmlElement*  element = hdl.FirstChildElement().FirstChildElement().Element();
@@ -51,7 +51,7 @@ void XMLReaderConfig::Read(std::string &FileName,ConfigInfos& Conf)
         std::string NAME=element->FirstChildElement( "NAME" )->GetText();
         unsigned int ID=std::stoi(element->FirstChildElement( "ID" )->GetText());
         bool ENABLED=bool(element->FirstChildElement( "ENABLED" )->GetText()) ;
-        Conf.AddDif(DifInfo(NAME,DIF_TYPE,ID,ENABLED));
+        Conf.AddDif(DifDatabaseInfo(NAME,DIF_TYPE,ID,ENABLED));
       }
       if(name=="ASIC")
       {

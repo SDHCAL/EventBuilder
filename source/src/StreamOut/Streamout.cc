@@ -1,7 +1,6 @@
 #include "Streamout/Streamout.h"
 #include "Streamout/BufferNavigator.h"
 #include "Streamout/LMGenericObject.h"
-#include "Progress.h"
 #include "Intro.h"
 #include <iostream>
 #include <string>
@@ -10,7 +9,6 @@
 #include <cstdint>
 #include <iomanip>
 #include <assert.h>
-#include "UTIL/LCTime.h"
 #include "Colors.h"
 #include <EVENT/LCCollection.h>
 #include <EVENT/LCGenericObject.h>
@@ -26,8 +24,6 @@
 #include <bitset>
 #include "UTIL/LCTOOLS.h"
 #include "UTIL/CellIDEncoder.h"
-#include <EVENT/LCGenericObject.h>
-#include "IMPL/LCCollectionVec.h"
 #include "IMPL/LCEventImpl.h"
 #include "IMPL/CalorimeterHitImpl.h"
 #include <IMPL/LCRunHeaderImpl.h>
@@ -38,6 +34,7 @@
 #include "Streamout/DIFUnpacker.h"
 #include <sstream>
 #include <set>
+#include "Progress.h"
 std::map<int, unsigned long long> BCID_old;
 // int _NbrRun=0;
 std::map<int, TH1F *> HistoTimeAsic1;
