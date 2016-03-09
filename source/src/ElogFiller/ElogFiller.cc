@@ -1,7 +1,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include "tinyxml.h"
+#include "tinyxml/tinyxml.h"
 #include <cstdlib>
 
 const std::string elogcommand="elog";

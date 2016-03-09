@@ -3,7 +3,7 @@
 #include"Reader.h"
 #include<iostream>
 #include<string>
-#include "marlin/tinyxml.h"
+#include "tinyxml/tinyxml.h"
 
 class XMLReaderElog: public Reader
 {

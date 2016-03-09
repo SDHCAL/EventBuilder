@@ -27,6 +27,8 @@ if(COMPILER_SUPPORTS_CXX14)
 endif()
 
 
+add_definitions(-DTINYXML_USE_STL)
+
 find_library(LOCCI_SUPPORT NAMES occi)
 if(LOCCI_SUPPORT)
   message("LOCCI found")
