@@ -9,6 +9,7 @@
 #include"TGraph2D.h"
 #include<iostream>
 #include<vector>
+#include<array>
 //Singleton which will own all the Histos
 
 
