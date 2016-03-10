@@ -14,31 +14,151 @@
 #define  NbrChamber 2
 #define  NbrAsic 3
 #define  NbrPad 4
+enum Tresholds {Threshold1,Threshold2,Threshold3,Threshold12,Threshold23,Thresholdall,No};
+std::string HistoHandler::GiveName(std::string name,std::string Chamber,std::string Asic,std::string Pad,unsigned int Threshold)
+{
+  std::string real_name=name;
+  if(Chamber!="")real_name+="_"+Chamber;
+  if(Asic!="")real_name+="_"+Asic;
+  if(Pad!="")real_name+="_"+Pad;
+  if(Threshold==No) return real_name;
+  else real_name+="_"+Thresholds_name[Threshold];
+  std::cout<<red<<real_name<<normal<<std::endl;
+  return real_name;
+}
+//For Detector Plot and Detector_Threshold Plot
+  TH1* HistoHandler::ReturnTH1(std::string name,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,"","","",Threshold);
+    return InternReturnTH1(nam); 
+  }
+  TH2* HistoHandler::ReturnTH2(std::string name,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,"","","",Threshold);
+    return InternReturnTH2(nam); 
+  }
+  TH3* HistoHandler::ReturnTH3(std::string name,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,"","","",Threshold);
+    return InternReturnTH3(nam); 
+  }
+  TGraph* HistoHandler::ReturnTGraph(std::string name,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,"","","",Threshold);
+    return InternReturnTGraph(nam); 
+  }
+  TGraph2D* HistoHandler::ReturnTGraph2D(std::string name,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,"","","",Threshold);
+    return InternReturnTGraph2D(nam); 
+  }
+  //For Chamber Plot and Chamber_Threshold Plot
+  TH1* HistoHandler::ReturnTH1(std::string name,unsigned int Chamber,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,std::to_string(Chamber),"","",Threshold);
+    return InternReturnTH1(nam);
+  }
+  TH2* HistoHandler::ReturnTH2(std::string name,unsigned int Chamber,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,std::to_string(Chamber),"","",Threshold);
+    return InternReturnTH2(nam);
+  }
+  TH3* HistoHandler::ReturnTH3(std::string name,unsigned int Chamber,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,std::to_string(Chamber),"","",Threshold);
+    return InternReturnTH3(nam);
+  }
+  TGraph* HistoHandler::ReturnTGraph(std::string name,unsigned int Chamber,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,std::to_string(Chamber),"","",Threshold);
+    return InternReturnTGraph(nam);
+  }
+  TGraph2D* HistoHandler::ReturnTGraph2D(std::string name,unsigned int Chamber,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,std::to_string(Chamber),"","",Threshold);
+    return InternReturnTGraph2D(nam);
+  }
+  //For Asic Plot and Asic_Threshold Plot
+  TH1* HistoHandler::ReturnTH1(std::string name,unsigned int Chamber,unsigned int Asic,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,std::to_string(Chamber),std::to_string(Asic),"",Threshold);
+    return InternReturnTH1(nam);
+  }
+  TH2* HistoHandler::ReturnTH2(std::string name,unsigned int Chamber,unsigned int Asic,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,std::to_string(Chamber),std::to_string(Asic),"",Threshold);
+    return InternReturnTH2(name);
+  }
+  TH3* HistoHandler::ReturnTH3(std::string name,unsigned int Chamber,unsigned int Asic,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,std::to_string(Chamber),std::to_string(Asic),"",Threshold);
+    return InternReturnTH3(nam);
+  }
+  TGraph* HistoHandler::ReturnTGraph(std::string name,unsigned int Chamber,unsigned int Asic,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,std::to_string(Chamber),std::to_string(Asic),"",Threshold);
+    return InternReturnTGraph(nam);
+  }
+  TGraph2D* HistoHandler::ReturnTGraph2D(std::string name,unsigned int Chamber,unsigned int Asic,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,std::to_string(Chamber),std::to_string(Asic),"",Threshold);
+    return InternReturnTGraph2D(nam);
+  }
+  //For Pad PLot and Pad_Threshold Plot
+  TH1* HistoHandler::ReturnTH1(std::string name,unsigned int Chamber,unsigned int Asic,unsigned int Pad,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,std::to_string(Chamber),std::to_string(Asic),std::to_string(Pad),Threshold);
+    return InternReturnTH1(nam);
+  }
+  TH2* HistoHandler::ReturnTH2(std::string name,unsigned int Chamber,unsigned int Asic,unsigned int Pad,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,std::to_string(Chamber),std::to_string(Asic),std::to_string(Pad),Threshold);
+    return InternReturnTH2(nam);
+  }
+  TH3* HistoHandler::ReturnTH3(std::string name,unsigned int Chamber,unsigned int Asic,unsigned int Pad,unsigned int Threshold)
+  {
+    std::string nam=GiveName(name,std::to_string(Chamber),std::to_string(Asic),std::to_string(Pad),Threshold);
+    return InternReturnTH3(nam);
+  }
+  TGraph* HistoHandler::ReturnTGraph(std::string name,unsigned int Chamber,unsigned int Asic,unsigned int Pad,unsigned int Threshold=Thresholdall)
+  {
+    std::string nam=GiveName(name,std::to_string(Chamber),std::to_string(Asic),std::to_string(Pad),Threshold);
+    return InternReturnTGraph(nam);
+  }
+  TGraph2D* HistoHandler::ReturnTGraph2D(std::string name,unsigned int Chamber,unsigned int Asic,unsigned int Pad,unsigned int Threshold=Thresholdall)
+  {
+    std::string nam=GiveName(name,std::to_string(Chamber),std::to_string(Asic),std::to_string(Pad),Threshold);
+    return InternReturnTGraph2D(nam);
+  }
 
-TH1* HistoHandler::ReturnTH1(std::string& name)
+
+TH1* HistoHandler::InternReturnTH1(std::string& name)
 {
+
   if (TH1s.find(name)!=TH1s.end())return TH1s.find(name)->second;
-  else {std::cout<<"Impossible to find "<<name<<normal<<std::endl;return NULL;}
+  else {std::cout<<"Impossible to find "<<name<<normal<<std::endl;std::exit(1);}
 }
-TH2* HistoHandler::ReturnTH2(std::string& name)
+TH2* HistoHandler::InternReturnTH2(std::string& name)
 {
+
   if (TH2s.find(name)!=TH2s.end())return TH2s.find(name)->second;
-  else {std::cout<<"Impossible to find "<<name<<normal<<std::endl;return NULL;}
+  else {std::cout<<"Impossible to find "<<name<<normal<<std::endl;std::exit(1);}
 }
-TH3* HistoHandler::ReturnTH3(std::string& name)
+TH3* HistoHandler::InternReturnTH3(std::string& name)
 {
   if (TH3s.find(name)!=TH3s.end())return TH3s.find(name)->second;
-  else {std::cout<<"Impossible to find "<<name<<normal<<std::endl;return NULL;}
+  else {std::cout<<"Impossible to find "<<name<<normal<<std::endl;std::exit(1);}
 }
-TGraph* HistoHandler::ReturnTGraph(std::string& name)
+TGraph* HistoHandler::InternReturnTGraph(std::string& name)
 {
+
   if (TGraphs.find(name)!=TGraphs.end())return TGraphs.find(name)->second;
-  else {std::cout<<"Impossible to find "<<name<<normal<<std::endl;return NULL;}
+  else {std::cout<<"Impossible to find "<<name<<normal<<std::endl;std::exit(1);}
 }
-TGraph2D* HistoHandler::ReturnTGraph2D(std::string& name )
+TGraph2D* HistoHandler::InternReturnTGraph2D(std::string& name)
 {
   if (TGraph2Ds.find(name)!=TGraph2Ds.end())return TGraph2Ds.find(name)->second;
-  else {std::cout<<"Impossible to find "<<name<<normal<<std::endl;return NULL;}
+  else {std::cout<<"Impossible to find "<<name<<normal<<std::endl;std::exit(1);}
 }
 
 
@@ -120,11 +240,24 @@ void HistoHandler::CreateIt(std::vector<std::string>& tokens)
     }
     else
     {
-      unsigned int GenerateItForThresholds=Thresholds_name.size()-1;
-      if(tokens[Threshold]=="ThrOn")GenerateItForThresholds=0;
-      for(unsigned int i=GenerateItForThresholds;i!=Thresholds_name.size();++i)
+      unsigned int begin=0;
+      unsigned int end=Thresholds_name.size()-1;
+      
+      //if(tokens[Threshold]=="ThrOn")GenerateItForThresholds=0;
+      if(tokens[Threshold]=="ThrOne")
       {
-        std::string Titl=tokens[Title]+"_"+Thresholds_name[i];
+        begin=Thresholds_name.size()-2;        
+      }
+      if(tokens[Threshold]=="ThrOff")
+      {
+        begin=Thresholds_name.size()-1;
+        end=Thresholds_name.size();
+      }
+      for(unsigned int i=begin;i!=end;++i)
+      {
+        std::string Titl="";
+        if(end==Thresholds_name.size())Titl=tokens[Title];
+        else Titl=tokens[Title]+"_"+Thresholds_name[i];
         if(tokens[Type]=="TH1C") TH1s[Titl]=new TH1C(Titl.c_str(),Titl.c_str(),std::stoi(tokens[NBinsX]),std::stof(tokens[Xmin]),std::stof(tokens[Xmax]));
         else if (tokens[Type]=="TH1S") TH1s[Titl]=new TH1S(Titl.c_str(),Titl.c_str(),std::stoi(tokens[NBinsX]),std::stof(tokens[Xmin]),std::stof(tokens[Xmax]));
         else if (tokens[Type]=="TH1I") TH1s[Titl]=new TH1I(Titl.c_str(),Titl.c_str(),std::stoi(tokens[NBinsX]),std::stof(tokens[Xmin]),std::stof(tokens[Xmax]));
