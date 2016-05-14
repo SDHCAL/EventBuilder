@@ -178,17 +178,12 @@ int counttt=0;
 TriventProcessor::~TriventProcessor() {}
 //END GLOBAL VARIABLES
 
-void TriventProcessor::processRunHeader( LCRunHeader* run)
-{
-
-}
+void TriventProcessor::processRunHeader( LCRunHeader* run){}
 
 
 //GLOBAL VARIABLES
 std::vector<std::string>bcidnames;
 //END GLOBAL VARIABLES
-
-
 
 void TriventProcessor::init()
 { 
@@ -310,7 +305,6 @@ void TriventProcessor::Loop_On_Scintillator_Collection_unused(LCCollection *col3
 		  static int ggg=0;
 		  ScintillatorCoincidence.push_back(raw_scin2->getIntVal(3)+1);
 		  ggg++;
-		  //std::cout<<ggg<<std::endl;
 		  _Front_scintillator--;
 		  _Back_scintillator--;
 		  _Both_scintillator++;
@@ -473,12 +467,13 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	  unsigned int dif_id  = (raw_hit)->getCellID0() & 0xFF ;
 	  if(geom.GetDifType(dif_id)==scintillator)continue;
 	  if(geom.GetDifNbrPlate(dif_id)==-1) continue;
+	 
 	  if(raw_hit->getTimeStamp()<0)
 	    {
-	      std::vector<unsigned int>b{dif_id,(unsigned int)((raw_hit->getCellID0() & 0xFF00)>>8),(unsigned int)((raw_hit->getCellID0() & 0xFF00)>>16)}; Negative[b][raw_hit->getTimeStamp()]++;
+	      std::vector<unsigned int>b{dif_id,(unsigned int)((raw_hit->getCellID0() & 0xFF00)>>8),(unsigned int)((raw_hit->getCellID0() & 0x3F0000)>>16)}; Negative[b][raw_hit->getTimeStamp()]++;
 	      std::cout<<"TimeStamp <=-1 : "<<raw_hit->getTimeStamp()<<std::endl;
 	      if(raw_hit->getTimeStamp()<-1)HasTimeStampNegative=true;
-	      
+             
 	    }
 	  
 	}
@@ -490,6 +485,8 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
       if (raw_hit != nullptr) 
 	{
 	  unsigned int dif_id  = (raw_hit)->getCellID0() & 0xFF ;
+          int asic_id = ((raw_hit)->getCellID0() & 0xFF00)>>8;
+          int chan_id = ((raw_hit)->getCellID0() & 0x3F0000)>>16;
 	  if(geom.GetDifType(dif_id)==scintillator)continue;
 	  if(geom.GetDifNbrPlate(dif_id)==-1) 
 	    {
@@ -506,7 +503,10 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	    std::cout<<"TimeStamp <=-1 : "<<raw_hit->getTimeStamp()<<std::endl;
 	    continue;
 	    }*/
-	    
+
+    	
+	    //std::cout<<dif_id<<" "<<asic_id<<" "<<chan_id<<std::endl;
+	  HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Set_Calibration(dif_id,asic_id,chan_id,1.0);
 	  if(_TriggerTime==0 || raw_hit->getTimeStamp()<=_TriggerTime)
 	    {
 	      if(ihit==0)
@@ -685,7 +685,7 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 		{
 		  //if(abs(it->first-(val_middle-d))<=time)std::cout<<blue<<val_middle<<"  "<<d<<" "<<it->first<<normal<<" ";
 		  if(abs(it->first-(val_middle-d))<=_TimeWin_Noise){
-		    std::cout<<it->first<<"  "<<abs(it->first-(val_middle-d))<<"  "<<std::endl;
+		    //std::cout<<it->first<<"  "<<abs(it->first-(val_middle-d))<<"  "<<std::endl;
 		    EstimationNoiseBefore.insert(EstimationNoiseBefore.end(),it->second.begin(),it->second.end());}
 	
 		}
@@ -760,6 +760,13 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
       Writer(_NoiseWriter,"SDHCAL_HIT_NOISE",BehondTrigger, evtP,EventsNoise,1);
     }
   if(_WantDistribution==true) for(unsigned int i=0;i<HistoPlanes.size();++i)HistoPlanes[i]->Fill_TH1_Hit_In_Pad_Per_RamFull();
+  std::ofstream file22( "Mask.txt", std::ios_base::out );
+  TFile f("Mask.root","recreate");
+  TTree t1("t1","Mask");
+  for(unsigned int i=0;i<HistoPlanes.size();++i)HistoPlanes[i]->SaveCalibrationMap(file22,SinCos,geom,i,HistoPlanes.size(),t1);
+  file22.close();
+  t1.Write();
+  f.Close();
 }//end processCollection
 
 void TriventProcessor::end()
@@ -767,7 +774,8 @@ void TriventProcessor::end()
   
   std::string name="Results_"+ patch::to_string(_NbrRun)+".root";
   TFile *hfile = new TFile(name.c_str(),"RECREATE","Results");
-  
+    std::ofstream file22("Masquer.txt",std::ios_base::out); 
+
   /*for(std::map<int,TGraphTime*>::iterator it=time_graph.begin();it!=time_graph.end();++it)
   {
       std::string name = "a"+to_string(it->first);
@@ -937,18 +945,20 @@ void TriventProcessor::end()
       std::cin>>reponse;
       std::string OracleDB = "s=oa.OracleAccess(\""+_Database_name+"_"+reponse+"\")";
       if (firstPass)
-      	for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i]->Get_Calibration(1,254,10,false);
+      	for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i]->Get_Calibration(/*1,254,10,false*/);
       else
       	{
 	  read_calibration("Calib.txt");
-	  for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i]->Get_Calibration(0,1,10,true);
+	  for(unsigned int i=0;i<HistoPlanes.size();++i) HistoPlanes[i]->Get_Calibration(/*0,1,10,true*/);
       	}
       file<<"import OracleAccess as oa"<<std::endl;
       file<<OracleDB<<std::endl;
       for(unsigned int i=0;i<HistoPlanes.size();++i)
     	{
 	  HistoPlanes[i]->Print_Calibration(file);
+			HistoPlanes[i]->SaveCalibration(file);
     	} 
+      
       file<<"s.uploadChanges()"<<std::endl;
       file.close();
       save_calibration("Calib.txt");

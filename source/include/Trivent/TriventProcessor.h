@@ -201,6 +201,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
   }
   for(std::vector<RawCalorimeterHit *>::iterator it=vec.begin(); it!=vec.end(); ++it) 
   {
+    
     CalorimeterHitImpl* caloHit = new CalorimeterHitImpl();
     int dif_id  = (*it)->getCellID0() & 0xFF ;
     int asic_id = ((*it)->getCellID0() & 0xFF00)>>8;
@@ -330,7 +331,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
     {
       hs2.Fill(fill,1);
 		  hss2.Fill(fill2,1);
-	  }
+    }
     //int a,b,c,d;
     //if(Delimiter.find(dif_id)==Delimiter.end()){a=Delimiter[1][0];b=Delimiter[1][1];c=Delimiter[1][2];d=Delimiter[1][3];}
     //else {a=Delimiter[dif_id][0];b=Delimiter[dif_id][1];c=Delimiter[dif_id][2];d=Delimiter[dif_id][3];}

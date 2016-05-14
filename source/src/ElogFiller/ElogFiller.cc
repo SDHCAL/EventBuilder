@@ -3,11 +3,32 @@
 #include <iostream>
 #include "tinyxml.h"
 #include <cstdlib>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <iostream>
+#include <fstream>
+using namespace std;
 
+/*int main()
+{
+    ifstream iFile("~/SDHCAL/python/Geom.xml");	// input.txt has integers, one per line
+
+    while (!iFile.eof())
+    {
+    	int x;
+    	iFile >> x;
+    	cerr << x << endl;
+    }
+
+    return 0;
+}*/
 const std::string elogcommand="elog";
 const std::string hostname="lyosvn.in2p3.fr";
+//const std::string hostname="localhost";
 const std::string logbook="GIF";
 const std::string port="443";
+//const std::string port="8080";
 const std::string subdir="elog";
 std::string username_password="";
 
@@ -35,6 +56,7 @@ void Read(std::string& FileName,std::string& parameters)
   std::string TcheScinti="";
   std::string Scintillator=" -a Scintillator=\"Not Set\"";
   std::string Tcherenkov=" -a Tcherenkov=No";
+  std::string PositionDet="";
   unsigned int PlateNumber=0;
   TiXmlDocument doc(FileName.c_str());
   doc.LoadFile();
@@ -46,6 +68,22 @@ void Read(std::string& FileName,std::string& parameters)
   else
   {
     TiXmlHandle hdl(&doc);
+    TiXmlElement* Detectorr = hdl.FirstChildElement().Element();
+    if(Detectorr->Attribute("PositionX")!=NULL)
+    {
+	std::string e=Detectorr->Attribute("PositionX");
+	PositionDet+=" -a \"Position Bati X\"="+e+" ";
+    }
+    if(Detectorr->Attribute("PositionY")!=NULL)
+    {
+	std::string e=Detectorr->Attribute("PositionY");
+	PositionDet+=" -a \"Position Bati Y\"="+e+" ";
+    }
+    if(Detectorr->Attribute("PositionZ")!=NULL)
+    {
+	std::string e=Detectorr->Attribute("PositionZ");
+	PositionDet+=" -a \"Position Bati Z\"="+e+" ";
+    }
     TiXmlElement* Platee = hdl.FirstChildElement().FirstChildElement().Element();
     TiXmlElement* Diff=nullptr;
     unsigned int DifNumber=0;
@@ -129,19 +167,19 @@ void Read(std::string& FileName,std::string& parameters)
     }
   }
   for(unsigned int i=1;i!=PlateNumber+1;++i) HVs+=" -a HV"+std::to_string(i)+"=\"Not Set\"";
-  parameters+=Types+" "+HVChannels+" "+GasChannels+" "+DifTypes+" -a \"Number Dif\"="+Numbers[PlateNumber]+" "+Dif_Ids+" "+zs+" "+HVs+" "+ Tcherenkov+" "+Scintillator+" "+TcheScinti+" " ;
+  parameters+=Types+" "+PositionDet+" "+HVChannels+" "+GasChannels+" "+DifTypes+" -a \"Number Dif\"="+Numbers[PlateNumber]+" "+Dif_Ids+" "+zs+" "+HVs+" "+ Tcherenkov+" "+Scintillator+" "+TcheScinti+" " ;
 }
 
 void FillElogPlease(std::string Filename,std::string run,std::string daqname)
 {
   std::string FileNam=Filename;
-  std::string command_part=elogcommand+" -h "+hostname+" -d "+subdir+" -s -l "+logbook+" -p "+port+" -u "+username_password+" -x ";
+  std::string command_part=elogcommand+" -h "+hostname+" -d "+subdir+" -l "+logbook+" -p "+port+" -u "+username_password+" -x -s ";
   std::string defaults="-a Good=\"Not Set\"  -a Beam=\"Not Set\" -a Source=\"Not Set\" -a Gaz=CMS";
-  defaults+=" -a Run="+run+" -a \"DAQ Name\"="+daqname+" ";
+  defaults+=" -a Author=DAQ -a Run="+run+" -a \"DAQ Name\"="+daqname+" -a Type=Data ";
   std::string parameters="";
   Read(FileNam,parameters);
-  std::string command=command_part+" "+defaults+" "+parameters+"\" \"";
-  std::cout<<command_part+" "+defaults+" "+parameters+"\" \""<<std::endl;
+  std::string command=command_part+" "+defaults+" "+parameters+" -m ~/SDHCAL/python/Geom.xml \" \"";
+  std::cout<<command_part+" "+defaults+" "+parameters+" -m ~/SDHCAL/python/Geom.xml \" \""<<std::endl;
   int good =std::system(command.c_str());
 }
 
@@ -150,6 +188,7 @@ void FillElogPlease(std::string Filename,std::string run,std::string daqname)
 
 int main(int argc, char *argv[])
 {
+  
   char* cpath=getenv("EventBuilder");
   if (cpath == NULL) std::cout<<"Please add EventBuilder path"<<std::endl;
   std::string confdb(cpath);
