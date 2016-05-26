@@ -592,8 +592,8 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	} //end  if (raw_hit != nullptr) 
     } //end for (int ihit=0; ihit < numElements; ++ihit) 
   if(Times.size()==0) std::cout<<red<<" 0 hits within the the TriggerTime given... You should verify your TriggerTime or your run is triggerless "<<normal<<std::endl;
-  unsigned int  long long global_min=HistoPlanes[0]->Get_local_min();
-  unsigned int long long  global_max=HistoPlanes[0]->Get_local_max();
+  int  long long global_min=HistoPlanes[0]->Get_local_min();
+  int long long  global_max=HistoPlanes[0]->Get_local_max();
   for(unsigned int i=0;i<HistoPlanes.size();++i) 
     { 
       HistoPlanes[i]->Set_Total_Time(); 
@@ -760,9 +760,9 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
       Writer(_NoiseWriter,"SDHCAL_HIT_NOISE",BehondTrigger, evtP,EventsNoise,1);
     }
   if(_WantDistribution==true) for(unsigned int i=0;i<HistoPlanes.size();++i)HistoPlanes[i]->Fill_TH1_Hit_In_Pad_Per_RamFull();
-  std::ofstream file22( "Mask.txt", std::ios_base::out );
-  TFile f("Mask.root","recreate");
-  TTree t1("t1","Mask");
+  std::ofstream file22( "Mask"+std::to_string(_NbrRun)+".root", std::ios_base::out );
+  TFile f(("Mask"+std::to_string(_NbrRun)+".root").c_str(),"recreate");
+  TTree t1("Mask","Mask");
   for(unsigned int i=0;i<HistoPlanes.size();++i)HistoPlanes[i]->SaveCalibrationMap(file22,SinCos,geom,i,HistoPlanes.size(),t1);
   file22.close();
   t1.Write();

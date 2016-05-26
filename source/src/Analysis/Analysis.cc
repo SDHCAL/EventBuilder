@@ -43,9 +43,20 @@
 #define size_strip 2.5
 #define degtorad 0.0174532925
 #include "HistoHandler/HistoHandler.h"
+#include "THnSparse.h"
 
-HistoHandler& hists = HistoHandler::getInstance( );
+//HistoHandler& hists = HistoHandler::getInstance( );
 using namespace std;
+
+
+//int bin2[3]={310,310,100};
+//double xmin2[3]={0,0,0};
+//double xmax2[3]={310,310,100};
+//extern TCanvas* canvas;
+//THnSparseI hs("Noise", "Noise", 3, bin2, xmin2, xmax2);
+
+
+
 ReaderFactory readerFactory;
 std::vector<std::vector<std::array<double,7>>>useforrealrate;
 std::map<std::string,std::vector<std::vector<TH1F*>>>Short_Efficiency;
@@ -84,8 +95,10 @@ std::array<std::string,6>Thresholds_name{"Threshold1","Threshold2","Threshold3",
 std::map<std::string,std::vector<TH2F*>>Distribution_hits;
 std::array<std::map<std::string,std::vector<TH2F*>>,6>All_The_Hits_From_Trivent;
 std::array<std::map<std::string,std::vector<TH2F*>>,6>Efficiency_pads;
+std::array<std::map<std::string,std::vector<TH2F*>>,6>Efficiency_pads_error;
 std::array<std::map<std::string,std::vector<TH2F*>>,6>Multiplicity_pads;
 std::array<std::map<std::string,std::vector<TH2F*>>,6>Efficiency_asics;
+std::array<std::map<std::string,std::vector<TH2F*>>,6>Efficiency_asics_error;
 std::map<std::string,std::vector<TH1F*>>HowLongFromExpectedX;
 std::map<std::string,std::vector<TH1F*>>HowLongFromExpectedY;
 std::map<std::string,std::vector<TH2D*>>difxy;
@@ -368,7 +381,7 @@ std::array<double,6> hitsInPlan::countHitAt(double& x, double& y, double dlim,in
       HowLongFromExpectedY[collectionName][cd(*it)["K"]-1]->Fill((*it)->getPosition()[1]-y);
     }
   }
-  for(int i=0;i!=Threshold_Counters.size();++i)
+  for(unsigned int i=0;i!=Threshold_Counters.size();++i)
   {
     Efficiency_per_pad[collectionName][i][IJKexpected].push_back(Threshold_Counters[i]);
   }
@@ -460,7 +473,7 @@ void Tracks(std::map<std::string,std::map<int,hitsInPlan>>& mapDIFplan,Geometry 
         double I=cg*cb*1.0/size_pad*(hp.barycentreX()-geometryplans[PlaneNbr[i]].GetX0())+sg*cb*1.0/size_pad*(hp.barycentreY()-geometryplans[PlaneNbr[i]].GetY0())+-sb*geometryplans[PlaneNbr[i]].GetZ0();
         double J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(hp.barycentreX()-geometryplans[PlaneNbr[i]].GetX0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(hp.barycentreY()-geometryplans[PlaneNbr[i]].GetY0())+cb*sa*geometryplans[PlaneNbr[i]].GetZ0();
         int K=geometryplans[PlaneNbr[i]].NbrPlate();
-	std::array<double,7>Vec={ceil(I),ceil(J),double(K),double(istouched),hp.barycentreX(),hp.barycentreY(),geometryplans[PlaneNbr[i]].GetZ0()};
+	std::array<double,7>Vec{{ceil(I),ceil(J),double(K),double(istouched),hp.barycentreX(),hp.barycentreY(),geometryplans[PlaneNbr[i]].GetZ0()}};
         XYZExpected.push_back(Vec);
         hp.computeMaxima(); //NB : computation results are not used
         grxz.SetPoint(i,hp.barycentreZ(),hp.barycentreX());
@@ -500,7 +513,7 @@ void Tracks(std::map<std::string,std::map<int,hitsInPlan>>& mapDIFplan,Geometry 
         double J=(-sg*ca+cg*sb*sa)*1.0/size_pad*(iexp-geometryplans[othersNbr[i]].GetX0())+(cg*ca+sg*sb*sa)*1.0/size_pad*(jexp-geometryplans[othersNbr[i]].GetY0())+cb*sa*geometryplans[othersNbr[i]].GetZ0();
         int K=geometryplans[othersNbr[i]].NbrPlate();
        //std::cout<<red<<Zexpp<<"  "<<"  "<<"  "<<I<<"  "<<J<<"  "<<K<<"  "<<int(ceil(I))<<"  "<<int(ceil(J))<<"  "<<istouched<<normal<<std::endl;
-        std::array<double,7>Vec={ceil(I),ceil(J),double(K),double(istouched),iexp,jexp,Zexpp};
+        std::array<double,7>Vec{{ceil(I),ceil(J),double(K),double(istouched),iexp,jexp,Zexpp}};
         XYZExpected.push_back(Vec);
         
         
@@ -565,7 +578,7 @@ AnalysisProcessor::AnalysisProcessor() : Processor("AnalysisProcessorType")
     _Chi2 = 1.0;
     registerProcessorParameter("Chi2" ,"Value of the Chi2  ",_Chi2 ,_Chi2);
     _Chi2Rate = 100.0;
-    registerProcessorParameter("Chi2" ,"Value of the Chi2 for Rate estimation  ",_Chi2Rate ,_Chi2Rate);
+    registerProcessorParameter("Chi2Noise" ,"Value of the Chi2 for Rate estimation  ",_Chi2Rate ,_Chi2Rate);
     _NbrHitPerPlaneMax = 6;
     registerProcessorParameter("NbrHitPerPlaneMax" ,"Maximal number of Hit in each Plane (<=6 by default)  ",_NbrHitPerPlaneMax ,_NbrHitPerPlaneMax);
     _NbrPlaneUseForTracking = 3;
@@ -592,9 +605,16 @@ AnalysisProcessor::~AnalysisProcessor() {}
 void AnalysisProcessor::init()
 {
     Intro();
-    std::vector<std::string>a{"TH1D;ThrOn;NAME;100000;0;1.5"};
-    std::vector<std::string>b;
-    hists.RegisterHistos(a,a,a,a);
+    //////Noise/////////////
+    //_NoiseWriter = LCFactory::getInstance()->createLCWriter() ;
+   // _NoiseWriter->setCompressionLevel( 2 ) ;
+    //_NoiseWriter->open(_noiseFileName.c_str(),LCIO::WRITE_NEW) ;
+    ////////////////////////
+    ////////////////////////
+    //std::vector<std::string>a{"TH1D;ThrOn;NAME;100000;0;1.5"};
+    //std::vector<std::string>b;
+    //hists.RegisterHistos(a,a,a,a);
+      std::cout<<"Here 11"<<std::endl; 
     _maxRecord= Global::parameters->getIntVal("MaxRecordNumber")-1;
     _skip= Global::parameters->getIntVal("SkipNEvents");
     if(EstimateNoiseContamination==true)
@@ -602,11 +622,13 @@ void AnalysisProcessor::init()
       names.push_back("NOISE_ESTIMATION_BEFORE");
       names.push_back("NOISE_ESTIMATION_AFTER");
     }
+      std::cout<<"Here 12"<<std::endl; 
     std::vector<std::string>LCIOFiles;
     Global::parameters->getStringVals("LCIOInputFiles" ,LCIOFiles );
 
    for(unsigned int i=0;i!=LCIOFiles.size();++i)
    {
+    std::cout<<LCIOFiles[i]<<std::endl;
     LCReader* lcReader = LCFactory::getInstance()->createLCReader() ;
     std::vector<std::string>colee{"SDHCAL_HIT"};
     lcReader->open( LCIOFiles[i] ) ;
@@ -617,7 +639,7 @@ void AnalysisProcessor::init()
    std::cout<<_GlobalEventsSc<<"  "<<_GlobalEvents<<std::endl;
     printParameters();
     Reader* myReader = readerFactory.CreateReader(_ReaderType);
-
+ std::cout<<"Here 13"<<std::endl; 
     if(myReader)
     {
       myReader->Read(_FileNameGeometry,geom);
@@ -644,6 +666,8 @@ void AnalysisProcessor::init()
         std::string AllTheHits="All_The_Hits_From_Trivent"+ std::to_string(it->first +1 );
         std::string c="Efficiency_of_the_voisinage_of_the_pad"+ std::to_string(it->first +1 );
         std::string d="Efficiency_of_the Asic_"+ std::to_string(it->first +1 );
+        std::string cerror="Error_in_Efficiency_of_the_voisinage_of_the_pad"+ std::to_string(it->first +1 );
+        std::string derror="Error_in_Efficiency_of_the Asic_"+ std::to_string(it->first +1 );
         std::string e="Distance_to_the_expected_hit_in_X_"+ std::to_string(it->first +1 );
         std::string f="Distance_to_the_expected_hit_in_Y_"+ std::to_string(it->first +1 );
         std::string g="Multiplicity_of_the_voisinage_of_the_pad_"+ std::to_string(it->first +1 );
@@ -714,6 +738,8 @@ void AnalysisProcessor::init()
               All_The_Hits_From_Trivent[j][names[i]].push_back(new TH2F((AllTheHits+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(AllTheHits+names[i]).c_str(),X,0,X,Y,0,Y));
               Efficiency_pads[j][names[i]].push_back(new TH2F((c+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(c+names[i]).c_str(),X,0,X,Y,0,Y));
               Efficiency_asics[j][names[i]].push_back(new TH2F((d+names[i]+Thresholds_name[j]).c_str(),(d+names[i]).c_str(),X,0,X,Y,0,Y));
+              Efficiency_pads_error[j][names[i]].push_back(new TH2F((cerror+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(cerror+names[i]).c_str(),X,0,X,Y,0,Y));
+              Efficiency_asics_error[j][names[i]].push_back(new TH2F((derror+names[i]+Thresholds_name[j]).c_str(),(derror+names[i]).c_str(),X,0,X,Y,0,Y));
               Multiplicity_pads[j][names[i]].push_back(new TH2F((g+names[i]+Thresholds_name[j]).c_str(),(g+names[i]).c_str(),X,0,X,Y,0,Y));
             }
 
@@ -731,6 +757,8 @@ void AnalysisProcessor::init()
             //All_The_Hits_From_Trivent[j][names[i]].push_back(new TH2F((AllTheHits+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(AllTheHits+names[i]).c_str(),X,0,X,Y,0,Y));
             Efficiency_pads[j][names[i]].push_back(new TH2F((c+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(c+names[i]).c_str(),X,0,X,Y,0,Y));
             Efficiency_asics[j][names[i]].push_back(new TH2F((d+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(d+names[i]).c_str(),X,0,X,Y,0,Y));
+             Efficiency_pads_error[j][names[i]].push_back(new TH2F((cerror+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(cerror+names[i]).c_str(),X,0,X,Y,0,Y));
+              Efficiency_asics_error[j][names[i]].push_back(new TH2F((derror+names[i]+Thresholds_name[j]).c_str(),(derror+names[i]).c_str(),X,0,X,Y,0,Y));
             Multiplicity_pads[j][names[i]].push_back(new TH2F((g+"_"+names[i]+"_"+Thresholds_name[j]).c_str(),(g+names[i]).c_str(),X,0,X,Y,0,Y));
             }
             HowLongFromExpectedX[names[i]].push_back(new TH1F((e+names[i]).c_str(),(e+names[i]).c_str(),2*(_dlimforPad),-_dlimforPad,_dlimforPad));
@@ -739,6 +767,7 @@ void AnalysisProcessor::init()
           }
         }
       }
+      std::cout<<"Here 14"<<std::endl; 
       if(_ShortEfficiency!=0)
 	    {
 		    for(unsigned int i=0;i<testedPlanList.size();++i)
@@ -774,7 +803,6 @@ void AnalysisProcessor::init()
 
 void AnalysisProcessor::processEvent( LCEvent * evtP )
 {
-     
   _NbrRun=evtP->getRunNumber();
 
   if(isFirstEvent()==true)
@@ -823,7 +851,6 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
       		}
     	}
     }
-
   Planss.clear();
 
   if (evtP == nullptr) 
@@ -865,7 +892,6 @@ void AnalysisProcessor::processEvent( LCEvent * evtP )
   // NB si Planss est vide, testedPlan::testYou ne fait rien
   for (std::vector<testedPlan>::iterator iter=testedPlanList.begin(); iter != testedPlanList.end(); ++iter) iter->testYou(Planss,testedPlanList);
   PrintStatShort();     
- 
 }
 
 void AnalysisProcessor::processRunHeader( LCRunHeader* run)
@@ -893,6 +919,14 @@ void AnalysisProcessor::end()
 	        }
 	        std::cout<<red<<i<<"  "<<itt->first<<"  "<<it->first[2]-1<<"  "<<it->first[0]<<"  "<<it->first[1]<<normal<<std::endl;
           Efficiency_pads[i][itt->first][it->first[2]-1]->Fill(it->first[0],it->first[1],was_at_least_a_hit*1.0/(it->second).size());
+          Efficiency_pads_error[i][itt->first][it->first[2]-1]->Fill
+	  (
+		it->first[0],
+		it->first[1],
+	  	std::sqrt(
+			was_at_least_a_hit*1.0/(it->second).size()*(1-was_at_least_a_hit*1.0/(it->second).size())/std::sqrt((it->second).size())
+			 )
+	  );
           if(was_at_least_a_hit!=0)Multiplicity_pads[i][itt->first][it->first[2]-1]->Fill(it->first[0],it->first[1],number_of_hits*1.0/was_at_least_a_hit);
       }
       }
@@ -1135,6 +1169,7 @@ void AnalysisProcessor::end()
         {
         
         Efficiency_pads[j][names[naa]][i]->Write();
+	Efficiency_pads_error[j][names[naa]][i]->Write();
         Multiplicity_pads[j][names[naa]][i]->Write();
         
         }
@@ -1152,6 +1187,7 @@ void AnalysisProcessor::end()
           for(unsigned int j=0;j<Efficiency_pads.size();++j)
           {
             delete Efficiency_pads[j][names[naa]][i];
+            delete Efficiency_pads_error[j][names[naa]][i];
             delete Multiplicity_pads[j][names[naa]][i];
           }
           if(_ShortEfficiency!=0) 

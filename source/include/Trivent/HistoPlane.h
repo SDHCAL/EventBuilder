@@ -141,8 +141,8 @@ class HistoPlane
 				unsigned int NbrPlate =geom.GetDifNbrPlate(it->first)-1;
     				float Z= geom.GetPlatePositionZ(NbrPlate);
     				unsigned int K =geom.GetDifNbrPlate(it->first);
-    				unsigned int I=0;
-    				unsigned int J=0;
+    				I=0;
+    				J=0;
     				if(geom.GetDifType(it->first)==pad) 
     				{
       					I =(1+MapILargeHR2[j]+AsicShiftI[i+1])+geom.GetDifPositionX(dif_id);

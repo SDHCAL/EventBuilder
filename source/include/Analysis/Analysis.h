@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 #include "Config/Config.h"
-
+#include "THnSparse.h"
 enum Threshold{Threshold_2=1,Threshold_1,Threshold_3};
 //class hitsInPlan;
 
@@ -50,6 +50,7 @@ public:
 protected:
  
     LCWriter* _EventWriter;
+    LCWriter* _NoiseWriter;
     std::string _FileNameGeometry;
     unsigned int _eventNr;
     unsigned int _skip;

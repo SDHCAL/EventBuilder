@@ -330,7 +330,7 @@ void TriventProcessor::FillIJK(std::vector<RawCalorimeterHit *>vec, LCCollection
     else if (IsNoise==0) 
     {
       hs2.Fill(fill,1);
-		  hss2.Fill(fill2,1);
+      hss2.Fill(fill2,1);
     }
     //int a,b,c,d;
     //if(Delimiter.find(dif_id)==Delimiter.end()){a=Delimiter[1][0];b=Delimiter[1][1];c=Delimiter[1][2];d=Delimiter[1][3];}
@@ -400,7 +400,7 @@ void TriventProcessor::CalculateEfficiencyScinti(std::vector<RawCalorimeterHit *
       else I =2*(64-chan_id)-1+geom.GetDifPositionX(dif_id);
       J =0;
     }
-      int a,b,c,d;
+      unsigned int a,b,c,d;
       
 	    if(Delimiter.find(dif_id)==Delimiter.end()){a=Delimiter[1][0];b=Delimiter[1][1];c=Delimiter[1][2];d=Delimiter[1][3];}
 	    else {a=Delimiter[dif_id][0];b=Delimiter[dif_id][1];c=Delimiter[dif_id][2];d=Delimiter[dif_id][3];}
@@ -422,9 +422,9 @@ void TriventProcessor::Writer(IO::LCWriter* file,const char * name,std::map<int,
   LCCollectionVec* col_event = new LCCollectionVec(LCIO::CALORIMETERHIT);
   col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_LONG));
   col_event->setFlag(col_event->getFlag()|( 1 << LCIO::RCHBIT_TIME));
-  CellIDEncoder<CalorimeterHitImpl> cd( "I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7" ,col_event) ;
+  CellIDEncoder<CalorimeterHitImpl> cd("I:8,J:7,K:10,Dif_id:8,Asic_id:6,Chan_id:7",col_event) ;
   for(std::map<int,std::vector<RawCalorimeterHit *> >::iterator itt=vec.begin(); itt!=vec.end(); ++itt) 
-	{
+  {
     FillIJK((itt->second),col_event,cd,IsNoise);
   }
   evt->addCollection(col_event,name);
