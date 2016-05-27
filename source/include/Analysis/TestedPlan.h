@@ -120,7 +120,7 @@ public:
     }
     inline double GetNumberOK(int i,std::string name)
     {
-       if(nombreTestsOK.find(name)==nombreTestsOK.end())return -1;
+       if(nombreTestsOK.find(name)==nombreTestsOK.end())return 0;
        else return nombreTestsOK[name][i];
     }
     inline double multiplicity(int i,std::string name)
@@ -132,8 +132,7 @@ public:
     {
         if(sommeNombreHits.find(name)==sommeNombreHits.end())
         {
-          std::cout<<red<<name<<" unknown"<<std::endl;
-          return -1; 
+          return 0; 
         }
         else return sommeNombreHits[name][i];
     }

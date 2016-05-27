@@ -153,13 +153,13 @@ void testedPlan::print(std::string name)
 {
     std::cout<<red<<"Plane Number (in geometry file): "<<geomplan.NbrPlate()+1<<" Z = "<<geomplan.GetZ0()<<" : "<<normal<<std::endl;
     std::cout<<blue<<"Number of Test : "<<Counts[name][0]<<"; with >="<<_NbrPlaneUseForTracking<<" planes for tracking : "<<Counts[name][1]<<"; with ChiXZ <"<<_Chi2<<" : "<<Counts[name][2]<<"; with ChiYZ <"<<_Chi2<<" : "<<Counts[name][3]<<" ; with track in the Delimiters "<<nombreTests[name]<<"; with hits in it : "<<Counts[name][4]<<" ; "<<normal<<std::endl;
-    std::cout<<red<<"with hits in dlim : "<<normal<<std::endl;
+    std::cout<<red<<"with hits in dlim   : "<<normal;
     for(unsigned int i=0;i!=Thresholds_name.size();++i)
     {
     std::cout<<Thresholds_name[i]<<" : "<<GetNumberOK(i,name)<<" "<<normal;
     }
     std::cout<<std::endl;
-    std::cout<<red<<"Sum of hits in dlim : "<<normal<<std::endl;
+    std::cout<<red<<"Sum of hits in dlim : "<<normal;
     for(unsigned int i=0;i!=Thresholds_name.size();++i)
     {
     std::cout<<Thresholds_name[i]<<" : "<<GetNombreHits(i,name)<<" "<<normal;
@@ -620,7 +620,6 @@ void AnalysisProcessor::init()
     //std::vector<std::string>a{"TH1D;ThrOn;NAME;100000;0;1.5"};
     //std::vector<std::string>b;
     //hists.RegisterHistos(a,a,a,a);
-      std::cout<<"Here 11"<<std::endl; 
     _maxRecord= Global::parameters->getIntVal("MaxRecordNumber")-1;
     _skip= Global::parameters->getIntVal("SkipNEvents");
     if(EstimateNoiseContamination==true)
@@ -628,7 +627,6 @@ void AnalysisProcessor::init()
       names.push_back("NOISE_ESTIMATION_BEFORE");
       names.push_back("NOISE_ESTIMATION_AFTER");
     }
-      std::cout<<"Here 12"<<std::endl; 
     std::vector<std::string>LCIOFiles;
     Global::parameters->getStringVals("LCIOInputFiles" ,LCIOFiles );
 
@@ -645,7 +643,6 @@ void AnalysisProcessor::init()
    std::cout<<_GlobalEventsSc<<"  "<<_GlobalEvents<<std::endl;
     printParameters();
     Reader* myReader = readerFactory.CreateReader(_ReaderType);
- std::cout<<"Here 13"<<std::endl; 
     if(myReader)
     {
       myReader->Read(_FileNameGeometry,geom);
@@ -775,7 +772,6 @@ void AnalysisProcessor::init()
           }
         }
       }
-      std::cout<<"Here 14"<<std::endl; 
       if(_ShortEfficiency!=0)
 	    {
 		    for(unsigned int i=0;i<testedPlanList.size();++i)
