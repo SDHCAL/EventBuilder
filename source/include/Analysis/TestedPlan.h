@@ -125,7 +125,7 @@ public:
     }
     inline double multiplicity(int i,std::string name)
     {
-        if(sommeNombreHits.find(name)==sommeNombreHits.end()||sommeNombreHits.find(name)==sommeNombreHits.end())return -1; 
+        if(sommeNombreHits.find(name)==sommeNombreHits.end())return -1; 
         else return sommeNombreHits[name][i]/nombreTestsOK[name][i];
     }
      inline double GetNombreHits(int i,std::string name)
@@ -137,8 +137,16 @@ public:
         }
         else return sommeNombreHits[name][i];
     }
-    
-    
+    inline double error(int i,std::string name)
+    {
+        if(efficiency(i,name)==-1)return -1; 
+        else return sqrt(GetNumberOK(i,name)*efficiency(i,name)*(1-efficiency(i,name)))*1.0/GetNumberOK(i,name);
+    }
+    inline double errorShort(int i,std::string name)
+    {
+        if(efficiencyShort(i,name)==-1)return -1; 
+        else return sqrt(GetNumberOKShort(i,name)*efficiencyShort(i,name)*(1-efficiencyShort(i,name)))*1.0/GetNumberOKShort(i,name);
+    }
     inline float get_ca(){return geomplan.get_ca();};
     inline float get_sa(){return geomplan.get_sa();};
     inline float get_cb(){return geomplan.get_cb();};

@@ -559,9 +559,11 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	      //{
 	      if(HasTimeStampNegative==false)
 		{
+		  double timestamp=raw_hit->getTimeStamp();
 		  HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Set_hit_trigger();
 		  Times[raw_hit->getTimeStamp()]++;
 		  RawHits[raw_hit->getTimeStamp()].push_back(raw_hit);//}
+		  HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_TH1_Timestamps_Distribution(dif_id,asic_id,chan_id,timestamp);
 		}
 	      //else std::cout<<"I do nothing"<<std::endl;
 	      ////////////////////////////////////////
@@ -575,8 +577,10 @@ void TriventProcessor::processCollection(EVENT::LCEvent *evtP,LCCollection* col)
 	      //{
 	      if(HasTimeStampNegative==false)
 		{
+                  double timestamp=raw_hit->getTimeStamp();
 		  HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Set_hit_other();
 		  BehondTrigger[raw_hit->getTimeStamp()].push_back(raw_hit);
+		  HistoPlanes[geom.GetDifNbrPlate(dif_id)-1]->Fill_TH1_Timestamps_Distribution(dif_id,asic_id,chan_id,timestamp);
 		}
 	      //else std::cout<<"I do nothing"<<std::endl;
 	      //}

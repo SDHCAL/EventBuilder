@@ -70,6 +70,7 @@ class HistoPlane
   void inline Write_TH1_Hit_In_Pad_Per_RamFull(TFile* file,std::string plate)
   {
         Plate_Dist->Write();
+	Plate_Dist2->Write();
 	for(unsigned int i=0;i<_Difs_Names.size();++i)
 	{
                 std::string Diff=plate+"/Dif"+ patch::to_string(_Difs_Names[i])+"Plane"+patch::to_string(NbrPlatee+1);
@@ -77,6 +78,7 @@ class HistoPlane
     		file->cd(Diff.c_str());
                 std::vector<int>a={_Difs_Names[i]};
 	 	Difs_Distr[a[0]]->Write();
+		Difs_Distr2[a[0]]->Write();
 		for(unsigned int j=1;j<=48;++j)
 		{
                         std::string Asicc=Diff+"/AsicinDif"+ patch::to_string(a[0]);
@@ -87,6 +89,7 @@ class HistoPlane
                         file->cd(Asicc.c_str());
                         a.push_back(j);
                         Asics_Distr[a]->Write();
+			Asics_Distr2[a]->Write();
 			for(unsigned int k=0;k<=63;++k)
 		        {
                           std::string Padd=Asicc+"/PadsinAsic"+ patch::to_string(j);
@@ -97,6 +100,7 @@ class HistoPlane
 			  }
                           a.push_back(k);
                           Pads_Distr[a]->Write();
+			  Pads_Distr2[a]->Write();
                           a.pop_back();
 			}
                         a.pop_back();
@@ -113,7 +117,7 @@ class HistoPlane
         Int_t I, J, dif_id,asic_id,channel_id,Num;
 	if(ok==0)
 	{
-   		t1.Branch("Ii",&I,"Ii/I");
+   		t1.Branch("I",&I,"I/I");
    		t1.Branch("J",&J,"J/I");
    		t1.Branch("dif_id",&dif_id,"dif_id/I");
    		t1.Branch("asic_id",&asic_id,"asic_id/I");
@@ -289,12 +293,16 @@ void inline Get_Calibration()
   void  ScaleHisto(const char* name,float i);
   void  WriteAll(int NbrPlatee, std::string);
   double inline Efficiency(){std::cout<<hit_other<<"  "<<hit_trigger<<std::endl;return 1.0*hit_trigger/(hit_other+hit_trigger);};
-  
+  void Fill_TH1_Timestamps_Distribution(unsigned int& Dif_Id ,int& Asic_Id,int& Channel_Id,double& timestamp);
  private:
   TH1D* Plate_Dist;
+  TH1D* Plate_Dist2;
   std::map<int,TH1D*>Difs_Distr;
   std::map<std::vector<int>,TH1D*>Asics_Distr;
   std::map<std::vector<int>,TH1D*>Pads_Distr;
+  std::map<int,TH1D*>Difs_Distr2;
+  std::map<std::vector<int>,TH1D*>Asics_Distr2;
+  std::map<std::vector<int>,TH1D*>Pads_Distr2;
   unsigned int hit_other;
   unsigned int hit_trigger;
   std::map<int,int>Time_Plates;

@@ -107,8 +107,6 @@ protected:
     void save_calibration(std::string filename);
     void read_calibration(std::string filename);
     std::map<int ,std::vector<double> >Delimiter;
-
-
  private:
     //helper methods
     void processEvent_ProcessCollectionNamed_DHCALRawTimes(LCEvent *evtP);

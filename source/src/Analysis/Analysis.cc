@@ -60,6 +60,7 @@ using namespace std;
 ReaderFactory readerFactory;
 std::vector<std::vector<std::array<double,7>>>useforrealrate;
 std::map<std::string,std::vector<std::vector<TH1F*>>>Short_Efficiency;
+std::map<std::string,std::vector<std::vector<TH1F*>>>Short_Efficiency_error;
 std::map<std::string,std::vector<std::vector<TH1F*>>>Short_Multiplicity;
 std::map<std::string,unsigned int>Numbers;
 unsigned int SumCombinaison(unsigned int n,unsigned int kmin)
@@ -86,12 +87,14 @@ TBranch* Branch6 =  tt->Branch("OrdYZ",&(totreee.OrdYZ));
 
 THnSparseD* hss2=nullptr;
 THnSparseD* hss=nullptr;
+THnSparseD* BEAM2=nullptr;
+THnSparseD* BEAM=nullptr;
 std::vector<TGraphErrors>xzaxis;
 std::map<int,int long>RealNumberPlane;
 std::vector<TGraphErrors>yzaxis;
 std::vector<std::string> names={"SDHCAL_HIT"};
 enum Tresholds {Threshold1,Threshold2,Threshold3,Threshold12,Threshold23,Thresholdall};
-std::array<std::string,6>Thresholds_name{"Threshold1","Threshold2","Threshold3","Threshold12","Threshold23","Thresholdall"};
+std::array<std::string,6>Thresholds_name{{"Threshold1","Threshold2","Threshold3","Threshold12","Threshold23","Thresholdall"}};
 std::map<std::string,std::vector<TH2F*>>Distribution_hits;
 std::array<std::map<std::string,std::vector<TH2F*>>,6>All_The_Hits_From_Trivent;
 std::array<std::map<std::string,std::vector<TH2F*>>,6>Efficiency_pads;
@@ -149,7 +152,7 @@ void AnalysisProcessor::PrintStatShort()
 void testedPlan::print(std::string name)
 {
     std::cout<<red<<"Plane Number (in geometry file): "<<geomplan.NbrPlate()+1<<" Z = "<<geomplan.GetZ0()<<" : "<<normal<<std::endl;
-    std::cout<<blue<<"Number of Test : "<<Counts[name][0]<<"; with >="<<_NbrPlaneUseForTracking<<" planes for tracking : "<<Counts[name][1]<<"; with ChiXZ <"<<_Chi2<<" : "<<Counts[name][2]<<"; with ChiYZ <"<<_Chi2<<" : "<<Counts[name][3]<<" ; with track in the Delimiters "<<nombreTests[name]<<"; with hits in it : "<<Counts[name][4]<<" ; "<<std::endl;
+    std::cout<<blue<<"Number of Test : "<<Counts[name][0]<<"; with >="<<_NbrPlaneUseForTracking<<" planes for tracking : "<<Counts[name][1]<<"; with ChiXZ <"<<_Chi2<<" : "<<Counts[name][2]<<"; with ChiYZ <"<<_Chi2<<" : "<<Counts[name][3]<<" ; with track in the Delimiters "<<nombreTests[name]<<"; with hits in it : "<<Counts[name][4]<<" ; "<<normal<<std::endl;
     std::cout<<red<<"with hits in dlim : "<<normal<<std::endl;
     for(unsigned int i=0;i!=Thresholds_name.size();++i)
     {
@@ -274,7 +277,7 @@ void testedPlan::testYou(std::map<std::string,std::map<int,hitsInPlan>>&mapDIFpl
 		      Thresholds[5]=nhit[itt->first];
 		    }
           
-		  for(int kk=0;kk!=Thresholds.size();++kk)
+		  for(unsigned int kk=0;kk!=Thresholds.size();++kk)
 		    {
 		      if (Thresholds[kk]==0)
 			{
@@ -322,8 +325,9 @@ void AnalysisProcessor::PrintStatShort(std::string name)
       for(unsigned int i=0; i!=testedPlanList.size(); ++i)
       {
         if(isfinite(testedPlanList[i].efficiencyShort(hhh,name)))Short_Efficiency[name][i][hhh]->Fill(Numbers[name],testedPlanList[i].efficiencyShort(hhh,name));
+        if(isfinite(testedPlanList[i].efficiencyShort(hhh,name)))Short_Efficiency_error[name][i][hhh]->Fill(Numbers[name],testedPlanList[i].errorShort(hhh,name));
         if(isfinite(testedPlanList[i].multiplicityShort(hhh,name)))Short_Multiplicity[name][i][hhh]->Fill(Numbers[name],testedPlanList[i].multiplicityShort(hhh,name));
-        fichier<<testedPlanList[i].efficiencyShort(hhh,name)<<" "<<sqrt(testedPlanList[i].GetNumberOKShort(hhh,name)*testedPlanList[i].efficiencyShort(hhh,name)*(1-testedPlanList[i].efficiencyShort(hhh,name)))*1.0/testedPlanList[i].GetNumberOKShort(hhh,name)<<" "<<testedPlanList[i].multiplicityShort(hhh,name)<<" 0 "<<"  ";
+        fichier<<testedPlanList[i].efficiencyShort(hhh,name)<<" "<<testedPlanList[i].errorShort(hhh,name)<<" "<<testedPlanList[i].multiplicityShort(hhh,name)<<" 0 "<<"  ";
       }
       fichier<<std::endl;
     }
@@ -335,7 +339,7 @@ void AnalysisProcessor::PrintStatShort(std::string name)
     std::cout<<"Run Number : "<<_NbrRun<<" Thresholds "<<Thresholds_name[hhh]<<std::endl;
     for(unsigned int i=0; i!=testedPlanList.size(); ++i)
     {
-      std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanList[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanList[i].efficiency(hhh,name)<<" Error : "<<setw(6)<<sqrt(testedPlanList[i].GetNumberOK(hhh,name)*testedPlanList[i].efficiency(hhh,name)*(1-testedPlanList[i].efficiency(hhh,name)))*1.0/testedPlanList[i].GetNumberOK(hhh,name)<<" Multiplicity : "<<setw(6)<<testedPlanList[i].multiplicity(hhh,name)<<normal<<std::endl;
+      std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanList[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanList[i].efficiency(hhh,name)<<" Error : "<<setw(6)<<testedPlanList[i].errorShort(hhh,name)<<" Multiplicity : "<<setw(6)<<testedPlanList[i].multiplicity(hhh,name)<<normal<<std::endl;
     }
   }
 }
@@ -354,6 +358,8 @@ std::array<double,6> hitsInPlan::countHitAt(double& x, double& y, double dlim,in
     difr[collectionName][cd(*it)["K"]-1]->Fill(sqrt((x-(*it)->getPosition()[0])*(x-(*it)->getPosition()[0])+(y-(*it)->getPosition()[1])*(y-(*it)->getPosition()[1])));
     if(fabs(x-(*it)->getPosition()[0])<dlim&&fabs(y-(*it)->getPosition()[1])<dlim)
     {
+      double fillr[3]={double((*it)->getPosition()[0]),double((*it)->getPosition()[0]),double((*it)->getPosition()[0])};
+      BEAM2->Fill(fillr,1);
       Number_hits[collectionName]++;
       int Threshold_Hit=(*it)->getEnergy();
       if(Threshold_Hit==Threshold_3)
@@ -546,7 +552,7 @@ void AnalysisProcessor::PrintStat(std::string name)
         fichier<<_NbrRun<<";#;";
           for(unsigned int i=0; i!=testedPlanList.size(); ++i)
           {
-            fichier<<testedPlanList[i].efficiency(hhh,name)<<";"<<sqrt(testedPlanList[i].GetNumberOK(hhh,name)*testedPlanList[i].efficiency(hhh,name)*(1-testedPlanList[i].efficiency(hhh,name)))*1.0/testedPlanList[i].GetNumberOK(hhh,name)<<";"<<testedPlanList[i].multiplicity(hhh,name)<<";0;";
+            fichier<<testedPlanList[i].efficiency(hhh,name)<<";"<<testedPlanList[i].error(hhh,name)<<";"<<testedPlanList[i].multiplicity(hhh,name)<<";0;";
           }
         fichier<<std::endl;
           // on referme le fichier
@@ -559,7 +565,7 @@ void AnalysisProcessor::PrintStat(std::string name)
     std::cout<<"Run Number : "<<_NbrRun<<" Thresholds "<<Thresholds_name[hhh]<<std::endl;
       for(unsigned int i=0; i!=testedPlanList.size(); ++i)
       {
-        std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanList[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanList[i].efficiency(hhh,name)<<" Error : "<<setw(6)<<sqrt(testedPlanList[i].GetNumberOK(hhh,name)*testedPlanList[i].efficiency(hhh,name)*(1-testedPlanList[i].efficiency(hhh,name)))*1.0/testedPlanList[i].GetNumberOK(hhh,name)<<" Multiplicity : "<<setw(6)<<testedPlanList[i].multiplicity(hhh,name)<<normal<<std::endl;
+        std::cout<<green<<setprecision(3)<<"Plane Number (in geometry file) : "<<testedPlanList[i].NbrPlate()+1<< " Efficiency : "<<setw(6)<<testedPlanList[i].efficiency(hhh,name)<<" Error : "<<setw(6)<<testedPlanList[i].error(hhh,name)<<" Multiplicity : "<<setw(6)<<testedPlanList[i].multiplicity(hhh,name)<<normal<<std::endl;
       }
     }
 
@@ -714,6 +720,8 @@ void AnalysisProcessor::init()
         double xmax[3]={double(Xmax),double(Ymax),double(PlansType.size())};
         hss2= new THnSparseD("Tracks", "Tracks", 3, bin, xmin, xmax);
         hss= new THnSparseD("TracksPon", "TracksPon", 3, bin, xmin, xmax);
+	BEAM2= new THnSparseD("BEAM_SEEN2", "BEAM_SEEN2", 3, bin, xmin, xmax);
+        BEAM= new THnSparseD("BEAM_SEEN", "BEAM_SEEN", 3, bin, xmin, xmax);
         Gain[names[0]].push_back(new TH2F(hh.c_str(),hh.c_str(),X,0,X,Y,0,Y));
         if(_Config_xml!=""||_Elog_xml!="")
         {
@@ -773,20 +781,28 @@ void AnalysisProcessor::init()
 		    for(unsigned int i=0;i<testedPlanList.size();++i)
 		    {
 			    std::string name="Short_Efficiency"+patch::to_string(i+1);
+			    std::string name2="Short_Efficiency_error"+patch::to_string(i+1);
 			    std::string namee="Short_Multiplicity"+patch::to_string(i+1);
 			    for(unsigned int i=0;i<names.size();++i)
           {
             name+=names[i];
+	    name2+=names[i];
             namee+=names[i];
             std::vector<TH1F*>vec;
             std::vector<TH1F*>vec2;
+	    std::vector<TH1F*>vec3;
             for(unsigned int j=0;j!=Thresholds_name.size();++j)
             {
-			        vec.push_back(new TH1F((name+Thresholds_name[j]).c_str(),(name+Thresholds_name[j]).c_str(),1000,0,_ShortEfficiency*1000));
-			        vec2.push_back(new TH1F((namee+Thresholds_name[j]).c_str(),(namee+Thresholds_name[j]).c_str(),1000,0,_ShortEfficiency*1000));
+				int nbrofshorteff=0;
+				if(_maxRecord!=0)nbrofshorteff=int((_maxRecord-_skip)*1.0/_ShortEfficiency)+2;
+				else nbrofshorteff=int((_GlobalEvents-_skip)*1.0/_ShortEfficiency)+2;
+			        vec.push_back(new TH1F((name+Thresholds_name[j]).c_str(),(name+Thresholds_name[j]).c_str(),nbrofshorteff,0,nbrofshorteff));
+			        vec2.push_back(new TH1F((namee+Thresholds_name[j]).c_str(),(namee+Thresholds_name[j]).c_str(),nbrofshorteff,0,nbrofshorteff));
+			        vec3.push_back(new TH1F((name2+Thresholds_name[j]).c_str(),(name2+Thresholds_name[j]).c_str(),nbrofshorteff,0,nbrofshorteff));
 			      }
 			      Short_Efficiency[names[i]].push_back(vec);
 			      Short_Multiplicity[names[i]].push_back(vec2);
+			      Short_Efficiency_error[names[i]].push_back(vec3);
 			    }
 		    }
 	    }
@@ -917,7 +933,7 @@ void AnalysisProcessor::end()
 			        number_of_hits+=it->second[j];
 		        }
 	        }
-	        std::cout<<red<<i<<"  "<<itt->first<<"  "<<it->first[2]-1<<"  "<<it->first[0]<<"  "<<it->first[1]<<normal<<std::endl;
+	        //std::cout<<red<<i<<"  "<<itt->first<<"  "<<it->first[2]-1<<"  "<<it->first[0]<<"  "<<it->first[1]<<normal<<std::endl;
           Efficiency_pads[i][itt->first][it->first[2]-1]->Fill(it->first[0],it->first[1],was_at_least_a_hit*1.0/(it->second).size());
           Efficiency_pads_error[i][itt->first][it->first[2]-1]->Fill
 	  (
@@ -979,7 +995,7 @@ void AnalysisProcessor::end()
         {
           number_touched++;
           
-          std::cout<<II<<"  "<<JJ<<"  "<<ZZ<<std::endl;
+          //std::cout<<II<<"  "<<JJ<<"  "<<ZZ<<std::endl;
          
           if(II>0&&II<xmax&&JJ>0&&JJ<ymax)
           {
@@ -1046,6 +1062,19 @@ void AnalysisProcessor::end()
     h2->Write();
     h1->GetListOfFunctions()->Add(tf);
     h1->Write();
+
+
+
+    BEAM2->Write();
+    BEAM->Write();
+    TH3D* BEAMh2= BEAM2->Projection(2,1,0);
+    TH3D* BEAMh1= BEAM->Projection(2,1,0);
+    Make_good_TH3(BEAMh2);
+    Make_good_TH3(BEAMh1);
+    BEAMh2->GetListOfFunctions()->Add(tf);
+    BEAMh2->Write();
+    BEAMh1->GetListOfFunctions()->Add(tf);
+    BEAMh1->Write();
     RateSeen3D["SDHCAL_HIT"]->Write("Rate_Seen_3D");
     std::string traces="Traces";
     Rate_Estimation->Fill (0.5,useforrealrate.size());
@@ -1153,6 +1182,7 @@ void AnalysisProcessor::end()
           for(unsigned int j=0;j!=Thresholds_name.size();++j)
           {
             Short_Efficiency[names[naa]][i][j]->Write();
+	    Short_Efficiency_error[names[naa]][i][j]->Write();
             Short_Multiplicity[names[naa]][i][j]->Write();
           }
           hfile->cd(plate.c_str());
@@ -1195,6 +1225,7 @@ void AnalysisProcessor::end()
             for(unsigned int j=0;j!=Thresholds_name.size();++j)
             {
               delete Short_Efficiency[names[naa]][i][j];
+	      delete Short_Efficiency_error[names[naa]][i][j];
               delete Short_Multiplicity[names[naa]][i][j];
             }
           } 

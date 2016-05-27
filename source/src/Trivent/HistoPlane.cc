@@ -12,18 +12,24 @@
 #include <array>
 #include "TCanvas.h"
 #include "TPDF.h"
+
 TCanvas* canvas = new  TCanvas("canvas");
 extern bool pdf;
+
 HistoPlane::HistoPlane(bool Distr,int NbrPlate,std::vector<int>Difs_Names,int SizeX, int SizeY, std::vector< std::string  >& vec_name_th1,std::vector< std::string >& vec_name_th2,std::vector< std::string >& vec_name_th2_Asic):_Distr(Distr),NbrPlatee(NbrPlate),Means(0),Nbrof0Hits(0),local_max(-1),local_min(99999999),total_time(0),_SizeX(SizeX),_SizeY(SizeY),_Difs_Names(Difs_Names)
 {       
         int Addone=0;
         std::string addnbr="";
+        std::string addnbr2="";
         if(Distr==true)
 	{
         Addone=1;
         addnbr="Distribution Nbr Hits in Plane : "+patch::to_string(NbrPlatee+1);
+        addnbr2="Distribution timestamps in Plane : "+patch::to_string(NbrPlatee+1);
         std::string a = "Distribution Nbr Hits in Plane : "+patch::to_string(NbrPlatee+1);
-        if (gROOT->FindObject(addnbr.c_str()) == NULL) Plate_Dist=new TH1D (a.c_str(),a.c_str(),20,0.,20.);
+        std::string a2 = "Distribution timestamps in Plane : "+patch::to_string(NbrPlatee+1);
+        if (gROOT->FindObject(addnbr.c_str()) == NULL)Plate_Dist=new TH1D (a.c_str(),a.c_str(),20,0.,20.);
+	if (gROOT->FindObject(addnbr2.c_str()) == NULL)Plate_Dist2=new TH1D (a2.c_str(),a2.c_str(),1000,0.,1000.);
         }
         for(int i=0;i<_Difs_Names.size();++i)
 	{
@@ -31,23 +37,35 @@ HistoPlane::HistoPlane(bool Distr,int NbrPlate,std::vector<int>Difs_Names,int Si
                 if(Distr==true)
 		{
 			addnbr="Distribution Nbr Hits in Dif : "+patch::to_string(_Difs_Names[i])+" Plane : "+patch::to_string(NbrPlatee+1);
+                        addnbr2="Distribution timestamps in Dif : "+patch::to_string(_Difs_Names[i])+" Plane : "+patch::to_string(NbrPlatee+1);
 			std::string a = "Distribution Nbr Hits in Dif : "+patch::to_string(_Difs_Names[i]);
+                        std::string a2 = "Distribution timestamp in Dif : "+patch::to_string(_Difs_Names[i]);
 			if (gROOT->FindObject(addnbr.c_str()) != NULL)continue;
 		 	Difs_Distr[_Difs_Names[i]]=new TH1D (addnbr.c_str(),a.c_str(),10,0.,10.);
+			if (gROOT->FindObject(addnbr2.c_str()) != NULL)continue;
+                        Difs_Distr2[_Difs_Names[i]]=new TH1D (addnbr2.c_str(),a2.c_str(),1000,0.,1000.);
 			for(int j=1;j<=48;++j)
 			{
 				std::vector<int>vec{_Difs_Names[i],j};
                         	addnbr="Distribution Nbr Hits in Asic : "+patch::to_string(j)+"Dif : "+patch::to_string(_Difs_Names[i])+" Plane : "+patch::to_string(NbrPlatee+1);
+                                addnbr2="Distribution timespamp in Asic : "+patch::to_string(j)+"Dif : "+patch::to_string(_Difs_Names[i])+" Plane : "+patch::to_string(NbrPlatee+1);
 				std::string b = "Distribution Nbr Hits in Asic : "+patch::to_string(j);
+                                std::string b2 = "Distribution timestamps in Asic : "+patch::to_string(j);
 				if (gROOT->FindObject(addnbr.c_str()) != NULL)continue;
 				Asics_Distr[vec]= new TH1D (addnbr.c_str(),b.c_str(),10,0.,10.);
+				if (gROOT->FindObject(addnbr2.c_str()) != NULL)continue;
+				Asics_Distr2[vec]= new TH1D (addnbr2.c_str(),b2.c_str(),1000,0.,1000.);
 				for(int k=0;k<=63;++k)
 		        	{
   					std::vector<int>vec{_Difs_Names[i],j,k};
                         		addnbr="Distribution Nbr Hits in Pad : "+patch::to_string(k)+"Asic : "+patch::to_string(j)+"Dif : "+patch::to_string(_Difs_Names[i])+" Plane : "+patch::to_string(NbrPlatee+1);
+					addnbr2="Distribution timestamp Hits in Pad : "+patch::to_string(k)+"Asic : "+patch::to_string(j)+"Dif : "+patch::to_string(_Difs_Names[i])+" Plane : "+patch::to_string(NbrPlatee+1);
 					std::string c = "Distribution Nbr Hits in Pad : "+patch::to_string(k);
+					std::string c2 = "Distribution timestamp Hits in Pad : "+patch::to_string(k);
 					if (gROOT->FindObject(addnbr.c_str()) != NULL)continue;
 					Pads_Distr[vec]= new TH1D (addnbr.c_str(),c.c_str(),5,0.,5.);
+					if (gROOT->FindObject(addnbr2.c_str()) != NULL)continue;
+					Pads_Distr2[vec]= new TH1D (addnbr2.c_str(),c2.c_str(),1000,0.,1000.);
 				}
 			}
 		}
@@ -77,10 +95,22 @@ HistoPlane::HistoPlane(const HistoPlane &source):_Distr(source._Distr),NbrPlatee
 {   
         std::cout<<"Create copy"<<std::endl;
         Plate_Dist=new TH1D (*(source.Plate_Dist));
-        
-        for(std::map<int,TH1D*>::const_iterator it=(source.Difs_Distr).begin();it!=(source.Difs_Distr).end();++it)
+	Plate_Dist2=new TH1D (*(source.Plate_Dist2));
+        for(std::map<int,TH1D*>::const_iterator it=(source.Difs_Distr2).begin();it!=(source.Difs_Distr2).end();++it)
 	{
-		Difs_Distr[it->first]=new TH1D (*it->second);
+		Difs_Distr2[it->first]=new TH1D (*it->second);
+        }
+	for(std::map<std::vector<int>,TH1D*>::const_iterator it=(source.Asics_Distr2).begin();it!=(source.Asics_Distr2).end();++it)
+        {
+		Asics_Distr2[it->first]= new TH1D (*it->second);
+        }
+	for(std::map<std::vector<int>,TH1D*>::const_iterator it=(source.Pads_Distr2).begin();it!=(source.Pads_Distr2).end();++it)
+	{
+		Pads_Distr2[it->first]= new TH1D (*it->second);
+	}
+        for(std::map<int,TH1D*>::const_iterator it=(source.Difs_Distr2).begin();it!=(source.Difs_Distr2).end();++it)
+	{
+		Difs_Distr2[it->first]=new TH1D (*it->second);
         }
 	for(std::map<std::vector<int>,TH1D*>::const_iterator it=(source.Asics_Distr).begin();it!=(source.Asics_Distr).end();++it)
         {
@@ -107,14 +137,17 @@ HistoPlane::~HistoPlane()
         for(int i=0;i<_Difs_Names.size();++i)
 	{
 		delete Difs_Distr[_Difs_Names[i]];
+		delete Difs_Distr2[_Difs_Names[i]];
 		for(int j=1;j<=48;++j)
 		{
 			std::vector<int>vec{_Difs_Names[i],j};
 			delete Asics_Distr[vec];
+			delete Asics_Distr2[vec];
 			for(int k=0;k<=63;++k)
 		        {
   				std::vector<int>vec{_Difs_Names[i],j,k};
 				delete Pads_Distr[vec];
+				delete Pads_Distr2[vec];
 			}
 		}
 	}
@@ -212,3 +245,13 @@ void HistoPlane::Save(TFile* file,std::string namepdf)
     if(_Distr==true)Write_TH1_Hit_In_Pad_Per_RamFull(file,plate);
     
 }
+
+ void HistoPlane::Fill_TH1_Timestamps_Distribution(unsigned int& Dif_Id ,int& Asic_Id,int& Channel_Id,double& timestamp)
+  {
+       std::vector<int>vec{Dif_Id,Asic_Id,Channel_Id};
+       Pads_Distr2[vec]->Fill(timestamp);
+       vec.pop_back();
+                        Asics_Distr2[vec]->Fill(timestamp);
+			vec.pop_back();
+                        Difs_Distr2[vec[0]]->Fill(timestamp);
+  }
