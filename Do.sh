@@ -51,11 +51,11 @@ else
 	sed -i "s|NOISES|$(pwd)/DHCAL_Noise_"$m"_I0.slcio|" Trivent.xml
 	cp $(pwd)/xml/Analysis.xml $(pwd)/Analysis_"$m".xml
 	sed -i "s|FILE|$(pwd)/DHCAL_Trivent_"$m"_I0.slcio|" Analysis_"$m".xml
-	Marlin DHCAL_"$m".xml
+	./Marlino DHCAL_"$m".xml
 	rm DHCAL_"$m".xml
-	Marlin Trivent.xml
+	./Marlino Trivent.xml
 	rm Trivent.xml
-	Marlin Analysis_"$m".xml
+	./Marlino Analysis_"$m".xml
 	rm Analysis_"$m".xml
 	done
 	elif [[ $1 == streamout ]]
@@ -75,8 +75,8 @@ else
         else sed -i "s|NUMBER|$2|" DHCAL_"$m".xml
         fi
 	sed -i "s|OUTPUT|$(pwd)/DHCAL_Streamout_"$m"_I0.slcio|" DHCAL_"$m".xml
-	Marlin DHCAL_"$m".xml
-	rm DHCAL_"$m".xml
+	./Marlino DHCAL_"$m".xml
+	#rm DHCAL_"$m".xml
 	done
 	elif [[ $1 == analysis ]]
 	then
@@ -89,7 +89,7 @@ else
         else sed -i "s|NUMBER|$2|" Analysis_"$m".xml
         fi
 	sed -i "s|FILE|$(pwd)/DHCAL_Trivent_"$m"_I0.slcio|" Analysis_"$m".xml
-	Marlin Analysis_"$m".xml
+	./Marlino Analysis_"$m".xml
 	rm Analysis_"$m".xml
         now=$(date +"%m_%d_%Y")
         #mv Results_"$m".txt $(pwd)/Results_"$m"_"$now".txt
@@ -102,7 +102,7 @@ else
 	m=$( echo "$n" | cut -c 15-20 ) 
 	cp $(pwd)/xml/AnalysisSplit.xml $(pwd)/Analysis_"$m".xml
 	sed -i "s|FILE|$(pwd)/DHCAL_Trivent_"$m"_I0_Split.slcio|" Analysis_"$m".xml
-	Marlin Analysis_"$m".xml >>Result_"$m"_Split.txt
+	./Marlino Analysis_"$m".xml >>Result_"$m"_Split.txt
 	rm Analysis_"$m".xml
         now=$(date +"%m_%d_%Y")
         #mv Results_"$m".txt $(pwd)/Split/Results_"$m"_"$now".txt
@@ -120,7 +120,7 @@ else
         else sed -i "s|NUMBER|$2|" Noise_"$m".xml
         fi
 	sed -i "s|FILE|$(pwd)/DHCAL_Noise_"$m"_I0.slcio|" Noise_"$m".xml
-	Marlin Noise_"$m".xml
+	./Marlino Noise_"$m".xml
 	rm Noise_"$m".xml
 	done
 	elif [[ $1 == trivent ]]
@@ -139,7 +139,7 @@ else
         now=$(date +"%m_%d_%Y")
         #mv Results_"m".root $(pwd)/Results_Trivent_"m"_"$now".root
 	#gdb Marlin 
-	Marlin Trivent.xml
+	./Marlino Trivent.xml
 	rm Trivent.xml
 	done
         elif [[ $1 == triventnonoise ]]
@@ -157,7 +157,7 @@ else
 	sed -i "s|NOISES| |" Trivent.xml
         now=$(date +"%m_%d_%Y")
         #mv Results_"m".root $(pwd)/Results_Trivent_"m"_"$now".root
-	Marlin Trivent.xml
+	./Marlino Trivent.xml
 	rm Trivent.xml
 	done
         elif [[ $1 == triventSplit ]]
@@ -169,7 +169,7 @@ else
 	sed -i "s|FILE|$(pwd)/DHCAL_Streamout_"$m"_I0.slcio|" TriventSplit.xml
 	sed -i "s|OUTPUT|$(pwd)/DHCAL_Trivent_"$m"_I0_Split.slcio|" TriventSplit.xml
 	sed -i "s|NOISES|$(pwd)/DHCAL_Noise_"$m"_I0_Split.slcio|" TriventSplit.xml
-	Marlin TriventSplit.xml
+	./Marlino TriventSplit.xml
         #mv Results_Trivent_*.root $(pwd)/Split
 	rm TriventSplit.xml
 	done

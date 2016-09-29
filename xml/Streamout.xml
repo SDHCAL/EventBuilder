@@ -1,7 +1,6 @@
 <marlin>
 	<execute>
 		<processor name="Streamout"/>
-                <processor name="MyLCIOOutputProcessor"/>
         </execute>
 	<global>
         	<parameter name="LCIOInputFiles">
@@ -11,9 +10,26 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		</parameter>
-                <parameter name="MaxRecordNumber" value="NUMBER"/>
-                <parameter name="SkipNEvents" value="0"/>
+                <parameter name="MaxRecordNumber" value="10"/>
+                <parameter name="SkipNEvents" value="NUMBER"/>
                 <parameter name="SupressCheck" value="false"/>
                	<parameter name="Verbosity" type="string">SILENT</parameter>
 	</global>
@@ -28,9 +44,4 @@
                 <parameter name="BitsToSkip" value="24"/>
                 <parameter name="TcherenkovSignalDuration" value="5"/>
 	</processor>
-	<processor name="MyLCIOOutputProcessor" type="LCIOOutputProcessor">
-        	<parameter name="LCIOWriteMode" type="string">WRITE_NEW </parameter>
-          <parameter name="LCIOOutputFile" type="string"> OUTPUT </parameter>
-          <parameter name="DropCollectionNames" type="string">RU_XDAQ</parameter> 
-  </processor>
 </marlin>

@@ -1,1 +1,0 @@
-1) Strip Chambers are not well plotted now :(

@@ -1,2 +1,0 @@
-#define EventBuilder_VERSION_MAJOR @EventBuilder_VERSION_MAJOR@
-#define EventBuilder_VERSION_MINOR @EventBuilder_VERSION_MINOR@

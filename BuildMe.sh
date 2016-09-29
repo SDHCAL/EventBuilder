@@ -1,10 +1,10 @@
 #!/bin/bash
 CreateBuildDir()
 {
-    if [ -d build ]; then
-	rm -r build
-    fi
-    mkdir build
+  if [ -d build ]; then
+	  rm -r build
+  fi
+  mkdir build
 }
 
 CreateMakefile()
@@ -13,7 +13,7 @@ CreateMakefile()
     echo "=                 Build Makefile for compilation           ="
     echo "============================================================"    
     echo "  Create a new Makefile  .. "
-    cmake -C ${ILCSOFT}/ILCSoft.cmake ..
+    cmake ..
     ls -lthr  
 }
 
@@ -31,5 +31,7 @@ CreateBuildDir
 cd build
 CreateMakefile
 Compile
-cp $(pwd)/source/src/ElogFiller/postlog.py $(pwd)/bin/
 echo " Compilation done"
+if [ -d build ]; then
+	  rm -r build
+fi
